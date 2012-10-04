@@ -1,0 +1,8 @@
+.idea
+console-common/.idea
+console-jmx/.idea
+camel-console.iml
+console-common/console-common.iml
+console-jmx/console-jmx.iml
+console-jmx/target/classes
+console-jmx/target/test-classes
