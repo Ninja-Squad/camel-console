@@ -19,7 +19,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.ninjasquad</groupId>
+            <groupId>com.ninja-squad</groupId>
             <artifactId>console-common</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
