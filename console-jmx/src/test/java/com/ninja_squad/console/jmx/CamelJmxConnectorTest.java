@@ -2,9 +2,9 @@ package com.ninja_squad.console.jmx;
 
 import com.google.common.collect.Sets;
 import com.ninja_squad.console.jmx.exception.JmxException;
-import com.ninjasquad.console.Instance;
-import com.ninjasquad.console.Route;
-import com.ninjasquad.console.State;
+import com.ninja_squad.console.Instance;
+import com.ninja_squad.console.Route;
+import com.ninja_squad.console.State;
 import org.junit.Test;
 
 import javax.management.*;
