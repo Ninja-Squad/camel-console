@@ -16,10 +16,22 @@ public class CamelJmxNotification {
 
     private Object body;
 
-    private Map<String,String> headers;
+    private Map<String, String> headers;
 
-    private Map<String,String> properties;
+    private Map<String, String> properties;
 
     private DateTime timestamp;
 
+    private String breadcrumbId;
+
+    @Override
+    public String toString() {
+        return "CamelJmxNotification{" +
+                "exchangeId='" + exchangeId + '\'' +
+                ", source='" + source + '\'' +
+                ", destination='" + destination + '\'' +
+                ", timestamp=" + timestamp +
+                ", breadcrumbId='" + breadcrumbId + '\'' +
+                '}';
+    }
 }
