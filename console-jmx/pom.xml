@@ -51,6 +51,11 @@
                         <format>xml</format>
                     </formats>
                     <check/>
+                    <instrumentation>
+                        <excludes>
+                            <exclude>**/Main.*</exclude>
+                        </excludes>
+                    </instrumentation>
                 </configuration>
             </plugin>
         </plugins>
