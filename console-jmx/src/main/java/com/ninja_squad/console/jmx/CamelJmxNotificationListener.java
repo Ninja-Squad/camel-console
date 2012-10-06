@@ -21,12 +21,10 @@ public class CamelJmxNotificationListener implements NotificationListener {
      * Convert a jmx notification with raw data to a more useful object {@link CamelJmxNotification} then store it {@link #storeNotification(CamelJmxNotification)}
      *
      * @param notification the notification received over jmx
-     * @param arg1         unused
+     * @param object       unused
      */
     @Override
-    public void handleNotification(Notification notification, Object arg1) {
-
-        log.debug("notif -> " + notification.toString());
+    public void handleNotification(Notification notification, Object object) {
 
         Map<String, Object> notificationAttributes = (Map<String, Object>) notification.getUserData();
 
@@ -35,6 +33,7 @@ public class CamelJmxNotificationListener implements NotificationListener {
         camelJmxNotification.setExchangeId((String) notificationAttributes.get("ExchangeId"));
         camelJmxNotification.setBody(notificationAttributes.get("Body"));
         camelJmxNotification.setHeaders((Map<String, String>) notificationAttributes.get("Headers"));
+        camelJmxNotification.setBreadcrumbId(camelJmxNotification.getHeaders().get("breadcrumbid"));
         camelJmxNotification.setProperties((Map<String, String>) notificationAttributes.get("Properties"));
         camelJmxNotification.setSource(camelJmxNotification.getProperties().get("CamelToEndpoint"));
         DateTime timestamp = new DateTime(notificationAttributes.get("TimeStamp"));
