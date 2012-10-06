@@ -48,6 +48,7 @@ public class CamelJmxNotificationListenerTest {
         expectedNotification.setDestination(destination);
         expectedNotification.setExchangeId(exchangeId);
         expectedNotification.setHeaders(headers);
+        expectedNotification.setBreadcrumbId(breadcrumbId);
         expectedNotification.setProperties(properties);
         expectedNotification.setSource(source);
         expectedNotification.setTimestamp(new DateTime(2012, 10, 4, 8, 5, 43));

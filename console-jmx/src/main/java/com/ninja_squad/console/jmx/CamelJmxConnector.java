@@ -212,9 +212,8 @@ public class CamelJmxConnector {
      * Start listening on a specific route, specified by its id.
      * All messages going through this route will be received and stored.
      *
-     * @param routeId the id of the {@link Route} to monitor
      */
-    public void listen(String routeId) {
+    public void listen() {
         // TODO should poll at some interval to retry
         if (isServerStopped()) return;
 
@@ -226,7 +225,6 @@ public class CamelJmxConnector {
 
         ObjectName tracer = objectNames.iterator().next();
         forceTraceNotification(tracer);
-
 
         //adding the listener
         try {
@@ -251,7 +249,7 @@ public class CamelJmxConnector {
         tracerCamel.setJmxTraceNotifications(true);
     }
 
-    public List<CamelJmxNotification> getNotifications(String routeId) {
+    public List<CamelJmxNotification> getNotifications() {
         return notificationListener.getNotifications();
     }
 }
