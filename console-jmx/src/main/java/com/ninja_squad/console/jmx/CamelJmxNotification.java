@@ -24,4 +24,14 @@ public class CamelJmxNotification {
 
     private String breadcrumbId;
 
+    @Override
+    public String toString() {
+        return "CamelJmxNotification{" +
+                "exchangeId='" + exchangeId + '\'' +
+                ", source='" + source + '\'' +
+                ", destination='" + destination + '\'' +
+                ", timestamp=" + timestamp +
+                ", breadcrumbId='" + breadcrumbId + '\'' +
+                '}';
+    }
 }
