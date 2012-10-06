@@ -1,6 +1,6 @@
 package com.ninja_squad.console.jmx;
 
-import com.ninjasquad.console.Instance;
+import com.ninja_squad.console.Instance;
 
 public class Main {
 

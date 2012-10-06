@@ -2,12 +2,17 @@ package com.ninja_squad.console.jmx;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
+import com.ninja_squad.console.Instance;
+import com.ninja_squad.console.Route;
+import com.ninja_squad.console.State;
 import com.ninja_squad.console.jmx.exception.JmxException;
-import com.ninjasquad.console.Instance;
-import com.ninjasquad.console.Route;
-import com.ninjasquad.console.State;
+import com.ninja_squad.core.retry.RetryException;
+import com.ninja_squad.core.retry.Retryer;
+import com.ninja_squad.core.retry.RetryerBuilder;
+import com.ninja_squad.core.retry.WaitStrategies;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -24,6 +29,9 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class CamelJmxConnector {
@@ -45,6 +53,8 @@ public class CamelJmxConnector {
     @Setter
     private CamelJmxNotificationListener notificationListener = new CamelJmxNotificationListener();
 
+    private Retryer retryer;
+
     /**
      * Jmx connector to a Camel instance
      *
@@ -53,6 +63,10 @@ public class CamelJmxConnector {
     public CamelJmxConnector(Instance instance) {
         Preconditions.checkNotNull(instance, "The instance should not be null");
         this.instance = instance;
+        retryer = RetryerBuilder.<State>newBuilder()
+                .withWaitStrategy(WaitStrategies.fixedWait(10000L, TimeUnit.MILLISECONDS))
+                .retryIfResult(Predicates.<State>equalTo(State.Stopped))
+                .build();
     }
 
     /**
@@ -63,10 +77,45 @@ public class CamelJmxConnector {
     public State connect() {
         try {
             setServerConnection(connectToServer());
+            updateState(State.Started);
         } catch (JmxException e) {
-            return State.Stopped;
+            updateState(State.Stopped);
         }
-        return State.Started;
+        return instance.getState();
+    }
+
+    /**
+     * Update the instance's state and eventually begin a retry strategy.
+     *
+     * @param state the actual instance's state
+     */
+    protected void updateState(State state) {
+        if (instance.getState().equals(state)) {
+            //same state, nothing to do
+            return;
+        }
+        instance.setState(state);
+        if (State.Stopped.equals(state)) {
+            retry();
+        }
+    }
+
+    /**
+     * Retry to connect if the instance is stopped.
+     */
+    protected void retry() {
+        try {
+            retryer.wrap(new Callable<State>() {
+                @Override
+                public State call() throws Exception {
+                    return connect();
+                }
+            }).call();
+        } catch (ExecutionException e) {
+            log.error("Error in connect execution", e);
+        } catch (RetryException e) {
+            log.error("Error in retry execution", e);
+        }
     }
 
     /**
@@ -211,7 +260,6 @@ public class CamelJmxConnector {
     /**
      * Start listening on a specific route, specified by its id.
      * All messages going through this route will be received and stored.
-     *
      */
     public void listen() {
         // TODO should poll at some interval to retry
@@ -231,8 +279,10 @@ public class CamelJmxConnector {
             getServerConnection().addNotificationListener(tracer, notificationListener, null, null);
             log.debug("Listener added");
         } catch (InstanceNotFoundException e) {
+            updateState(State.Stopped);
             throw new JmxException("Instance cannot be found", e);
         } catch (IOException e) {
+            updateState(State.Stopped);
             throw new JmxException("Couldn't connect to the instance", e);
         }
 
@@ -249,7 +299,13 @@ public class CamelJmxConnector {
         tracerCamel.setJmxTraceNotifications(true);
     }
 
+    /**
+     * Return the notifications received
+     *
+     * @return a {@link List} of {@link CamelJmxNotification}
+     */
     public List<CamelJmxNotification> getNotifications() {
         return notificationListener.getNotifications();
     }
+
 }
