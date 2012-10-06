@@ -294,7 +294,7 @@ public class CamelJmxConnectorTest {
 
         //then throw JmxException
         try {
-            connector.listen("route1");
+            connector.listen();
             failBecauseExceptionWasNotThrown(JmxException.class);
         } catch (JmxException e) {
             assertThat(e).hasMessage("There should be only one tracer - check your jmx config");
@@ -319,7 +319,7 @@ public class CamelJmxConnectorTest {
 
         //then throw JmxException
         try {
-            connector.listen("route1");
+            connector.listen();
             failBecauseExceptionWasNotThrown(JmxException.class);
         } catch (JmxException e) {
             assertThat(e).hasMessage("Instance cannot be found");
@@ -344,7 +344,7 @@ public class CamelJmxConnectorTest {
 
         //then throw JmxException
         try {
-            connector.listen("route1");
+            connector.listen();
             failBecauseExceptionWasNotThrown(JmxException.class);
         } catch (JmxException e) {
             assertThat(e).hasMessage("Couldn't connect to the instance");

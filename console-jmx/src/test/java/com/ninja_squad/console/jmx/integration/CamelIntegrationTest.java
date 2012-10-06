@@ -1,6 +1,7 @@
 package com.ninja_squad.console.jmx.integration;
 
 
+import com.google.common.collect.Sets;
 import com.ninja_squad.console.jmx.CamelJmxConnector;
 import com.ninja_squad.console.jmx.CamelJmxNotification;
 import com.ninja_squad.console.jmx.CamelJmxNotificationListener;
@@ -9,11 +10,15 @@ import com.ninjasquad.console.Route;
 import com.ninjasquad.console.State;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.CamelContext;
+import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultProducerTemplate;
 import org.apache.camel.management.JmxSystemPropertyKeys;
+import org.fest.assertions.core.Condition;
+import org.joda.time.DateTime;
 import org.junit.Test;
 
 import java.util.List;
@@ -49,7 +54,19 @@ public class CamelIntegrationTest {
         context.addRoutes(new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("direct:route2").routeId("route2").to("mock:result");
+                from("direct:route2").routeId("route2")//
+                        .process(new Processor() {
+                            @Override
+                            public void process(Exchange exchange) throws Exception {
+                                exchange.getOut().setBody("route2 - 2");
+                            }
+
+                            @Override
+                            public String toString() {
+                                return "route2-processor";
+                            }
+                        })//
+                        .to("direct:route1");
             }
         });
         context.start();
@@ -138,7 +155,7 @@ public class CamelIntegrationTest {
         startCamelApp();
 
         //listen on route 1
-        camelJmxConnector.listen("route1");
+        camelJmxConnector.listen();
 
         //send a message in route 1
         ProducerTemplate template = new DefaultProducerTemplate(context);
@@ -152,7 +169,50 @@ public class CamelIntegrationTest {
         stopCamelApp();
 
         //then
-        List<CamelJmxNotification> notifications = camelJmxConnector.getNotifications("route1");
+        List<CamelJmxNotification> notifications = camelJmxConnector.getNotifications();
         assertThat(extractProperty("body").from(notifications)).containsExactly("route1 - 1");
+        assertThat(extractProperty("destination").from(notifications)).containsExactly("mock:result");
+    }
+
+    @Test
+    public void shouldSeeTwoMessagesGoingThroughRoute2() throws Exception {
+        //spying on notification listener
+        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener());
+        camelJmxConnector.setNotificationListener(listener);
+
+        //start instance
+        startCamelApp();
+
+        //listen on route 1
+        camelJmxConnector.listen();
+
+        //send a message in route 1
+        final DateTime start = DateTime.now();
+        final ProducerTemplate template = new DefaultProducerTemplate(context);
+        template.start();
+        template.sendBody("direct:route2", "route2 - 1");
+
+        //wait to receive notification
+        verify(listener, timeout(1000).times(3)).storeNotification(any(CamelJmxNotification.class));
+
+        //stop instance
+        stopCamelApp();
+        final DateTime stop = DateTime.now();
+
+        //then
+        List<CamelJmxNotification> notifications = camelJmxConnector.getNotifications();
+        assertThat(extractProperty("body").from(notifications)).containsExactly("route2 - 1", "route2 - 2", "route2 - 2");
+        assertThat(extractProperty("source").from(notifications)).containsExactly("direct://route2", "direct://route2", "direct://route1");
+        assertThat(extractProperty("destination").from(notifications)).containsExactly("route2-processor", "direct:route1", "mock:result");
+        // all exchangeIds should be equals
+        assertThat(Sets.newHashSet(extractProperty("exchangeId").from(notifications))).hasSize(1);
+        // all timestamps should be between start and stop
+        assertThat(extractProperty("timestamp").from(notifications)).hasSize(3).are(new Condition<Object>() {
+            @Override
+            public boolean matches(Object value) {
+                DateTime timestamp = (DateTime) value;
+                return timestamp.isAfter(start) && timestamp.isBefore(stop);
+            }
+        });
     }
 }
