@@ -83,21 +83,21 @@ public class CamelIntegrationTest {
 
     @Test
     public void shouldFindInstanceState() throws Exception {
+        Instance spy = spy(instance);
+        camelJmxConnector = new CamelJmxConnector(spy);
         //new instance is not started
         State state = camelJmxConnector.connect();
         assertThat(state).isEqualTo(State.Stopped);
-        assertThat(instance.getState()).isEqualTo(State.Stopped);
+        assertThat(spy.getState()).isEqualTo(State.Stopped);
 
         //start instance
         startCamelApp();
 
         //wait for retry
-        Instance spy = spy(instance);
         verify(spy, timeout(1000).times(1)).setState(State.Started);
 
         // should have reconnect
-        assertThat(state).isEqualTo(State.Started);
-        assertThat(instance.getState()).isEqualTo(State.Started);
+        assertThat(spy.getState()).isEqualTo(State.Started);
 
         //stop instance
         stopCamelApp();
@@ -105,7 +105,7 @@ public class CamelIntegrationTest {
         //reconnect
         state = camelJmxConnector.connect();
         assertThat(state).isEqualTo(State.Stopped);
-        assertThat(instance.getState()).isEqualTo(State.Stopped);
+        assertThat(spy.getState()).isEqualTo(State.Stopped);
     }
 
     @Test

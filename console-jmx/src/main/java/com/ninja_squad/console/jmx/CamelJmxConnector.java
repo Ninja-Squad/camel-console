@@ -9,7 +9,6 @@ import com.ninja_squad.console.Instance;
 import com.ninja_squad.console.Route;
 import com.ninja_squad.console.State;
 import com.ninja_squad.console.jmx.exception.JmxException;
-import com.ninja_squad.core.retry.RetryException;
 import com.ninja_squad.core.retry.Retryer;
 import com.ninja_squad.core.retry.RetryerBuilder;
 import com.ninja_squad.core.retry.WaitStrategies;
@@ -30,7 +29,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -42,6 +42,7 @@ public class CamelJmxConnector {
     public static final String ROUTE_ID = "RouteId";
     public static final String ENDPOINT_URI = "EndpointUri";
     public static final String STATE = "State";
+    public static final int POOL_SIZE = 4;
 
     @Getter
     @Setter
@@ -54,6 +55,7 @@ public class CamelJmxConnector {
     private CamelJmxNotificationListener notificationListener = new CamelJmxNotificationListener();
 
     private Retryer retryer;
+    private ExecutorService executorService = Executors.newFixedThreadPool(POOL_SIZE);
 
     /**
      * Jmx connector to a Camel instance
@@ -64,7 +66,7 @@ public class CamelJmxConnector {
         Preconditions.checkNotNull(instance, "The instance should not be null");
         this.instance = instance;
         retryer = RetryerBuilder.<State>newBuilder()
-                .withWaitStrategy(WaitStrategies.fixedWait(10000L, TimeUnit.MILLISECONDS))
+                .withWaitStrategy(WaitStrategies.fixedWait(500L, TimeUnit.MILLISECONDS))
                 .retryIfResult(Predicates.<State>equalTo(State.Stopped))
                 .build();
     }
@@ -81,6 +83,7 @@ public class CamelJmxConnector {
         } catch (JmxException e) {
             updateState(State.Stopped);
         }
+        log.debug("Connect - " + instance.getState());
         return instance.getState();
     }
 
@@ -94,6 +97,7 @@ public class CamelJmxConnector {
             //same state, nothing to do
             return;
         }
+        log.debug("New state - " + state);
         instance.setState(state);
         if (State.Stopped.equals(state)) {
             retry();
@@ -103,19 +107,18 @@ public class CamelJmxConnector {
     /**
      * Retry to connect if the instance is stopped.
      */
+    @SuppressWarnings("unchecked")
     protected void retry() {
-        try {
-            retryer.wrap(new Callable<State>() {
-                @Override
-                public State call() throws Exception {
-                    return connect();
-                }
-            }).call();
-        } catch (ExecutionException e) {
-            log.error("Error in connect execution", e);
-        } catch (RetryException e) {
-            log.error("Error in retry execution", e);
-        }
+        Retryer.RetryerCallable callable = retryer.wrap(new Callable<State>() {
+            int nb;
+
+            @Override
+            public State call() throws Exception {
+                log.debug("Retry - " + nb++);
+                return connect();
+            }
+        });
+        executorService.submit(callable);
     }
 
     /**
