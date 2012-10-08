@@ -2,12 +2,12 @@ package com.ninja_squad.console.jmx.integration;
 
 
 import com.google.common.collect.Sets;
-import com.ninja_squad.console.jmx.CamelJmxConnector;
-import com.ninja_squad.console.jmx.CamelJmxNotification;
-import com.ninja_squad.console.jmx.CamelJmxNotificationListener;
 import com.ninja_squad.console.Instance;
 import com.ninja_squad.console.Route;
 import com.ninja_squad.console.State;
+import com.ninja_squad.console.jmx.CamelJmxConnector;
+import com.ninja_squad.console.jmx.CamelJmxNotification;
+import com.ninja_squad.console.jmx.CamelJmxNotificationListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
@@ -224,17 +224,19 @@ public class CamelIntegrationTest {
         });
     }
 
+    //TODO
+    /*
     @Test
-       public void shouldRetryToConnectIfServerStop() throws Exception {
-           //spying on notification listener
-           CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener());
-           camelJmxConnector.setNotificationListener(listener);
+    public void shouldRetryToConnectIfServerStop() throws Exception {
+        //spying on notification listener
+        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener());
+        camelJmxConnector.setNotificationListener(listener);
 
-           //start instance
-           startCamelApp();
+        //start instance
+        startCamelApp();
 
         //listen
         camelJmxConnector.listen();
 
-    }
+    }*/
 }
