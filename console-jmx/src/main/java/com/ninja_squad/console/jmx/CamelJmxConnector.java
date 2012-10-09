@@ -5,6 +5,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Sets;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.ninja_squad.console.Instance;
 import com.ninja_squad.console.Route;
 import com.ninja_squad.console.State;
@@ -24,10 +26,7 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,11 +49,17 @@ public class CamelJmxConnector {
     @NonNull
     private Instance instance;
 
+    @Getter
+    private EventBus notificationBus = new EventBus();
+
     @Setter
-    private CamelJmxNotificationListener notificationListener = new CamelJmxNotificationListener();
+    private CamelJmxNotificationListener notificationListener = new CamelJmxNotificationListener(notificationBus);
 
     private Retryer retryer;
+
     private ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+    private List<CamelJmxNotification> notifications = new ArrayList<CamelJmxNotification>();
 
     /**
      * Jmx connector to a Camel instance
@@ -68,6 +73,7 @@ public class CamelJmxConnector {
                 .withWaitStrategy(WaitStrategies.fixedWait(500L, TimeUnit.MILLISECONDS))
                 .retryIfResult(Predicates.<State>equalTo(State.Stopped))
                 .build();
+        notificationBus.register(new NotificationHandler());
     }
 
     /**
@@ -267,14 +273,7 @@ public class CamelJmxConnector {
         // TODO should poll at some interval to retry
         if (isServerStopped()) return;
 
-        //get the only tracer
-        Set<ObjectName> objectNames = getObjectNames(CAMEL_TRACER);
-        if (objectNames.size() != 1) {
-            throw new JmxException("There should be only one tracer - check your jmx config");
-        }
-
-        ObjectName tracer = objectNames.iterator().next();
-        forceTraceNotification(tracer);
+        ObjectName tracer = getTracer();
 
         //adding the listener
         try {
@@ -291,6 +290,23 @@ public class CamelJmxConnector {
     }
 
     /**
+     * Give the instance's tracer
+     *
+     * @return the tracer
+     */
+    private ObjectName getTracer() {
+        //get the only tracer
+        Set<ObjectName> objectNames = getObjectNames(CAMEL_TRACER);
+        if (objectNames.size() != 1) {
+            throw new JmxException("There should be only one tracer - check your jmx config");
+        }
+
+        ObjectName tracer = objectNames.iterator().next();
+        forceTraceNotification(tracer);
+        return tracer;
+    }
+
+    /**
      * Ensure the instance has enable the jmx notifications on the tracer
      *
      * @param tracer to listen
@@ -302,12 +318,53 @@ public class CamelJmxConnector {
     }
 
     /**
+     * Subscriber to the {@link EventBus} receiving the notifications.
+     * Each notification will be stored and will trigger an update of the route's stats.
+     */
+    private class NotificationHandler {
+        @Subscribe
+        public void handleNotification(CamelJmxNotification notification) {
+            storeNotification(notification);
+            updateRouteStatistics(notification.getSource());
+        }
+    }
+
+    /**
+     * Store the notification
+     *
+     * @param notification to store
+     */
+    private void storeNotification(CamelJmxNotification notification) {
+        notifications.add(notification);
+    }
+
+    /**
+     * Update the route's statistics.
+     *
+     * @param routeId of the route to update.
+     */
+    private void updateRouteStatistics(String routeId) {
+
+    }
+
+    private ObjectName getRoute(String routeId) {
+        //get the only route
+        Set<ObjectName> objectNames = getObjectNames(CAMEL_ROUTE + ",name=" + routeId);
+        if (objectNames.size() != 1) {
+            throw new JmxException("There should be only one route with this id");
+        }
+
+        ObjectName route = objectNames.iterator().next();
+        return route;
+    }
+
+    /**
      * Return the notifications received
      *
      * @return a {@link List} of {@link CamelJmxNotification}
      */
     public List<CamelJmxNotification> getNotifications() {
-        return notificationListener.getNotifications();
+        return notifications;
     }
 
 }

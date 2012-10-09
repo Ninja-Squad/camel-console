@@ -155,7 +155,7 @@ public class CamelIntegrationTest {
     @Test
     public void shouldSeeOneMessageGoingThroughRoute1() throws Exception {
         //spying on notification listener
-        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener());
+        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener(camelJmxConnector.getNotificationBus()));
         camelJmxConnector.setNotificationListener(listener);
 
         //start instance
@@ -184,7 +184,7 @@ public class CamelIntegrationTest {
     @Test
     public void shouldSeeTwoMessagesGoingThroughRoute2() throws Exception {
         //spying on notification listener
-        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener());
+        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener(camelJmxConnector.getNotificationBus()));
         camelJmxConnector.setNotificationListener(listener);
 
         //start instance

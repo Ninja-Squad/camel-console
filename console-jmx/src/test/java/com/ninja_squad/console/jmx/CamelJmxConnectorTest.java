@@ -92,7 +92,7 @@ public class CamelJmxConnectorTest {
         Instance instance = new Instance();
         CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         connector.retry();
-        verify(connector, timeout(1100).atLeast(2)).connect();
+        verify(connector, timeout(1000).atLeast(1)).connect();
     }
 
 
