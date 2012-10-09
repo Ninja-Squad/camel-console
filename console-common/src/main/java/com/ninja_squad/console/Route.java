@@ -2,6 +2,7 @@ package com.ninja_squad.console;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 @ToString
@@ -18,7 +19,16 @@ public class Route {
     private State state;
 
     @Getter
-    private Instance instance;
+    @Setter
+    private long exchangesCompleted;
+
+    @Getter
+    @Setter
+    private long exchangesFailed;
+
+    @Getter
+    @Setter
+    private long exchangesTotal;
 
     //Builder
 

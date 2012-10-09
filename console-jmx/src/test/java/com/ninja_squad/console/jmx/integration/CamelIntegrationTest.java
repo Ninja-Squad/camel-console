@@ -21,8 +21,8 @@ import org.fest.assertions.core.Condition;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.extractProperty;
@@ -86,8 +86,6 @@ public class CamelIntegrationTest {
         Instance spy = spy(instance);
         camelJmxConnector = new CamelJmxConnector(spy);
         //new instance is not started
-        State state = camelJmxConnector.connect();
-        assertThat(state).isEqualTo(State.Stopped);
         assertThat(spy.getState()).isEqualTo(State.Stopped);
 
         //start instance
@@ -102,44 +100,53 @@ public class CamelIntegrationTest {
         //stop instance
         stopCamelApp();
 
+        //wait for retry
+        verify(spy, timeout(1000).times(1)).setState(State.Stopped);
+
         //reconnect
-        state = camelJmxConnector.connect();
-        assertThat(state).isEqualTo(State.Stopped);
         assertThat(spy.getState()).isEqualTo(State.Stopped);
     }
 
     @Test
     public void shouldFindTheRoutes() throws Exception {
-        //new instance not started
-        Set<Route> routes = camelJmxConnector.getRoutes();
-        //have found two routes
-        assertThat(routes).isEmpty();
+        Instance spy = spy(instance);
+        camelJmxConnector = new CamelJmxConnector(spy);
+        //new instance not started -> no routes
+        assertThat(spy.getRoutes()).isEmpty();
 
         //start instance
         startCamelApp();
 
         //reconnect
-        routes = camelJmxConnector.getRoutes();
+        camelJmxConnector.getRoutes();
+
         //have found two routes
+        Collection<Route> routes = spy.getRoutes().values();
         assertThat(routes).hasSize(2);
         //both started
         assertThat(extractProperty("state").from(routes)).contains(State.Started, State.Started);
         //with correct names
         assertThat(extractProperty("routeId").from(routes)).contains("route1", "route2");
+        //with 0 exchanges
+        assertThat(extractProperty("exchangesCompleted").from(routes)).contains(0L, 0L);
 
         //stop route1
         context.stopRoute("route1");
-        routes = camelJmxConnector.getRoutes();
+        camelJmxConnector.getRoutes();
+        routes = spy.getRoutes().values();
         //have found two routes
         assertThat(routes).hasSize(2);
         //one started and the other started
         assertThat(extractProperty("state").from(routes)).contains(State.Stopped, State.Started);
         //with correct names
         assertThat(extractProperty("routeId").from(routes)).contains("route1", "route2");
+        //with 0 exchanges
+        assertThat(extractProperty("exchangesCompleted").from(routes)).contains(0L, 0L);
 
         //remove route1
         context.removeRoute("route1");
-        routes = camelJmxConnector.getRoutes();
+        camelJmxConnector.getRoutes();
+        routes = spy.getRoutes().values();
         //have found two routes
         assertThat(routes).hasSize(1);
         //started
@@ -147,6 +154,8 @@ public class CamelIntegrationTest {
         );
         //with correct name
         assertThat(extractProperty("routeId").from(routes)).contains("route2");
+        //with 0 exchanges
+        assertThat(extractProperty("exchangesCompleted").from(routes)).contains(0L);
 
         //stop instance
         stopCamelApp();
@@ -155,14 +164,16 @@ public class CamelIntegrationTest {
     @Test
     public void shouldSeeOneMessageGoingThroughRoute1() throws Exception {
         //spying on notification listener
-        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener(camelJmxConnector.getNotificationBus()));
-        camelJmxConnector.setNotificationListener(listener);
+        CamelJmxConnector connector = spy(camelJmxConnector);
+        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener(connector.getNotificationBus()));
+        connector.setNotificationListener(listener);
 
         //start instance
         startCamelApp();
 
         //listen
-        camelJmxConnector.listen();
+        connector.getRoutes();
+        connector.listen();
 
         //send a message in route 1
         ProducerTemplate template = new DefaultProducerTemplate(context);
@@ -171,27 +182,41 @@ public class CamelIntegrationTest {
 
         //wait to receive notification
         verify(listener, timeout(1000).times(1)).storeNotification(any(CamelJmxNotification.class));
+        verify(connector, timeout(1000).times(1)).updateRouteStatistics(any(String.class));
 
         //stop instance
         stopCamelApp();
 
         //then
-        List<CamelJmxNotification> notifications = camelJmxConnector.getNotifications();
+        List<CamelJmxNotification> notifications = connector.getNotifications();
         assertThat(extractProperty("body").from(notifications)).containsExactly("route1 - 1");
         assertThat(extractProperty("destination").from(notifications)).containsExactly("mock:result");
+
+        //with 1 exchange completed in route1
+        assertThat(instance.getRoutes().get("route1").getExchangesTotal()).isEqualTo(1L);
+        assertThat(instance.getRoutes().get("route1").getExchangesCompleted()).isEqualTo(1L);
+        assertThat(instance.getRoutes().get("route1").getExchangesFailed()).isEqualTo(0L);
+
+        //with 0 exchange completed in route2
+        assertThat(instance.getRoutes().get("route2").getExchangesTotal()).isEqualTo(0L);
+        assertThat(instance.getRoutes().get("route2").getExchangesCompleted()).isEqualTo(0L);
+        assertThat(instance.getRoutes().get("route2").getExchangesFailed()).isEqualTo(0L);
+
     }
 
     @Test
     public void shouldSeeTwoMessagesGoingThroughRoute2() throws Exception {
         //spying on notification listener
-        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener(camelJmxConnector.getNotificationBus()));
-        camelJmxConnector.setNotificationListener(listener);
+        CamelJmxConnector connector = spy(camelJmxConnector);
+        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener(connector.getNotificationBus()));
+        connector.setNotificationListener(listener);
 
         //start instance
         startCamelApp();
 
         //listen
-        camelJmxConnector.listen();
+        connector.getRoutes();
+        connector.listen();
 
         //send a message in route 2 (will then go through route 1)
         final DateTime start = DateTime.now();
@@ -201,6 +226,7 @@ public class CamelIntegrationTest {
 
         //wait to receive notification
         verify(listener, timeout(1000).times(3)).storeNotification(any(CamelJmxNotification.class));
+        verify(connector, timeout(1000).times(3)).updateRouteStatistics(any(String.class));
 
         //stop instance
         stopCamelApp();
@@ -208,7 +234,7 @@ public class CamelIntegrationTest {
 
         //then
         //should have received 3 notifications as it goes through 3 steps
-        List<CamelJmxNotification> notifications = camelJmxConnector.getNotifications();
+        List<CamelJmxNotification> notifications = connector.getNotifications();
         assertThat(extractProperty("body").from(notifications)).containsExactly("route2 - 1", "route2 - 2", "route2 - 2");
         assertThat(extractProperty("source").from(notifications)).containsExactly("direct://route2", "direct://route2", "direct://route1");
         assertThat(extractProperty("destination").from(notifications)).containsExactly("route2-processor", "direct:route1", "mock:result");
@@ -222,6 +248,18 @@ public class CamelIntegrationTest {
                 return timestamp.isAfter(start) && timestamp.isBefore(stop);
             }
         });
+
+
+        //with 1 exchange completed in route1
+        assertThat(instance.getRoutes().get("route1").getExchangesTotal()).isEqualTo(1L);
+        assertThat(instance.getRoutes().get("route1").getExchangesCompleted()).isEqualTo(1L);
+        assertThat(instance.getRoutes().get("route1").getExchangesFailed()).isEqualTo(0L);
+
+        //with 0 exchange completed in route2
+        assertThat(instance.getRoutes().get("route2").getExchangesTotal()).isEqualTo(1L);
+        assertThat(instance.getRoutes().get("route2").getExchangesCompleted()).isEqualTo(1L);
+        assertThat(instance.getRoutes().get("route2").getExchangesFailed()).isEqualTo(0L);
+
     }
 
     //TODO

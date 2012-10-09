@@ -19,6 +19,7 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.api.management.mbean.ManagedTracerMBean;
+import org.apache.camel.management.mbean.ManagedRoute;
 
 import javax.management.*;
 import javax.management.remote.JMXConnector;
@@ -36,11 +37,15 @@ import java.util.concurrent.TimeUnit;
 public class CamelJmxConnector {
 
     protected final static String CAMEL_PACKAGE = "org.apache.camel:";
-    protected final static String CAMEL_ROUTE = CAMEL_PACKAGE + "type=routes,*";
+    protected final static String CAMEL_ROUTE = CAMEL_PACKAGE + "type=routes,name=";
+    protected final static String CAMEL_ROUTE_ALL = CAMEL_PACKAGE + "type=routes,*";
     protected final static String CAMEL_TRACER = CAMEL_PACKAGE + "type=tracer,*";
     public static final String ROUTE_ID = "RouteId";
     public static final String ENDPOINT_URI = "EndpointUri";
     public static final String STATE = "State";
+    public static final String EXCHANGES_COMPLETED = "ExchangesCompleted";
+    public static final String EXCHANGES_FAILED = "ExchangesFailed";
+    public static final String EXCHANGES_TOTAL = "ExchangesTotal";
 
     @Getter
     @Setter
@@ -71,9 +76,10 @@ public class CamelJmxConnector {
         this.instance = instance;
         retryer = RetryerBuilder.<State>newBuilder()
                 .withWaitStrategy(WaitStrategies.fixedWait(500L, TimeUnit.MILLISECONDS))
-                .retryIfResult(Predicates.<State>equalTo(State.Stopped))
+                .retryIfResult(Predicates.<State>notNull())
                 .build();
         notificationBus.register(new NotificationHandler());
+        retry();
     }
 
     /**
@@ -104,9 +110,6 @@ public class CamelJmxConnector {
         }
         log.debug("New state - " + state);
         instance.setState(state);
-        if (State.Stopped.equals(state)) {
-            retry();
-        }
     }
 
     /**
@@ -149,8 +152,7 @@ public class CamelJmxConnector {
      * @return true if the server is stopped
      */
     protected boolean isServerStopped() {
-        State state = connect();
-        return State.Stopped.equals(state);
+        return State.Stopped.equals(instance.getState());
     }
 
     /**
@@ -167,7 +169,7 @@ public class CamelJmxConnector {
             JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxServiceURL);
             server = jmxConnector.getMBeanServerConnection();
         } catch (IOException e) {
-            throw new JmxException("Cannot connect to " + instance.url(), e);
+            throw new JmxException("Cannot connect to " + instance.url());
         }
         return server;
     }
@@ -194,7 +196,7 @@ public class CamelJmxConnector {
      */
     protected Set<Route> connectToRoutes() throws JmxException {
         //get objectNames
-        Set<ObjectName> objectNames = getObjectNames(CAMEL_ROUTE);
+        Set<ObjectName> objectNames = getObjectNames(CAMEL_ROUTE_ALL);
         //convert them in routes
         Collection<Route> routes = Collections2.transform(objectNames, new Function<ObjectName, Route>() {
             @Override
@@ -202,6 +204,12 @@ public class CamelJmxConnector {
                 return extractRouteFromObjectName(objectName);
             }
         });
+
+        instance.getRoutes().clear();
+        for (Route route : routes) {
+            instance.getRoutes().put(route.getUri(), route);
+        }
+
         //return the routes as a set
         return Sets.newHashSet(routes);
     }
@@ -220,7 +228,18 @@ public class CamelJmxConnector {
             String routeId = (String) getServerConnection().getAttribute(objectInfoName, ROUTE_ID);
             String in = (String) getServerConnection().getAttribute(objectInfoName, ENDPOINT_URI);
             String state = (String) getServerConnection().getAttribute(objectInfoName, STATE);
-            return new Route(routeId).uri(in).state(State.valueOf(state));
+            Route route = new Route(routeId).uri(in).state(State.valueOf(state));
+
+            long exchangesCompleted = (Long) getServerConnection().getAttribute(objectInfoName, EXCHANGES_COMPLETED);
+            route.setExchangesCompleted(exchangesCompleted);
+
+            long exchangesFailed = (Long) getServerConnection().getAttribute(objectInfoName, EXCHANGES_FAILED);
+            route.setExchangesFailed(exchangesFailed);
+
+            long exchangesTotal = (Long) getServerConnection().getAttribute(objectInfoName, EXCHANGES_TOTAL);
+            route.setExchangesTotal(exchangesTotal);
+
+            return route;
         } catch (Exception e) {
             throw new JmxException("Couldn't find objects with name : " + CAMEL_PACKAGE + keyProperty, e);
         }
@@ -341,17 +360,33 @@ public class CamelJmxConnector {
     /**
      * Update the route's statistics.
      *
-     * @param routeId of the route to update.
+     * @param uri of the route to update.
      */
-    private void updateRouteStatistics(String routeId) {
+    public void updateRouteStatistics(String uri) {
+        Route route = instance.getRoutes().get(uri);
+        if (route == null) {
+            throw new JmxException("Route should not be null");
+        }
 
+        ObjectName routeObjectName = getRoute(route.getRouteId());
+        ManagedRoute routeCamel = JMX.newMBeanProxy(serverConnection, routeObjectName, ManagedRoute.class);
+        try {
+            long exchangesTotal = routeCamel.getExchangesTotal();
+            route.setExchangesTotal(exchangesTotal);
+            long exchangesFailed = routeCamel.getExchangesFailed();
+            route.setExchangesFailed(exchangesFailed);
+            long exchangesCompleted = routeCamel.getExchangesCompleted();
+            route.setExchangesCompleted(exchangesCompleted);
+        } catch (Exception e) {
+            log.error("Exception while reading route stats " + route.getRouteId(), e);
+        }
     }
 
     private ObjectName getRoute(String routeId) {
         //get the only route
-        Set<ObjectName> objectNames = getObjectNames(CAMEL_ROUTE + ",name=" + routeId);
+        Set<ObjectName> objectNames = getObjectNames(CAMEL_ROUTE + "\"" + routeId + "\"");
         if (objectNames.size() != 1) {
-            throw new JmxException("There should be only one route with this id");
+            throw new JmxException("There should be only one route with this id : " + routeId);
         }
 
         ObjectName route = objectNames.iterator().next();
