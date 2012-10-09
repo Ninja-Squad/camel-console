@@ -211,6 +211,7 @@ public class CamelJmxConnectorTest {
         //then should return the route route1
         ObjectName objectName = new ObjectName(CamelJmxConnector.CAMEL_ROUTE);
         Route route1 = new Route("route1").state(State.Started).uri("uri");
+        route1.setCanonicalName("org.apache.camel:name=,type=routes");
         assertThat(connector.extractRouteFromObjectName(objectName)).isEqualTo(route1);
     }
 

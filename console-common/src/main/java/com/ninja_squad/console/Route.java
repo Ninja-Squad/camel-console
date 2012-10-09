@@ -20,6 +20,10 @@ public class Route {
 
     @Getter
     @Setter
+    private String canonicalName;
+
+    @Getter
+    @Setter
     private long exchangesCompleted;
 
     @Getter

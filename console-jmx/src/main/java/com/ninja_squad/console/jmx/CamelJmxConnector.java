@@ -16,7 +16,6 @@ import lombok.NonNull;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.api.management.mbean.ManagedTracerMBean;
-import org.apache.camel.management.mbean.ManagedRoute;
 
 import javax.management.*;
 import javax.management.remote.JMXConnector;
@@ -206,6 +205,7 @@ public class CamelJmxConnector {
             String in = (String) getServerConnection().getAttribute(objectInfoName, ENDPOINT_URI);
             String state = (String) getServerConnection().getAttribute(objectInfoName, STATE);
             Route route = new Route(routeId).uri(in).state(State.valueOf(state));
+            route.setCanonicalName(objectName.getCanonicalName());
 
             long exchangesCompleted = (Long) getServerConnection().getAttribute(objectInfoName, EXCHANGES_COMPLETED);
             route.setExchangesCompleted(exchangesCompleted);
@@ -266,9 +266,6 @@ public class CamelJmxConnector {
      * All messages going through this route will be received and stored.
      */
     public void listen() {
-        // TODO should poll at some interval to retry
-        if (isServerStopped()) return;
-
         ObjectName tracer = getTracer();
 
         //adding the listener
@@ -320,8 +317,8 @@ public class CamelJmxConnector {
     private class NotificationHandler {
         @Subscribe
         public void handleNotification(CamelJmxNotification notification) {
+            getRoutes();
             storeNotification(notification);
-            updateRouteStatistics(notification.getSource());
         }
     }
 
@@ -330,40 +327,15 @@ public class CamelJmxConnector {
      *
      * @param notification to store
      */
-    private void storeNotification(CamelJmxNotification notification) {
+    public void storeNotification(CamelJmxNotification notification) {
         notifications.add(notification);
-    }
-
-    /**
-     * Update the route's statistics.
-     *
-     * @param uri of the route to update.
-     */
-    public void updateRouteStatistics(String uri) {
-        Route route = instance.getRoutes().get(uri);
-        if (route == null) {
-            throw new JmxException("Route should not be null");
-        }
-
-        ObjectName routeObjectName = getRoute(route.getRouteId());
-        ManagedRoute routeCamel = JMX.newMBeanProxy(serverConnection, routeObjectName, ManagedRoute.class);
-        try {
-            long exchangesTotal = routeCamel.getExchangesTotal();
-            route.setExchangesTotal(exchangesTotal);
-            long exchangesFailed = routeCamel.getExchangesFailed();
-            route.setExchangesFailed(exchangesFailed);
-            long exchangesCompleted = routeCamel.getExchangesCompleted();
-            route.setExchangesCompleted(exchangesCompleted);
-        } catch (Exception e) {
-            log.error("Exception while reading route stats " + route.getRouteId(), e);
-        }
     }
 
     private ObjectName getRoute(String routeId) {
         //get the only route
-        Set<ObjectName> objectNames = getObjectNames(CAMEL_ROUTE + "\"" + routeId + "\"");
+        Set<ObjectName> objectNames = getObjectNames(routeId);
         if (objectNames.size() != 1) {
-            throw new JmxException("There should be only one route with this id : " + routeId);
+            throw new JmxException("There should be only one route with this id : " + routeId + " and not " + objectNames.size());
         }
 
         return objectNames.iterator().next();
