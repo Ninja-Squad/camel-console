@@ -2,8 +2,8 @@ package com.ninja_squad.console.jmx;
 
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
@@ -11,9 +11,6 @@ import com.ninja_squad.console.Instance;
 import com.ninja_squad.console.Route;
 import com.ninja_squad.console.State;
 import com.ninja_squad.console.jmx.exception.JmxException;
-import com.ninja_squad.core.retry.Retryer;
-import com.ninja_squad.core.retry.RetryerBuilder;
-import com.ninja_squad.core.retry.WaitStrategies;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -28,10 +25,6 @@ import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class CamelJmxConnector {
@@ -47,12 +40,13 @@ public class CamelJmxConnector {
     public static final String EXCHANGES_FAILED = "ExchangesFailed";
     public static final String EXCHANGES_TOTAL = "ExchangesTotal";
 
-    @Getter
-    @Setter
-    private MBeanServerConnection serverConnection;
-
     @NonNull
     private Instance instance;
+
+    @Getter
+    private MBeanServerConnection serverConnection;
+
+    private CamelJmxConnectionRetryer retryer = new CamelJmxConnectionRetryer(this);
 
     @Getter
     private EventBus notificationBus = new EventBus();
@@ -60,11 +54,9 @@ public class CamelJmxConnector {
     @Setter
     private CamelJmxNotificationListener notificationListener = new CamelJmxNotificationListener(notificationBus);
 
-    private Retryer retryer;
-
-    private ExecutorService executorService = Executors.newSingleThreadExecutor();
-
     private List<CamelJmxNotification> notifications = new ArrayList<CamelJmxNotification>();
+
+    private CamelJMXConnectionListener connectionListener = new CamelJMXConnectionListener();
 
     /**
      * Jmx connector to a Camel instance
@@ -74,12 +66,9 @@ public class CamelJmxConnector {
     public CamelJmxConnector(Instance instance) {
         Preconditions.checkNotNull(instance, "The instance should not be null");
         this.instance = instance;
-        retryer = RetryerBuilder.<State>newBuilder()
-                .withWaitStrategy(WaitStrategies.fixedWait(500L, TimeUnit.MILLISECONDS))
-                .retryIfResult(Predicates.<State>notNull())
-                .build();
+        // start watching notifications
         notificationBus.register(new NotificationHandler());
-        retry();
+        retryer.start();
     }
 
     /**
@@ -89,7 +78,7 @@ public class CamelJmxConnector {
      */
     public State connect() {
         try {
-            setServerConnection(connectToServer());
+            serverConnection = connectToServer();
             updateState(State.Started);
         } catch (JmxException e) {
             updateState(State.Stopped);
@@ -110,23 +99,6 @@ public class CamelJmxConnector {
         }
         log.debug("New state - " + state);
         instance.setState(state);
-    }
-
-    /**
-     * Retry to connect if the instance is stopped.
-     */
-    @SuppressWarnings("unchecked")
-    protected void retry() {
-        Retryer.RetryerCallable callable = retryer.wrap(new Callable<State>() {
-            int nb;
-
-            @Override
-            public State call() throws Exception {
-                log.debug("Retry - " + nb++);
-                return connect();
-            }
-        });
-        executorService.submit(callable);
     }
 
     /**
@@ -157,6 +129,7 @@ public class CamelJmxConnector {
 
     /**
      * Try to establish a connection to the instance and return it.
+     * A {@link CamelJMXConnectionListener} is added to listen to the connection's state.
      * A {@link JmxException} is raised if a connection problem occurs.
      *
      * @return a {@link MBeanServerConnection} to the instance
@@ -166,7 +139,11 @@ public class CamelJmxConnector {
         JMXServiceURL jmxServiceURL = getJmxServiceUrl();
         MBeanServerConnection server;
         try {
-            JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxServiceURL);
+            Map<String, Object> properties = Maps.newHashMap();
+            properties.put("jmx.remote.x.client.connection.check.period", 500L);
+            JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxServiceURL, properties);
+            // start watching connection state
+            jmxConnector.addConnectionNotificationListener(connectionListener, null, retryer);
             server = jmxConnector.getMBeanServerConnection();
         } catch (IOException e) {
             throw new JmxException("Cannot connect to " + instance.url());
@@ -389,8 +366,7 @@ public class CamelJmxConnector {
             throw new JmxException("There should be only one route with this id : " + routeId);
         }
 
-        ObjectName route = objectNames.iterator().next();
-        return route;
+        return objectNames.iterator().next();
     }
 
     /**

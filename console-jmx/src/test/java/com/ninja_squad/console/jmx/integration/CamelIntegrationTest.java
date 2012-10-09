@@ -85,6 +85,7 @@ public class CamelIntegrationTest {
     public void shouldFindInstanceState() throws Exception {
         Instance spy = spy(instance);
         camelJmxConnector = new CamelJmxConnector(spy);
+
         //new instance is not started
         assertThat(spy.getState()).isEqualTo(State.Stopped);
 
