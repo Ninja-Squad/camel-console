@@ -1,10 +1,10 @@
 package com.ninja_squad.console.jmx;
 
 import com.google.common.collect.Sets;
-import com.ninja_squad.console.jmx.exception.JmxException;
 import com.ninja_squad.console.Instance;
 import com.ninja_squad.console.Route;
 import com.ninja_squad.console.State;
+import com.ninja_squad.console.jmx.exception.JmxException;
 import org.junit.Test;
 
 import javax.management.*;
@@ -37,21 +37,62 @@ public class CamelJmxConnectorTest {
     @Test
     public void connectShouldReturnStoppedIfServerThrowsException() throws Exception {
         //mocking connectToServer to throw a JmxException
-        CamelJmxConnector connector = spy(new CamelJmxConnector(new Instance()));
+        Instance instance = new Instance();
+        CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         doThrow(JmxException.class).when(connector).connectToServer();
+        doNothing().when(connector).retry();
 
         //then State should be stopped when call to connect
         assertThat(connector.connect()).isEqualTo(State.Stopped);
+        assertThat(instance.getState()).isEqualTo(State.Stopped);
+
+        //should start the retry strategy
+        verify(connector).retry();
     }
 
     @Test
     public void connectShouldReturnStartedIfServerIsAlright() throws Exception {
         //mocking connectToServer to return a connection
-        CamelJmxConnector connector = spy(new CamelJmxConnector(new Instance()));
+        Instance instance = new Instance();
+        CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         doReturn(mock(MBeanServerConnection.class)).when(connector).connectToServer();
 
         //then State should be Started when call to connect
         assertThat(connector.connect()).isEqualTo(State.Started);
+        assertThat(instance.getState()).isEqualTo(State.Started);
+    }
+
+    // updateState()
+
+    @Test
+    public void updateStateShouldReturnIfStateDidNotChange() throws Exception {
+        Instance instance = spy(new Instance());
+        instance.setState(State.Stopped);
+        CamelJmxConnector connector = new CamelJmxConnector(instance);
+        connector.updateState(State.Stopped);
+        verify(instance, times(1)).setState(any(State.class));
+        assertThat(instance.getState()).isEqualTo(State.Stopped);
+    }
+
+    @Test
+    public void updateStateShouldChangeStateIfStateChanged() throws Exception {
+        Instance instance = spy(new Instance());
+        instance.setState(State.Stopped);
+        CamelJmxConnector connector = new CamelJmxConnector(instance);
+        connector.updateState(State.Started);
+        verify(instance, times(2)).setState(any(State.class));
+        assertThat(instance.getState()).isEqualTo(State.Started);
+    }
+
+
+    //retry()
+
+    @Test
+    public void retryShouldCallConnectEvery500ms() throws Exception {
+        Instance instance = new Instance();
+        CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
+        connector.retry();
+        verify(connector, timeout(1100).atLeast(2)).connect();
     }
 
 
@@ -146,6 +187,7 @@ public class CamelJmxConnectorTest {
         //mocking connectToServer to return an invalid connection
         CamelJmxConnector connector = spy(new CamelJmxConnector(new Instance()));
         doThrow(JmxException.class).when(connector).connectToServer();
+        doNothing().when(connector).retry();
 
         //then
         assertThat(connector.isServerStopped()).isTrue();
@@ -207,6 +249,7 @@ public class CamelJmxConnectorTest {
 
 
     @Test
+    @SuppressWarnings("unchecked")
     public void extractRouteFromObjectNameShouldThrowAnExceptionIfNoConnection() throws Exception {
         //mocking serverConnection
         MBeanServerConnection serverConnection = mock(MBeanServerConnection.class);
@@ -259,6 +302,7 @@ public class CamelJmxConnectorTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void getObjectNamesShouldThrowAnExceptionIfCannotConnect() throws Exception {
         //mocking serverConnection
         MBeanServerConnection serverConnection = mock(MBeanServerConnection.class);
@@ -303,9 +347,11 @@ public class CamelJmxConnectorTest {
 
     @Test
     public void listenShouldThrowAnExceptionIfInstanceNotFound() throws Exception {
-        CamelJmxConnector connector = spy(new CamelJmxConnector(new Instance()));
+        Instance instance = new Instance();
+        CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         //mocking a valid connection
         doReturn(false).when(connector).isServerStopped();
+        doNothing().when(connector).retry();
         //mocking a valid objectName set
         HashSet<ObjectName> objectNames = Sets.newHashSet(ObjectName.getInstance(CamelJmxConnector.CAMEL_TRACER));
         doReturn(objectNames).when(connector).getObjectNames(anyString());
@@ -323,14 +369,17 @@ public class CamelJmxConnectorTest {
             failBecauseExceptionWasNotThrown(JmxException.class);
         } catch (JmxException e) {
             assertThat(e).hasMessage("Instance cannot be found");
+            assertThat(instance.getState()).isEqualTo(State.Stopped);
         }
     }
 
     @Test
     public void listenShouldThrowAnExceptionIfIOException() throws Exception {
-        CamelJmxConnector connector = spy(new CamelJmxConnector(new Instance()));
+        Instance instance = new Instance();
+        CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         //mocking a valid connection
         doReturn(false).when(connector).isServerStopped();
+        doNothing().when(connector).retry();
         //mocking a valid objectName set
         HashSet<ObjectName> objectNames = Sets.newHashSet(ObjectName.getInstance(CamelJmxConnector.CAMEL_TRACER));
         doReturn(objectNames).when(connector).getObjectNames(anyString());
@@ -348,6 +397,7 @@ public class CamelJmxConnectorTest {
             failBecauseExceptionWasNotThrown(JmxException.class);
         } catch (JmxException e) {
             assertThat(e).hasMessage("Couldn't connect to the instance");
+            assertThat(instance.getState()).isEqualTo(State.Stopped);
         }
     }
 
