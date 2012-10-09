@@ -42,7 +42,6 @@ public class CamelJmxConnector {
     public static final String ROUTE_ID = "RouteId";
     public static final String ENDPOINT_URI = "EndpointUri";
     public static final String STATE = "State";
-    public static final int POOL_SIZE = 4;
 
     @Getter
     @Setter
@@ -55,7 +54,7 @@ public class CamelJmxConnector {
     private CamelJmxNotificationListener notificationListener = new CamelJmxNotificationListener();
 
     private Retryer retryer;
-    private ExecutorService executorService = Executors.newFixedThreadPool(POOL_SIZE);
+    private ExecutorService executorService = Executors.newSingleThreadExecutor();
 
     /**
      * Jmx connector to a Camel instance
