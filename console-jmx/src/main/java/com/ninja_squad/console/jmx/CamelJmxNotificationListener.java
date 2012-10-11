@@ -1,20 +1,21 @@
 package com.ninja_squad.console.jmx;
 
-import lombok.Getter;
+import com.google.common.eventbus.EventBus;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 
 import javax.management.Notification;
 import javax.management.NotificationListener;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @Slf4j
 public class CamelJmxNotificationListener implements NotificationListener {
 
-    @Getter
-    private List<CamelJmxNotification> notifications = new ArrayList<CamelJmxNotification>();
+    private EventBus notificationBus;
+
+    public CamelJmxNotificationListener(EventBus notificationBus) {
+        this.notificationBus = notificationBus;
+    }
 
     /**
      * Called every time a notification is received.
@@ -48,8 +49,8 @@ public class CamelJmxNotificationListener implements NotificationListener {
      * @param notification to store
      */
     public void storeNotification(CamelJmxNotification notification) {
-        log.debug("store -> " + notification.toString());
-        notifications.add(notification);
+        log.debug(notification.toString());
+        notificationBus.post(notification);
     }
 
 }

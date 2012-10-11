@@ -3,11 +3,14 @@ package com.ninja_squad.console.jmx;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.ninja_squad.console.jmx.exception.JmxException;
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.ninja_squad.console.Instance;
 import com.ninja_squad.console.Route;
 import com.ninja_squad.console.State;
+import com.ninja_squad.console.jmx.exception.JmxException;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -20,30 +23,39 @@ import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 public class CamelJmxConnector {
 
     protected final static String CAMEL_PACKAGE = "org.apache.camel:";
-    protected final static String CAMEL_ROUTE = CAMEL_PACKAGE + "type=routes,*";
+    protected final static String CAMEL_ROUTE = CAMEL_PACKAGE + "type=routes,name=";
+    protected final static String CAMEL_ROUTE_ALL = CAMEL_PACKAGE + "type=routes,*";
     protected final static String CAMEL_TRACER = CAMEL_PACKAGE + "type=tracer,*";
     public static final String ROUTE_ID = "RouteId";
     public static final String ENDPOINT_URI = "EndpointUri";
     public static final String STATE = "State";
-
-    @Getter
-    @Setter
-    private MBeanServerConnection serverConnection;
+    public static final String EXCHANGES_COMPLETED = "ExchangesCompleted";
+    public static final String EXCHANGES_FAILED = "ExchangesFailed";
+    public static final String EXCHANGES_TOTAL = "ExchangesTotal";
 
     @NonNull
     private Instance instance;
 
+    @Getter
+    private MBeanServerConnection serverConnection;
+
+    private CamelJmxConnectionRetryer retryer = new CamelJmxConnectionRetryer(this);
+
+    @Getter
+    private EventBus notificationBus = new EventBus();
+
     @Setter
-    private CamelJmxNotificationListener notificationListener = new CamelJmxNotificationListener();
+    private CamelJmxNotificationListener notificationListener = new CamelJmxNotificationListener(notificationBus);
+
+    private List<CamelJmxNotification> notifications = new ArrayList<CamelJmxNotification>();
+
+    private CamelJMXConnectionListener connectionListener = new CamelJMXConnectionListener();
 
     /**
      * Jmx connector to a Camel instance
@@ -53,6 +65,9 @@ public class CamelJmxConnector {
     public CamelJmxConnector(Instance instance) {
         Preconditions.checkNotNull(instance, "The instance should not be null");
         this.instance = instance;
+        // start watching notifications
+        notificationBus.register(new NotificationHandler());
+        retryer.start();
     }
 
     /**
@@ -62,11 +77,27 @@ public class CamelJmxConnector {
      */
     public State connect() {
         try {
-            setServerConnection(connectToServer());
+            serverConnection = connectToServer();
+            listen();
+            updateState(State.Started);
         } catch (JmxException e) {
-            return State.Stopped;
+            updateState(State.Stopped);
         }
-        return State.Started;
+        return instance.getState();
+    }
+
+    /**
+     * Update the instance's state and eventually begin a retry strategy.
+     *
+     * @param state the actual instance's state
+     */
+    protected void updateState(State state) {
+        if (instance.getState().equals(state)) {
+            //same state, nothing to do
+            return;
+        }
+        log.debug("New state - " + state);
+        instance.setState(state);
     }
 
     /**
@@ -92,12 +123,12 @@ public class CamelJmxConnector {
      * @return true if the server is stopped
      */
     protected boolean isServerStopped() {
-        State state = connect();
-        return State.Stopped.equals(state);
+        return State.Stopped.equals(instance.getState());
     }
 
     /**
      * Try to establish a connection to the instance and return it.
+     * A {@link CamelJMXConnectionListener} is added to listen to the connection's state.
      * A {@link JmxException} is raised if a connection problem occurs.
      *
      * @return a {@link MBeanServerConnection} to the instance
@@ -107,10 +138,14 @@ public class CamelJmxConnector {
         JMXServiceURL jmxServiceURL = getJmxServiceUrl();
         MBeanServerConnection server;
         try {
-            JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxServiceURL);
+            Map<String, Object> properties = Maps.newHashMap();
+            properties.put("jmx.remote.x.client.connection.check.period", 500L);
+            JMXConnector jmxConnector = JMXConnectorFactory.connect(jmxServiceURL, properties);
+            // start watching connection state
+            jmxConnector.addConnectionNotificationListener(connectionListener, null, retryer);
             server = jmxConnector.getMBeanServerConnection();
         } catch (IOException e) {
-            throw new JmxException("Cannot connect to " + instance.url(), e);
+            throw new JmxException("Cannot connect to " + instance.url());
         }
         return server;
     }
@@ -137,7 +172,7 @@ public class CamelJmxConnector {
      */
     protected Set<Route> connectToRoutes() throws JmxException {
         //get objectNames
-        Set<ObjectName> objectNames = getObjectNames(CAMEL_ROUTE);
+        Set<ObjectName> objectNames = getObjectNames(CAMEL_ROUTE_ALL);
         //convert them in routes
         Collection<Route> routes = Collections2.transform(objectNames, new Function<ObjectName, Route>() {
             @Override
@@ -145,6 +180,12 @@ public class CamelJmxConnector {
                 return extractRouteFromObjectName(objectName);
             }
         });
+
+        instance.getRoutes().clear();
+        for (Route route : routes) {
+            instance.getRoutes().put(route.getUri(), route);
+        }
+
         //return the routes as a set
         return Sets.newHashSet(routes);
     }
@@ -163,7 +204,19 @@ public class CamelJmxConnector {
             String routeId = (String) getServerConnection().getAttribute(objectInfoName, ROUTE_ID);
             String in = (String) getServerConnection().getAttribute(objectInfoName, ENDPOINT_URI);
             String state = (String) getServerConnection().getAttribute(objectInfoName, STATE);
-            return new Route(routeId).uri(in).state(State.valueOf(state));
+            Route route = new Route(routeId).uri(in).state(State.valueOf(state));
+            route.setCanonicalName(objectName.getCanonicalName());
+
+            long exchangesCompleted = (Long) getServerConnection().getAttribute(objectInfoName, EXCHANGES_COMPLETED);
+            route.setExchangesCompleted(exchangesCompleted);
+
+            long exchangesFailed = (Long) getServerConnection().getAttribute(objectInfoName, EXCHANGES_FAILED);
+            route.setExchangesFailed(exchangesFailed);
+
+            long exchangesTotal = (Long) getServerConnection().getAttribute(objectInfoName, EXCHANGES_TOTAL);
+            route.setExchangesTotal(exchangesTotal);
+
+            return route;
         } catch (Exception e) {
             throw new JmxException("Couldn't find objects with name : " + CAMEL_PACKAGE + keyProperty, e);
         }
@@ -211,12 +264,31 @@ public class CamelJmxConnector {
     /**
      * Start listening on a specific route, specified by its id.
      * All messages going through this route will be received and stored.
-     *
      */
     public void listen() {
-        // TODO should poll at some interval to retry
-        if (isServerStopped()) return;
+        log.debug("Listen");
+        ObjectName tracer = getTracer();
 
+        //adding the listener
+        try {
+            getServerConnection().addNotificationListener(tracer, notificationListener, null, null);
+            log.debug("Listener added");
+        } catch (InstanceNotFoundException e) {
+            updateState(State.Stopped);
+            throw new JmxException("Instance cannot be found", e);
+        } catch (IOException e) {
+            updateState(State.Stopped);
+            throw new JmxException("Couldn't connect to the instance", e);
+        }
+
+    }
+
+    /**
+     * Give the instance's tracer
+     *
+     * @return the tracer
+     */
+    private ObjectName getTracer() {
         //get the only tracer
         Set<ObjectName> objectNames = getObjectNames(CAMEL_TRACER);
         if (objectNames.size() != 1) {
@@ -225,17 +297,7 @@ public class CamelJmxConnector {
 
         ObjectName tracer = objectNames.iterator().next();
         forceTraceNotification(tracer);
-
-        //adding the listener
-        try {
-            getServerConnection().addNotificationListener(tracer, notificationListener, null, null);
-            log.debug("Listener added");
-        } catch (InstanceNotFoundException e) {
-            throw new JmxException("Instance cannot be found", e);
-        } catch (IOException e) {
-            throw new JmxException("Couldn't connect to the instance", e);
-        }
-
+        return tracer;
     }
 
     /**
@@ -249,7 +311,34 @@ public class CamelJmxConnector {
         tracerCamel.setJmxTraceNotifications(true);
     }
 
-    public List<CamelJmxNotification> getNotifications() {
-        return notificationListener.getNotifications();
+    /**
+     * Subscriber to the {@link EventBus} receiving the notifications.
+     * Each notification will be stored and will trigger an update of the route's stats.
+     */
+    private class NotificationHandler {
+        @Subscribe
+        public void handleNotification(CamelJmxNotification notification) {
+            getRoutes();
+            storeNotification(notification);
+        }
     }
+
+    /**
+     * Store the notification
+     *
+     * @param notification to store
+     */
+    public void storeNotification(CamelJmxNotification notification) {
+        notifications.add(notification);
+    }
+
+    /**
+     * Return the notifications received
+     *
+     * @return a {@link List} of {@link CamelJmxNotification}
+     */
+    public List<CamelJmxNotification> getNotifications() {
+        return notifications;
+    }
+
 }
