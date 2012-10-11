@@ -80,7 +80,8 @@ public class CamelIntegrationTest {
     @Test
     public void shouldFindInstanceState() throws Exception {
         Instance spy = spy(new Instance());
-        CamelJmxConnector camelJmxConnector = new CamelJmxConnector(spy);
+        CamelJmxConnector connector = spy(new CamelJmxConnector(spy));
+        doNothing().when(connector).listen();
 
         //wait for retry
         verify(spy, timeout(1000).times(1)).setState(State.Stopped);
@@ -172,7 +173,6 @@ public class CamelIntegrationTest {
 
         //listen
         connector.getRoutes();
-        connector.listen();
 
         //send a message in route 1
         ProducerTemplate template = new DefaultProducerTemplate(context);
@@ -180,7 +180,7 @@ public class CamelIntegrationTest {
         template.sendBody("direct:route1", "route1 - 1");
 
         //wait to receive notification
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
 
         //stop instance
         stopCamelApp();
@@ -213,7 +213,6 @@ public class CamelIntegrationTest {
 
         //listen
         connector.getRoutes();
-        connector.listen();
 
         //send a message in route 2 (will then go through route 1)
         final DateTime start = DateTime.now();
@@ -222,7 +221,7 @@ public class CamelIntegrationTest {
         template.sendBody("direct:route2", "route2 - 1");
 
         //wait to receive notification
-        Thread.sleep(1000L);
+        Thread.sleep(2000L);
 
         //stop instance
         stopCamelApp();

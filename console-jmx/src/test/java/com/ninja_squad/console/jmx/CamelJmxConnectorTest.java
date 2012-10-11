@@ -52,6 +52,7 @@ public class CamelJmxConnectorTest {
         Instance instance = new Instance();
         CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         doReturn(mock(MBeanServerConnection.class)).when(connector).connectToServer();
+        doNothing().when(connector).listen();
 
         //then State should be Started when call to connect
         assertThat(connector.connect()).isEqualTo(State.Started);

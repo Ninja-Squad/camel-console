@@ -78,11 +78,11 @@ public class CamelJmxConnector {
     public State connect() {
         try {
             serverConnection = connectToServer();
+            listen();
             updateState(State.Started);
         } catch (JmxException e) {
             updateState(State.Stopped);
         }
-        log.debug("Connect - " + instance.getState());
         return instance.getState();
     }
 
@@ -266,6 +266,7 @@ public class CamelJmxConnector {
      * All messages going through this route will be received and stored.
      */
     public void listen() {
+        log.debug("Listen");
         ObjectName tracer = getTracer();
 
         //adding the listener
@@ -329,16 +330,6 @@ public class CamelJmxConnector {
      */
     public void storeNotification(CamelJmxNotification notification) {
         notifications.add(notification);
-    }
-
-    private ObjectName getRoute(String routeId) {
-        //get the only route
-        Set<ObjectName> objectNames = getObjectNames(routeId);
-        if (objectNames.size() != 1) {
-            throw new JmxException("There should be only one route with this id : " + routeId + " and not " + objectNames.size());
-        }
-
-        return objectNames.iterator().next();
     }
 
     /**

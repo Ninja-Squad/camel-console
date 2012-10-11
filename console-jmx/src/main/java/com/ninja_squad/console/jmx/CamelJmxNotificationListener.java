@@ -49,6 +49,7 @@ public class CamelJmxNotificationListener implements NotificationListener {
      * @param notification to store
      */
     public void storeNotification(CamelJmxNotification notification) {
+        log.debug(notification.toString());
         notificationBus.post(notification);
     }
 
