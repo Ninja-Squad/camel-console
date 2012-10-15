@@ -1,24 +1,15 @@
 package com.ninja_squad.console.notifier;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
 import org.apache.camel.management.event.ExchangeCompletedEvent;
-import org.apache.camel.model.ProcessorDefinition;
-import org.apache.camel.processor.interceptor.TraceEventHandler;
-import org.apache.camel.processor.interceptor.TraceInterceptor;
 import org.apache.camel.support.EventNotifierSupport;
-import org.joda.time.DateTime;
 
 import java.util.Collection;
 import java.util.EventObject;
 
-public class ConsoleEventNotifier extends EventNotifierSupport implements TraceEventHandler {
+public class ConsoleEventNotifier extends EventNotifierSupport {
 
     private NotifierRepository repository;
-
-    private Multimap<String, Notification> exchanges = HashMultimap.create();
+    private ConsoleTraceHandler traceHandler;
 
     public void notify(EventObject event) throws Exception {
         if (event instanceof ExchangeCompletedEvent) {
@@ -30,15 +21,13 @@ public class ConsoleEventNotifier extends EventNotifierSupport implements TraceE
     protected void notifyExchangeCompletedEvent(ExchangeCompletedEvent event) {
         log.debug(event.getExchange().getFromRouteId() + " : " + event.getExchange().getExchangeId()
                 + " completed.");
-        //get events related
+        //get notifications related
         final String id = event.getExchange().getExchangeId();
-        Collection<Notification> events = exchanges.get(id);
-
+        Collection<Notification> notifications = traceHandler.getNotifications(id);
+        log.debug("notifications for completed event " + id  + " : " + notifications);
         //persist them
-        repository.save(events);
-
-        //then remove events
-        exchanges.removeAll(id);
+        repository.save(notifications);
+        traceHandler.removeNotifications(id);
     }
 
     public boolean isEnabled(EventObject event) {
@@ -64,29 +53,7 @@ public class ConsoleEventNotifier extends EventNotifierSupport implements TraceE
         this.repository = repository;
     }
 
-    @Override
-    public void traceExchange(ProcessorDefinition<?> node, Processor target, TraceInterceptor traceInterceptor, Exchange exchange) throws Exception {
-        Notification notification = new Notification();
-        notification.setRouteId(exchange.getFromRouteId());
-        String exchangeId = exchange.getExchangeId();
-        notification.setExchangeId(exchangeId);
-        notification.setBody(exchange.getIn().getBody());
-        notification.setTimestamp(DateTime.now());
-        notification.setSource(exchange.getFromEndpoint() == null ? "" : exchange.getFromEndpoint().getEndpointUri());
-        notification.setDestination(node.getLabel());
-        addNotification(exchangeId, notification);
-    }
-
-    protected void addNotification(String exchangeId, Notification notification) {
-        exchanges.put(exchangeId, notification);
-    }
-
-    @Override
-    public Object traceExchangeIn(ProcessorDefinition<?> node, Processor target, TraceInterceptor traceInterceptor, Exchange exchange) throws Exception {
-        return null;
-    }
-
-    @Override
-    public void traceExchangeOut(ProcessorDefinition<?> node, Processor target, TraceInterceptor traceInterceptor, Exchange exchange, Object traceState) throws Exception {
+    public void setTraceHandler(ConsoleTraceHandler traceHandler) {
+        this.traceHandler = traceHandler;
     }
 }

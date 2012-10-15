@@ -36,4 +36,16 @@ public class Notification {
     public void setSource(String source) {
         this.source = source;
     }
+
+    @Override
+    public String toString() {
+        return "Notification{" +
+                "routeId='" + routeId + '\'' +
+                ", destination='" + destination + '\'' +
+                ", exchangeId='" + exchangeId + '\'' +
+                ", body=" + body +
+                ", timestamp=" + timestamp +
+                ", source='" + source + '\'' +
+                '}';
+    }
 }
