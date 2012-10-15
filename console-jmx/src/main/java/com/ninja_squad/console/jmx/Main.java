@@ -5,8 +5,7 @@ import com.ninja_squad.console.Instance;
 public class Main {
 
     public static void main(String[] args) throws InterruptedException {
-        CamelJmxConnector connector = new CamelJmxConnector(new Instance());
-        connector.listen();
-        Thread.sleep(100000);
+        new CamelJmxConnector(new Instance());
+        Thread.sleep(1000000);
     }
 }
