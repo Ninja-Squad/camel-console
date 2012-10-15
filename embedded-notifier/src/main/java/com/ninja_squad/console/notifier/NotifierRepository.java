@@ -20,8 +20,8 @@ public class NotifierRepository {
         } catch (UnknownHostException e) {
             log.error("No Mongo running");
         }
-        Jongo jongo = new Jongo(mongo.getDB("meteor"));
-        mongoCollection = jongo.getCollection("exchanges");
+        Jongo jongo = new Jongo(mongo.getDB("console"));
+        mongoCollection = jongo.getCollection("notifications");
     }
 
     public void save(Collection<Notification> events) {

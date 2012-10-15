@@ -43,14 +43,14 @@ public class ConsoleIntegrationTest {
     public void setUp() throws Exception {
 
         //setting up mongodb embedded
-        int port = 3002;
+        int port = 27017;
         MongodConfig mongodConfig = new MongodConfig(Version.Main.V2_0, port, Network.localhostIsIPv6());
         MongodStarter runtime = MongodStarter.getDefaultInstance();
         MongodExecutable mongodExecutable = runtime.prepare(mongodConfig);
         mongod = mongodExecutable.start();
         Mongo mongo = new Mongo("localhost", port);
-        DB db = mongo.getDB("meteor");
-        exchanges = db.getCollection("exchanges");
+        DB db = mongo.getDB("console");
+        exchanges = db.getCollection("notifications");
 
         //setting up notifiers and tracers
         traceHandler = spy(new ConsoleTraceHandler());
