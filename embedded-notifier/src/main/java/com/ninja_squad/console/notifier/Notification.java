@@ -43,7 +43,6 @@ public class Notification {
                 "routeId='" + routeId + '\'' +
                 ", destination='" + destination + '\'' +
                 ", exchangeId='" + exchangeId + '\'' +
-                ", body=" + body +
                 ", timestamp=" + timestamp +
                 ", source='" + source + '\'' +
                 '}';

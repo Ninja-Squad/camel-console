@@ -24,7 +24,6 @@ public class ConsoleEventNotifierTest {
         //when the EventNotifier receives it
         ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
         notifier.setTraceHandler(mock(ConsoleTraceHandler.class));
-        notifier.setRepository(mock(NotifierRepository.class));
         notifier.notify(event);
 
         //then notifyExchangeSentEvent should have been called

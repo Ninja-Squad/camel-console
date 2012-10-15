@@ -11,6 +11,10 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
     private NotifierRepository repository;
     private ConsoleTraceHandler traceHandler;
 
+    public ConsoleEventNotifier() {
+        this.repository = new NotifierRepository();
+    }
+
     public void notify(EventObject event) throws Exception {
         if (event instanceof ExchangeCompletedEvent) {
             ExchangeCompletedEvent sent = (ExchangeCompletedEvent) event;
@@ -24,7 +28,7 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
         //get notifications related
         final String id = event.getExchange().getExchangeId();
         Collection<Notification> notifications = traceHandler.getNotifications(id);
-        log.debug("notifications for completed event " + id  + " : " + notifications);
+        log.debug("notifications for completed event " + id + " : " + notifications);
         //persist them
         repository.save(notifications);
         traceHandler.removeNotifications(id);
@@ -47,10 +51,6 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
     @Override
     public boolean isStarted() {
         return true;
-    }
-
-    public void setRepository(NotifierRepository repository) {
-        this.repository = repository;
     }
 
     public void setTraceHandler(ConsoleTraceHandler traceHandler) {

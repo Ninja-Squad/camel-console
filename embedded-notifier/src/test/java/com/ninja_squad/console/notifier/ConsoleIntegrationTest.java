@@ -53,9 +53,9 @@ public class ConsoleIntegrationTest {
         exchanges = db.getCollection("exchanges");
 
         //setting up notifiers and tracers
-        notifier = spy(new ConsoleEventNotifier());
-        notifier.setRepository(new NotifierRepository());
         traceHandler = spy(new ConsoleTraceHandler());
+        notifier = spy(new ConsoleEventNotifier());
+        notifier.setTraceHandler(traceHandler);
 
     }
 
@@ -69,8 +69,6 @@ public class ConsoleIntegrationTest {
     private void startCamelApp() throws Exception {
         //start Camel application with two routes
         context = new DefaultCamelContext();
-        //tracer must be enable
-        context.setTracing(true);
 
         context.addRoutes(new RouteBuilder() {
             @Override
@@ -97,7 +95,8 @@ public class ConsoleIntegrationTest {
             }
         });
         //add the intercept strategy
-        context.addInterceptStrategy(new ConsoleTracer(notifier, traceHandler));
+        context.getInterceptStrategies().clear();
+        context.addInterceptStrategy(new ConsoleTracer(traceHandler));
         // and the management strategy
         context.getManagementStrategy().addEventNotifier(notifier);
         context.start();
