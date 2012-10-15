@@ -1,5 +1,6 @@
 package com.ninja_squad.console.jmx;
 
+import com.google.common.eventbus.EventBus;
 import org.joda.time.DateTime;
 import org.junit.Test;
 
@@ -7,8 +8,7 @@ import javax.management.Notification;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class CamelJmxNotificationListenerTest {
 
@@ -39,7 +39,7 @@ public class CamelJmxNotificationListenerTest {
                     notification.setUserData(userData);
 
         //listener
-        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener());
+        CamelJmxNotificationListener listener = spy(new CamelJmxNotificationListener(mock(EventBus.class)));
         listener.handleNotification(notification, null);
 
         //then

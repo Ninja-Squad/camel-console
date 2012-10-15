@@ -3,13 +3,20 @@ package com.ninja_squad.console;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Instance {
 
-    public String host = "localhost";
+    private String host = "localhost";
 
-    public int port = 1099;
+    private int port = 1099;
 
-    public String context = "jmxrmi/camel";
+    private String context = "jmxrmi/camel";
+
+    @Getter
+    @Setter
+    private Map<String, Route> routes = new HashMap<String, Route>();
 
     @Getter
     @Setter

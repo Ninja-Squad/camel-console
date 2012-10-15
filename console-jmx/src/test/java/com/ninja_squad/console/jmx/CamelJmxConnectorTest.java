@@ -40,14 +40,10 @@ public class CamelJmxConnectorTest {
         Instance instance = new Instance();
         CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         doThrow(JmxException.class).when(connector).connectToServer();
-        doNothing().when(connector).retry();
 
         //then State should be stopped when call to connect
         assertThat(connector.connect()).isEqualTo(State.Stopped);
         assertThat(instance.getState()).isEqualTo(State.Stopped);
-
-        //should start the retry strategy
-        verify(connector).retry();
     }
 
     @Test
@@ -56,6 +52,7 @@ public class CamelJmxConnectorTest {
         Instance instance = new Instance();
         CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         doReturn(mock(MBeanServerConnection.class)).when(connector).connectToServer();
+        doNothing().when(connector).listen();
 
         //then State should be Started when call to connect
         assertThat(connector.connect()).isEqualTo(State.Started);
@@ -82,17 +79,6 @@ public class CamelJmxConnectorTest {
         connector.updateState(State.Started);
         verify(instance, times(2)).setState(any(State.class));
         assertThat(instance.getState()).isEqualTo(State.Started);
-    }
-
-
-    //retry()
-
-    @Test
-    public void retryShouldCallConnectEvery500ms() throws Exception {
-        Instance instance = new Instance();
-        CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
-        connector.retry();
-        verify(connector, timeout(1100).atLeast(2)).connect();
     }
 
 
@@ -158,8 +144,9 @@ public class CamelJmxConnectorTest {
     @Test
     public void getRoutesShouldReturnASetWithRoutesIfConnectSuccess() throws Exception {
         //mocking connectToRoutes to return one route
-        CamelJmxConnector connector = spy(new CamelJmxConnector(new Instance()));
-        Route route = new Route("route1").state(State.Started);
+        Instance instance = new Instance();
+        CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
+        Route route = new Route("route1").state(State.Started).uri("direct://endpoint");
         Set<Route> routes = Sets.newHashSet(route);
         doReturn(routes).when(connector).connectToRoutes();
         //server is running
@@ -170,45 +157,23 @@ public class CamelJmxConnectorTest {
     }
 
 
-    //isServerStopped()
-
-    @Test
-    public void isServerStoppedShouldBeFalseIfConnectionIsOk() throws Exception {
-        //mocking connectToServer to return a valid connection
-        CamelJmxConnector connector = spy(new CamelJmxConnector(new Instance()));
-        doReturn(mock(MBeanServerConnection.class)).when(connector).connectToServer();
-
-        //then
-        assertThat(connector.isServerStopped()).isFalse();
-    }
-
-    @Test
-    public void isServerStoppedShouldBeTrueIfConnectionIsNotOk() throws Exception {
-        //mocking connectToServer to return an invalid connection
-        CamelJmxConnector connector = spy(new CamelJmxConnector(new Instance()));
-        doThrow(JmxException.class).when(connector).connectToServer();
-        doNothing().when(connector).retry();
-
-        //then
-        assertThat(connector.isServerStopped()).isTrue();
-    }
-
-
     //connectToRoutes()
 
     @Test
     public void connectToRoutesShouldReturnASetWithRoutesFromObjectNames() throws Exception {
         //mocking getObjectNames to return a list
-        CamelJmxConnector connector = spy(new CamelJmxConnector(new Instance()));
+        Instance instance = new Instance();
+        CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         ObjectName objectName = new ObjectName(CamelJmxConnector.CAMEL_ROUTE);
         Set<ObjectName> objectNames = Sets.newHashSet(objectName);
         doReturn(objectNames).when(connector).getObjectNames(anyString());
         // and extractRouteFromObjectName to return a route
-        Route route1 = new Route("route1");
+        Route route1 = new Route("route1").uri("direct://endpoint");
         doReturn(route1).when(connector).extractRouteFromObjectName(objectName);
 
         //then
         assertThat(connector.connectToRoutes()).isInstanceOf(Set.class).containsExactly(route1);
+        assertThat(instance.getRoutes().keySet()).isInstanceOf(Set.class).containsExactly(route1.getUri());
     }
 
     @Test
@@ -237,6 +202,9 @@ public class CamelJmxConnectorTest {
         when(serverConnection.getAttribute(any(ObjectName.class), eq(CamelJmxConnector.ROUTE_ID))).thenReturn("route1");
         when(serverConnection.getAttribute(any(ObjectName.class), eq(CamelJmxConnector.ENDPOINT_URI))).thenReturn("uri");
         when(serverConnection.getAttribute(any(ObjectName.class), eq(CamelJmxConnector.STATE))).thenReturn("Started");
+        when(serverConnection.getAttribute(any(ObjectName.class), eq(CamelJmxConnector.EXCHANGES_COMPLETED))).thenReturn(0L);
+        when(serverConnection.getAttribute(any(ObjectName.class), eq(CamelJmxConnector.EXCHANGES_FAILED))).thenReturn(0L);
+        when(serverConnection.getAttribute(any(ObjectName.class), eq(CamelJmxConnector.EXCHANGES_TOTAL))).thenReturn(0L);
 
         CamelJmxConnector connector = spy(new CamelJmxConnector(new Instance()));
         doReturn(serverConnection).when(connector).getServerConnection();
@@ -244,6 +212,7 @@ public class CamelJmxConnectorTest {
         //then should return the route route1
         ObjectName objectName = new ObjectName(CamelJmxConnector.CAMEL_ROUTE);
         Route route1 = new Route("route1").state(State.Started).uri("uri");
+        route1.setCanonicalName("org.apache.camel:name=,type=routes");
         assertThat(connector.extractRouteFromObjectName(objectName)).isEqualTo(route1);
     }
 
@@ -260,7 +229,7 @@ public class CamelJmxConnectorTest {
         doReturn(serverConnection).when(connector).getServerConnection();
 
         //then should throw an exception
-        ObjectName objectName = new ObjectName(CamelJmxConnector.CAMEL_ROUTE);
+        ObjectName objectName = new ObjectName(CamelJmxConnector.CAMEL_ROUTE_ALL);
         try {
             connector.extractRouteFromObjectName(objectName);
             failBecauseExceptionWasNotThrown(JmxException.class);
@@ -351,7 +320,6 @@ public class CamelJmxConnectorTest {
         CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         //mocking a valid connection
         doReturn(false).when(connector).isServerStopped();
-        doNothing().when(connector).retry();
         //mocking a valid objectName set
         HashSet<ObjectName> objectNames = Sets.newHashSet(ObjectName.getInstance(CamelJmxConnector.CAMEL_TRACER));
         doReturn(objectNames).when(connector).getObjectNames(anyString());
@@ -379,7 +347,6 @@ public class CamelJmxConnectorTest {
         CamelJmxConnector connector = spy(new CamelJmxConnector(instance));
         //mocking a valid connection
         doReturn(false).when(connector).isServerStopped();
-        doNothing().when(connector).retry();
         //mocking a valid objectName set
         HashSet<ObjectName> objectNames = Sets.newHashSet(ObjectName.getInstance(CamelJmxConnector.CAMEL_TRACER));
         doReturn(objectNames).when(connector).getObjectNames(anyString());

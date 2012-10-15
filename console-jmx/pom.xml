@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>console-jmx</artifactId>
+    <packaging>jar</packaging>
 
     <properties>
         <camel.version>2.10.1</camel.version>
@@ -61,6 +62,19 @@
                             <exclude>**/Main.*</exclude>
                         </excludes>
                     </instrumentation>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.ninja_squad.console.jmx.Main</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
                 </configuration>
             </plugin>
         </plugins>
