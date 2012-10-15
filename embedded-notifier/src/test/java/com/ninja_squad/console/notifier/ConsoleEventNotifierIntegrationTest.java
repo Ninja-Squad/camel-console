@@ -1,5 +1,15 @@
 package com.ninja_squad.console.notifier;
 
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.Mongo;
+import de.flapdoodle.embed.mongo.MongodExecutable;
+import de.flapdoodle.embed.mongo.MongodProcess;
+import de.flapdoodle.embed.mongo.MongodStarter;
+import de.flapdoodle.embed.mongo.config.MongodConfig;
+import de.flapdoodle.embed.mongo.distribution.Version;
+import de.flapdoodle.embed.process.runtime.Network;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -11,8 +21,11 @@ import org.apache.camel.management.event.ExchangeCompletedEvent;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.processor.interceptor.TraceInterceptor;
 import org.apache.camel.processor.interceptor.Tracer;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
+import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -21,6 +34,25 @@ public class ConsoleEventNotifierIntegrationTest {
     private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ConsoleEventNotifierIntegrationTest.class);
 
     private CamelContext context;
+    private MongodProcess mongod;
+    private DBCollection exchanges;
+
+    @Before
+    public void setUp() throws Exception {
+        int port = 3002;
+        MongodConfig mongodConfig = new MongodConfig(Version.Main.V2_0, port, Network.localhostIsIPv6());
+        MongodStarter runtime = MongodStarter.getDefaultInstance();
+        MongodExecutable mongodExecutable = runtime.prepare(mongodConfig);
+        mongod = mongodExecutable.start();
+        Mongo mongo = new Mongo("localhost", port);
+        DB db = mongo.getDB("meteor");
+        exchanges = db.getCollection("exchanges");
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        mongod.stop();
+    }
 
     private void startCamelApp() throws Exception {
         //start Camel application with two routes
@@ -70,7 +102,7 @@ public class ConsoleEventNotifierIntegrationTest {
         ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
         notifier.setRepository(new NotifierRepository());
         context.getManagementStrategy().addEventNotifier(notifier);
-        ((Tracer)context.getDefaultTracer()).addTraceHandler(notifier);
+        ((Tracer) context.getDefaultTracer()).addTraceHandler(notifier);
 
         //send a message in route 1
         ProducerTemplate template = new DefaultProducerTemplate(context);
@@ -84,5 +116,9 @@ public class ConsoleEventNotifierIntegrationTest {
         verify(notifier, timeout(1000).times(1)).notifyExchangeCompletedEvent(any(ExchangeCompletedEvent.class));
 
         stopCamelApp();
+
+        //should be in database
+        DBCursor dbObjects = exchanges.find();
+        assertThat(dbObjects.count()).isEqualTo(3);
     }
 }
