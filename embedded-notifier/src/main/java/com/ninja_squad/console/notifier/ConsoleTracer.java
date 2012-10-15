@@ -1,6 +1,7 @@
 package com.ninja_squad.console.notifier;
 
 import org.apache.camel.CamelContext;
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.processor.interceptor.TraceInterceptor;
@@ -9,6 +10,7 @@ import org.apache.camel.processor.interceptor.Tracer;
 public class ConsoleTracer extends Tracer {
 
     public ConsoleTracer(ConsoleTraceHandler traceHandler) {
+        super.setLogLevel(LoggingLevel.TRACE);
         super.getTraceHandlers().clear();
         super.getTraceHandlers().add(traceHandler);
     }

@@ -95,8 +95,12 @@ public class ConsoleIntegrationTest {
             }
         });
         //add the intercept strategy
-        context.getInterceptStrategies().clear();
         context.addInterceptStrategy(new ConsoleTracer(traceHandler));
+        //context.setTracing(true);
+        //Tracer defaultTracer = (Tracer) context.getDefaultTracer();
+        //defaultTracer.getTraceHandlers().clear();
+        //defaultTracer.addTraceHandler(traceHandler);
+        //defaultTracer.setLogLevel(LoggingLevel.TRACE);
         // and the management strategy
         context.getManagementStrategy().addEventNotifier(notifier);
         context.start();

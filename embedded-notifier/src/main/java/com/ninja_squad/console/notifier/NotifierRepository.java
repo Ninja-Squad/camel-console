@@ -16,7 +16,7 @@ public class NotifierRepository {
     public NotifierRepository() {
         Mongo mongo = null;
         try {
-            mongo = new Mongo("127.0.0.1", 3002);
+            mongo = new Mongo("127.0.0.1", 27017);
         } catch (UnknownHostException e) {
             log.error("No Mongo running");
         }

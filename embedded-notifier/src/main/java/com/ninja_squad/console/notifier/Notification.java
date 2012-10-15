@@ -10,7 +10,7 @@ public class Notification {
     private String exchangeId;
     @JsonIgnore
     private Object body;
-    private DateTime timestamp;
+    private String timestamp;
     private String source;
 
     public void setRouteId(String routeId) {
@@ -30,7 +30,7 @@ public class Notification {
     }
 
     public void setTimestamp(DateTime now) {
-        this.timestamp = now;
+        this.timestamp = now.toString();
     }
 
     public void setSource(String source) {
