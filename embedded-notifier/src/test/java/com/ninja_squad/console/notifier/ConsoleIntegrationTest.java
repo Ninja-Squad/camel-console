@@ -221,7 +221,7 @@ public class ConsoleIntegrationTest {
         assertThat(dbObjects.count()).isEqualTo(1);
         for (DBObject state : dbObjects) {
             log.debug(state.toString());
-            assertThat(state.get("name")).isEqualTo("camel-1");
+            assertThat(state.get("name")).isEqualTo(context.getName());
             assertThat(state.get("state")).isEqualTo("Started");
         }
 
@@ -239,7 +239,7 @@ public class ConsoleIntegrationTest {
         assertThat(dbObjects.count()).isEqualTo(2);
         for (DBObject state : dbObjects) {
             log.debug(state.toString());
-            assertThat(state.get("name")).isEqualTo("camel-1");
+            assertThat(state.get("name")).isEqualTo(context.getName());
             assertThat(state.get("state")).isIn("Started", "Stopped");
         }
 
