@@ -1,9 +1,6 @@
 package com.ninja_squad.console.notifier;
 
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.Mongo;
+import com.mongodb.*;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -23,6 +20,8 @@ import org.apache.camel.processor.interceptor.TraceInterceptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -30,11 +29,11 @@ import static org.mockito.Mockito.*;
 
 public class ConsoleIntegrationTest {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ConsoleIntegrationTest.class);
+    protected Logger log = LoggerFactory.getLogger(getClass());
 
     private CamelContext context;
     private MongodProcess mongod;
-    private DBCollection exchanges;
+    private DBCollection notifications;
     private ConsoleEventNotifier notifier;
     private ConsoleTraceHandler traceHandler;
 
@@ -50,7 +49,7 @@ public class ConsoleIntegrationTest {
         mongod = mongodExecutable.start();
         Mongo mongo = new Mongo("localhost", port);
         DB db = mongo.getDB("console");
-        exchanges = db.getCollection("notifications");
+        notifications = db.getCollection("notifications");
 
         //setting up notifiers and tracers
         traceHandler = spy(new ConsoleTraceHandler());
@@ -129,9 +128,16 @@ public class ConsoleIntegrationTest {
         //and notifyExchangeCompletedEvent should have been called
         verify(notifier, timeout(1000).times(1)).notifyExchangeCompletedEvent(any(ExchangeCompletedEvent.class));
 
+        Thread.sleep(2000);
+
         //should be in database
-        DBCursor dbObjects = exchanges.find();
+        DBCursor dbObjects = notifications.find();
         assertThat(dbObjects.count()).isEqualTo(3);
+        while (dbObjects.hasNext()){
+            DBObject dbObject = dbObjects.next();
+            log.debug(dbObject.toString());
+            assertThat(dbObject.get("step")).isIn(0, 1, 2);
+        }
 
         stopCamelApp();
     }

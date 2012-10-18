@@ -12,6 +12,7 @@ public class Notification {
     private Object body;
     private String timestamp;
     private String source;
+    private int step;
 
     public void setRouteId(String routeId) {
         this.routeId = routeId;
@@ -37,14 +38,23 @@ public class Notification {
         this.source = source;
     }
 
+    public int getStep() {
+        return step;
+    }
+
+    public void setStep(int step) {
+        this.step = step;
+    }
+
     @Override
     public String toString() {
         return "Notification{" +
                 "routeId='" + routeId + '\'' +
-                ", destination='" + destination + '\'' +
                 ", exchangeId='" + exchangeId + '\'' +
-                ", timestamp=" + timestamp +
+                ", destination='" + destination + '\'' +
                 ", source='" + source + '\'' +
+                ", step='" + source + '\'' +
+                ", timestamp=" + timestamp +
                 '}';
     }
 }

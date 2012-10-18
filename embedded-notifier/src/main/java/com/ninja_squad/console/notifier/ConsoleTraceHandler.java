@@ -33,6 +33,10 @@ public class ConsoleTraceHandler implements TraceEventHandler {
     }
 
     protected void addNotification(String exchangeId, Notification notification) {
+        //setting step number
+        Collection<Notification> notifications = exchanges.get(exchangeId);
+        notification.setStep(notifications.size());
+        //saving
         exchanges.put(exchangeId, notification);
     }
 
