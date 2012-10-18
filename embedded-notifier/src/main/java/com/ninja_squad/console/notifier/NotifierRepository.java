@@ -5,7 +5,6 @@ import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 
 import java.net.UnknownHostException;
-import java.util.Collection;
 
 public class NotifierRepository {
 
@@ -24,9 +23,7 @@ public class NotifierRepository {
         mongoCollection = jongo.getCollection("notifications");
     }
 
-    public void save(Collection<Notification> notifications) {
-        Message message = new Message();
-        message.setNotifications(notifications);
+    public void save(Message message) {
         mongoCollection.save(message);
     }
 }

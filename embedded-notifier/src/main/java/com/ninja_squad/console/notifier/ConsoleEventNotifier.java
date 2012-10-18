@@ -1,6 +1,7 @@
 package com.ninja_squad.console.notifier;
 
 import org.apache.camel.management.event.ExchangeCompletedEvent;
+import org.apache.camel.management.event.ExchangeFailedEvent;
 import org.apache.camel.support.EventNotifierSupport;
 
 import java.util.Collection;
@@ -19,7 +20,25 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
         if (event instanceof ExchangeCompletedEvent) {
             ExchangeCompletedEvent sent = (ExchangeCompletedEvent) event;
             notifyExchangeCompletedEvent(sent);
+        } else if (event instanceof ExchangeFailedEvent) {
+            ExchangeFailedEvent sent = (ExchangeFailedEvent) event;
+            notifyExchangeFailedEvent(sent);
         }
+    }
+
+    protected void notifyExchangeFailedEvent(ExchangeFailedEvent event) {
+        log.debug(event.getExchange().getFromRouteId() + " : " + event.getExchange().getExchangeId()
+                + " failed.");
+        //get notifications related
+        final String id = event.getExchange().getExchangeId();
+        Collection<Notification> notifications = traceHandler.getNotifications(id);
+        log.debug("notifications for failed event " + id + " : " + notifications);
+        //persist them
+        Message message = new Message();
+        message.setExchangeId(id);
+        message.setNotifications(notifications);
+        repository.save(message);
+        traceHandler.removeNotifications(id);
     }
 
     protected void notifyExchangeCompletedEvent(ExchangeCompletedEvent event) {
@@ -30,7 +49,10 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
         Collection<Notification> notifications = traceHandler.getNotifications(id);
         log.debug("notifications for completed event " + id + " : " + notifications);
         //persist them
-        repository.save(notifications);
+        Message message = new Message();
+        message.setExchangeId(id);
+        message.setNotifications(notifications);
+        repository.save(message);
         traceHandler.removeNotifications(id);
     }
 

@@ -57,4 +57,34 @@ public class Notification {
                 ", timestamp=" + timestamp +
                 '}';
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Notification)) return false;
+
+        Notification that = (Notification) o;
+
+        if (step != that.step) return false;
+        if (body != null ? !body.equals(that.body) : that.body != null) return false;
+        if (destination != null ? !destination.equals(that.destination) : that.destination != null) return false;
+        if (exchangeId != null ? !exchangeId.equals(that.exchangeId) : that.exchangeId != null) return false;
+        if (routeId != null ? !routeId.equals(that.routeId) : that.routeId != null) return false;
+        if (source != null ? !source.equals(that.source) : that.source != null) return false;
+        if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = routeId != null ? routeId.hashCode() : 0;
+        result = 31 * result + (destination != null ? destination.hashCode() : 0);
+        result = 31 * result + (exchangeId != null ? exchangeId.hashCode() : 0);
+        result = 31 * result + (body != null ? body.hashCode() : 0);
+        result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
+        result = 31 * result + (source != null ? source.hashCode() : 0);
+        result = 31 * result + step;
+        return result;
+    }
 }

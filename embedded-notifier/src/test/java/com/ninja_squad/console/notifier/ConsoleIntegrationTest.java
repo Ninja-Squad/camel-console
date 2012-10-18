@@ -7,14 +7,12 @@ import de.flapdoodle.embed.mongo.MongodStarter;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
-import org.apache.camel.CamelContext;
-import org.apache.camel.Exchange;
-import org.apache.camel.Processor;
-import org.apache.camel.ProducerTemplate;
+import org.apache.camel.*;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultProducerTemplate;
 import org.apache.camel.management.event.ExchangeCompletedEvent;
+import org.apache.camel.management.event.ExchangeFailedEvent;
 import org.apache.camel.model.ProcessorDefinition;
 import org.apache.camel.processor.interceptor.TraceInterceptor;
 import org.junit.After;
@@ -95,6 +93,19 @@ public class ConsoleIntegrationTest {
                         .to("direct:route1");
             }
         });
+        context.addRoutes(new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                from("direct:route3").routeId("route3")//
+                        .onException(NullPointerException.class).log(LoggingLevel.ERROR, "NPE").end()//
+                        .to("direct:route1").process(new Processor() {
+                    @Override
+                    public void process(Exchange exchange) throws Exception {
+                        throw new NullPointerException();
+                    }
+                });
+            }
+        });
         //add the intercept strategy
         context.addInterceptStrategy(new ConsoleTracer(traceHandler));
         //context.setTracing(true);
@@ -141,6 +152,41 @@ public class ConsoleIntegrationTest {
         for (DBObject notification : notifs) {
             log.debug(notification.toString());
             assertThat(notification.get("step")).isIn(0, 1, 2);
+        }
+
+        stopCamelApp();
+    }
+
+    @Test
+    public void shouldSeeNotificationsAndErrorEvent() throws Exception {
+        startCamelApp();
+
+        //send a message in route 2
+        try {
+            ProducerTemplate template = new DefaultProducerTemplate(context);
+            template.start();
+            template.sendBody("direct:route3", "route3 - 1");
+        } catch (CamelExecutionException e) {
+            //should receive a NPE but do nothing
+        }
+
+        //then notifyExchangeSentEvent should have been called
+        verify(traceHandler, timeout(1000).times(5)).traceExchange(any(ProcessorDefinition.class),
+                any(Processor.class), any(TraceInterceptor.class), any(Exchange.class));
+        //and notifyExchangeFailedEvent should have been called
+        verify(notifier, timeout(1000).times(1)).notifyExchangeFailedEvent(any(ExchangeFailedEvent.class));
+
+        Thread.sleep(2000);
+
+        //should be 1 message in database
+        DBCursor dbObjects = notifications.find();
+        assertThat(dbObjects.count()).isEqualTo(1);
+        DBObject message = dbObjects.next();
+
+        List<DBObject> notifs = (List<DBObject>) message.get("notifications");
+        for (DBObject notification : notifs) {
+            log.debug(notification.toString());
+            assertThat(notification.get("step")).isIn(0, 1, 2, 3, 4);
         }
 
         stopCamelApp();
