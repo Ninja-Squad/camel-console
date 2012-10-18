@@ -23,6 +23,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
+
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
@@ -130,13 +132,15 @@ public class ConsoleIntegrationTest {
 
         Thread.sleep(2000);
 
-        //should be in database
+        //should be 1 message in database
         DBCursor dbObjects = notifications.find();
-        assertThat(dbObjects.count()).isEqualTo(3);
-        while (dbObjects.hasNext()){
-            DBObject dbObject = dbObjects.next();
-            log.debug(dbObject.toString());
-            assertThat(dbObject.get("step")).isIn(0, 1, 2);
+        assertThat(dbObjects.count()).isEqualTo(1);
+        DBObject message = dbObjects.next();
+
+        List<DBObject> notifs = (List<DBObject>) message.get("notifications");
+        for (DBObject notification : notifs) {
+            log.debug(notification.toString());
+            assertThat(notification.get("step")).isIn(0, 1, 2);
         }
 
         stopCamelApp();

@@ -23,6 +23,7 @@ public class ConsoleEventNotifierTest {
 
         //when the EventNotifier receives it
         ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
+        doNothing().when(notifier).notifyExchangeCompletedEvent(any(ExchangeCompletedEvent.class));
         notifier.setTraceHandler(mock(ConsoleTraceHandler.class));
         notifier.notify(event);
 

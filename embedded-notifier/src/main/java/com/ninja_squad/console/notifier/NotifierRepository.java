@@ -24,9 +24,9 @@ public class NotifierRepository {
         mongoCollection = jongo.getCollection("notifications");
     }
 
-    public void save(Collection<Notification> events) {
-        for (Notification notification : events){
-            mongoCollection.save(notification);
-        }
+    public void save(Collection<Notification> notifications) {
+        Message message = new Message();
+        message.setNotifications(notifications);
+        mongoCollection.save(message);
     }
 }
