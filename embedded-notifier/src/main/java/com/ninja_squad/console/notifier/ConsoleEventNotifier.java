@@ -56,4 +56,8 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
     public void setTraceHandler(ConsoleTraceHandler traceHandler) {
         this.traceHandler = traceHandler;
     }
+
+    public void setRepository(NotifierRepository repository) {
+        this.repository = repository;
+    }
 }
