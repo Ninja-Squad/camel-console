@@ -34,8 +34,12 @@ public class ConsoleIntegrationTest {
     private CamelContext context;
     private MongodProcess mongod;
     private DBCollection notifications;
+    private DBCollection routes;
+    private DBCollection routeStates;
+    private DBCollection states;
     private ConsoleEventNotifier notifier;
     private ConsoleTraceHandler traceHandler;
+    private ConsoleLifecycleStrategy consoleLifecycleStrategy;
 
 
     @Before
@@ -50,12 +54,15 @@ public class ConsoleIntegrationTest {
         Mongo mongo = new Mongo("localhost", port);
         DB db = mongo.getDB("console");
         notifications = db.getCollection("notifications");
+        routes = db.getCollection("routes");
+        routeStates = db.getCollection("route-states");
+        states = db.getCollection("states");
 
         //setting up notifiers and tracers
         traceHandler = spy(new ConsoleTraceHandler());
         notifier = spy(new ConsoleEventNotifier());
         notifier.setTraceHandler(traceHandler);
-
+        consoleLifecycleStrategy = spy(new ConsoleLifecycleStrategy());
     }
 
     @After
@@ -115,6 +122,8 @@ public class ConsoleIntegrationTest {
         //defaultTracer.setLogLevel(LoggingLevel.TRACE);
         // and the management strategy
         context.getManagementStrategy().addEventNotifier(notifier);
+
+        context.addLifecycleStrategy(consoleLifecycleStrategy);
         context.start();
     }
 
@@ -190,5 +199,56 @@ public class ConsoleIntegrationTest {
         }
 
         stopCamelApp();
+    }
+
+    @Test
+    public void shouldSeeInstanceStateAndRouteState() throws Exception {
+        startCamelApp();
+
+        //should see 3 routes
+        DBCursor dbObjects = routes.find();
+        assertThat(dbObjects.count()).isEqualTo(3);
+        for (DBObject route : dbObjects) {
+            log.debug(route.toString());
+            assertThat(route.get("routeId")).isIn("route1", "route2", "route3");
+            assertThat(route.get("uri")).isIn("direct://route1", "direct://route2", "direct://route3");
+            assertThat(route.get("exchangesCompleted")).isEqualTo(0);
+            assertThat(route.get("exchangesFailed")).isEqualTo(0);
+            assertThat(route.get("exchangesTotal")).isEqualTo(0);
+        }
+
+        dbObjects = states.find();
+        assertThat(dbObjects.count()).isEqualTo(1);
+        for (DBObject state : dbObjects) {
+            log.debug(state.toString());
+            assertThat(state.get("name")).isEqualTo("camel-1");
+            assertThat(state.get("state")).isEqualTo("Started");
+        }
+
+        dbObjects = routeStates.find();
+        assertThat(dbObjects.count()).isEqualTo(3);
+        for (DBObject state : dbObjects) {
+            log.debug(state.toString());
+            assertThat(state.get("routeId")).isIn("route1", "route2", "route3");
+            assertThat(state.get("state")).isEqualTo("Started");
+        }
+
+        stopCamelApp();
+
+        dbObjects = states.find();
+        assertThat(dbObjects.count()).isEqualTo(2);
+        for (DBObject state : dbObjects) {
+            log.debug(state.toString());
+            assertThat(state.get("name")).isEqualTo("camel-1");
+            assertThat(state.get("state")).isIn("Started", "Stopped");
+        }
+
+        dbObjects = routeStates.find();
+        assertThat(dbObjects.count()).isEqualTo(6);
+        for (DBObject state : dbObjects) {
+            log.debug(state.toString());
+            assertThat(state.get("routeId")).isIn("route1", "route2", "route3");
+            assertThat(state.get("state")).isIn("Started", "Stopped");
+        }
     }
 }

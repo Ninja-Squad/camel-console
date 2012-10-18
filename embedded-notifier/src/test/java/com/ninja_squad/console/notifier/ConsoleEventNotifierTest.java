@@ -56,7 +56,7 @@ public class ConsoleEventNotifierTest {
         Collection<Notification> notifications = Sets.newHashSet(notif1, notif2);
         doReturn(notifications).when(traceHandler).getNotifications("1");
         notifier.setTraceHandler(traceHandler);
-        NotifierRepository repository = mock(NotifierRepository.class);
+        ConsoleRepository repository = mock(ConsoleRepositoryJongo.class);
         notifier.setRepository(repository);
         notifier.notifyExchangeCompletedEvent(event);
 
@@ -90,7 +90,7 @@ public class ConsoleEventNotifierTest {
             Collection<Notification> notifications = Sets.newHashSet(notif1, notif2);
             doReturn(notifications).when(traceHandler).getNotifications("1");
             notifier.setTraceHandler(traceHandler);
-            NotifierRepository repository = mock(NotifierRepository.class);
+            ConsoleRepository repository = mock(ConsoleRepositoryJongo.class);
             notifier.setRepository(repository);
             notifier.notifyExchangeFailedEvent(event);
 

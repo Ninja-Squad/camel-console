@@ -9,11 +9,11 @@ import java.util.EventObject;
 
 public class ConsoleEventNotifier extends EventNotifierSupport {
 
-    private NotifierRepository repository;
+    private ConsoleRepository repository;
     private ConsoleTraceHandler traceHandler;
 
     public ConsoleEventNotifier() {
-        this.repository = new NotifierRepository();
+        this.repository = new ConsoleRepositoryJongo();
     }
 
     public void notify(EventObject event) throws Exception {
@@ -79,7 +79,7 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
         this.traceHandler = traceHandler;
     }
 
-    public void setRepository(NotifierRepository repository) {
+    public void setRepository(ConsoleRepository repository) {
         this.repository = repository;
     }
 }
