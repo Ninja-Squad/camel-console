@@ -55,7 +55,7 @@ public class ConsoleIntegrationTest {
         DB db = mongo.getDB("console");
         notifications = db.getCollection("notifications");
         routes = db.getCollection("routes");
-        routeStates = db.getCollection("route-states");
+        routeStates = db.getCollection("routestates");
         states = db.getCollection("states");
 
         //setting up notifiers and tracers

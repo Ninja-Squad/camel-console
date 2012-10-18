@@ -27,7 +27,7 @@ public class ConsoleRepositoryJongo implements ConsoleRepository {
         Jongo jongo = new Jongo(mongo.getDB("console"));
         messages = jongo.getCollection("notifications");
         states = jongo.getCollection("states");
-        routeStates = jongo.getCollection("route-states");
+        routeStates = jongo.getCollection("routestates");
         routes = jongo.getCollection("routes");
     }
 

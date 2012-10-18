@@ -1,12 +1,10 @@
 package com.ninja_squad.console;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 @ToString
 @EqualsAndHashCode
+@NoArgsConstructor
 public class Route {
 
     @Getter
