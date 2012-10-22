@@ -13,8 +13,6 @@ import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.camel.impl.DefaultProducerTemplate;
 import org.apache.camel.management.event.ExchangeCompletedEvent;
 import org.apache.camel.management.event.ExchangeFailedEvent;
-import org.apache.camel.model.ProcessorDefinition;
-import org.apache.camel.processor.interceptor.TraceInterceptor;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -38,7 +36,6 @@ public class ConsoleIntegrationTest {
     private DBCollection routeStates;
     private DBCollection states;
     private ConsoleEventNotifier notifier;
-    private ConsoleTraceHandler traceHandler;
     private ConsoleLifecycleStrategy consoleLifecycleStrategy;
 
 
@@ -59,9 +56,7 @@ public class ConsoleIntegrationTest {
         states = db.getCollection("states");
 
         //setting up notifiers and tracers
-        traceHandler = spy(new ConsoleTraceHandler());
-        notifier = spy(new ConsoleEventNotifier());
-        notifier.setTraceHandler(traceHandler);
+        notifier = spy(new ConsoleEventNotifier(consoleLifecycleStrategy));
         consoleLifecycleStrategy = spy(new ConsoleLifecycleStrategy());
     }
 
@@ -114,12 +109,8 @@ public class ConsoleIntegrationTest {
             }
         });
         //add the intercept strategy
-        context.addInterceptStrategy(new ConsoleTracer(traceHandler));
-        //context.setTracing(true);
-        //Tracer defaultTracer = (Tracer) context.getDefaultTracer();
-        //defaultTracer.getTraceHandlers().clear();
-        //defaultTracer.addTraceHandler(traceHandler);
-        //defaultTracer.setLogLevel(LoggingLevel.TRACE);
+        notifier = spy(new ConsoleEventNotifier(consoleLifecycleStrategy));
+        context.addInterceptStrategy(new ConsoleTracer(notifier));
         // and the management strategy
         context.getManagementStrategy().addEventNotifier(notifier);
 
@@ -142,15 +133,12 @@ public class ConsoleIntegrationTest {
         //send a message in route 2
         ProducerTemplate template = new DefaultProducerTemplate(context);
         template.start();
-        template.sendBody("direct:route2", "route1 - 1");
+        template.sendBody("direct:route2", "route2 - 1");
 
-        //then notifyExchangeSentEvent should have been called
-        verify(traceHandler, timeout(1000).times(3)).traceExchange(any(ProcessorDefinition.class),
-                any(Processor.class), any(TraceInterceptor.class), any(Exchange.class));
         //and notifyExchangeCompletedEvent should have been called
         verify(notifier, timeout(1000).times(1)).notifyExchangeCompletedEvent(any(ExchangeCompletedEvent.class));
 
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
         //should be 1 message in database
         DBCursor dbObjects = notifications.find();
@@ -161,6 +149,21 @@ public class ConsoleIntegrationTest {
         for (DBObject notification : notifs) {
             log.debug(notification.toString());
             assertThat(notification.get("step")).isIn(0, 1, 2);
+        }
+
+        //should have updated the exchanges per route
+        dbObjects = routes.find();
+        for (DBObject route : dbObjects) {
+            log.debug(route.toString());
+            if (route.get("routeId").equals("route2")) {
+                assertThat(route.get("exchangesTotal")).isEqualTo(1);
+                assertThat(route.get("exchangesCompleted")).isEqualTo(1);
+                assertThat(route.get("exchangesFailed")).isEqualTo(0);
+            } else {
+                assertThat(route.get("exchangesTotal")).isEqualTo(0);
+                assertThat(route.get("exchangesCompleted")).isEqualTo(0);
+                assertThat(route.get("exchangesFailed")).isEqualTo(0);
+            }
         }
 
         stopCamelApp();
@@ -179,9 +182,6 @@ public class ConsoleIntegrationTest {
             //should receive a NPE but do nothing
         }
 
-        //then notifyExchangeSentEvent should have been called
-        verify(traceHandler, timeout(1000).times(5)).traceExchange(any(ProcessorDefinition.class),
-                any(Processor.class), any(TraceInterceptor.class), any(Exchange.class));
         //and notifyExchangeFailedEvent should have been called
         verify(notifier, timeout(1000).times(1)).notifyExchangeFailedEvent(any(ExchangeFailedEvent.class));
 

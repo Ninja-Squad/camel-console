@@ -1,24 +1,21 @@
 package com.ninja_squad.console.notifier;
 
 import org.apache.camel.CamelContext;
-import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.model.ProcessorDefinition;
-import org.apache.camel.processor.interceptor.TraceInterceptor;
-import org.apache.camel.processor.interceptor.Tracer;
+import org.apache.camel.spi.InterceptStrategy;
 
-public class ConsoleTracer extends Tracer {
+public class ConsoleTracer implements InterceptStrategy {
 
-    public ConsoleTracer(ConsoleTraceHandler traceHandler) {
-        super.setLogLevel(LoggingLevel.TRACE);
-        super.getTraceHandlers().clear();
-        super.getTraceHandlers().add(traceHandler);
+    private ConsoleEventNotifier eventNotifier;
+
+    public ConsoleTracer(ConsoleEventNotifier eventNotifier) {
+        this.eventNotifier = eventNotifier;
     }
 
     @Override
     public Processor wrapProcessorInInterceptors(CamelContext context, ProcessorDefinition<?> definition, Processor target, Processor nextTarget) throws Exception {
-        //RouteDefinitionHelper.forceAssignIds(context, definition);
-        return new TraceInterceptor(definition, target, null, this);
+        return new ConsoleTraceInterceptor(eventNotifier, definition, target);
     }
 
 }

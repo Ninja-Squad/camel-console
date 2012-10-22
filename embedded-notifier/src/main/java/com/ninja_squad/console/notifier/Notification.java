@@ -13,6 +13,7 @@ public class Notification {
     private String timestamp;
     private String source;
     private int step;
+    private long duration;
 
     public void setRouteId(String routeId) {
         this.routeId = routeId;
@@ -46,16 +47,8 @@ public class Notification {
         this.step = step;
     }
 
-    @Override
-    public String toString() {
-        return "Notification{" +
-                "routeId='" + routeId + '\'' +
-                ", exchangeId='" + exchangeId + '\'' +
-                ", destination='" + destination + '\'' +
-                ", source='" + source + '\'' +
-                ", step='" + source + '\'' +
-                ", timestamp=" + timestamp +
-                '}';
+    public void setDuration(long duration) {
+        this.duration = duration;
     }
 
     @Override
@@ -65,6 +58,7 @@ public class Notification {
 
         Notification that = (Notification) o;
 
+        if (duration != that.duration) return false;
         if (step != that.step) return false;
         if (body != null ? !body.equals(that.body) : that.body != null) return false;
         if (destination != null ? !destination.equals(that.destination) : that.destination != null) return false;
@@ -85,6 +79,20 @@ public class Notification {
         result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
         result = 31 * result + (source != null ? source.hashCode() : 0);
         result = 31 * result + step;
+        result = 31 * result + (int) (duration ^ (duration >>> 32));
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Notification{" +
+                "routeId='" + routeId + '\'' +
+                ", destination='" + destination + '\'' +
+                ", exchangeId='" + exchangeId + '\'' +
+                ", timestamp='" + timestamp + '\'' +
+                ", source='" + source + '\'' +
+                ", step=" + step +
+                ", duration=" + duration +
+                '}';
     }
 }

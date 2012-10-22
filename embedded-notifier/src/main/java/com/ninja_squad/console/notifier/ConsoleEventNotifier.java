@@ -1,5 +1,7 @@
 package com.ninja_squad.console.notifier;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import org.apache.camel.management.event.ExchangeCompletedEvent;
 import org.apache.camel.management.event.ExchangeFailedEvent;
 import org.apache.camel.support.EventNotifierSupport;
@@ -10,10 +12,14 @@ import java.util.EventObject;
 public class ConsoleEventNotifier extends EventNotifierSupport {
 
     private ConsoleRepository repository;
-    private ConsoleTraceHandler traceHandler;
 
-    public ConsoleEventNotifier() {
+    private ConsoleLifecycleStrategy consoleLifecycleStrategy;
+
+    private Multimap<String, Notification> exchanges = HashMultimap.create();
+
+    public ConsoleEventNotifier(ConsoleLifecycleStrategy consoleLifecycleStrategy) {
         this.repository = new ConsoleRepositoryJongo();
+        this.consoleLifecycleStrategy = consoleLifecycleStrategy;
     }
 
     public void notify(EventObject event) throws Exception {
@@ -31,14 +37,7 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
                 + " failed.");
         //get notifications related
         final String id = event.getExchange().getExchangeId();
-        Collection<Notification> notifications = traceHandler.getNotifications(id);
-        log.debug("notifications for failed event " + id + " : " + notifications);
-        //persist them
-        Message message = new Message();
-        message.setExchangeId(id);
-        message.setNotifications(notifications);
-        repository.save(message);
-        traceHandler.removeNotifications(id);
+        persistMessage(id);
     }
 
     protected void notifyExchangeCompletedEvent(ExchangeCompletedEvent event) {
@@ -46,14 +45,49 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
                 + " completed.");
         //get notifications related
         final String id = event.getExchange().getExchangeId();
-        Collection<Notification> notifications = traceHandler.getNotifications(id);
-        log.debug("notifications for completed event " + id + " : " + notifications);
+        persistMessage(id);
+        updateRouteStat(event.getExchange().getFromRouteId());
+    }
+
+    protected synchronized void addNotification(String exchangeId, Notification notification) {
+        //setting step number
+        Collection<Notification> notifications = exchanges.get(exchangeId);
+        notification.setStep(notifications.size());
+        //saving
+        exchanges.put(exchangeId, notification);
+    }
+
+    protected synchronized Collection<Notification> getNotifications(String id) {
+        //then remove events
+        Collection<Notification> notifications = exchanges.get(id);
+        return notifications;
+    }
+
+    protected synchronized void removeNotifications(String id) {
+        exchanges.removeAll(id);
+    }
+
+    private void persistMessage(String id) {
+        Collection<Notification> notifications = getNotifications(id);
+        log.debug("notifications for event " + id + " : " + notifications);
         //persist them
         Message message = new Message();
         message.setExchangeId(id);
         message.setNotifications(notifications);
         repository.save(message);
-        traceHandler.removeNotifications(id);
+        removeNotifications(id);
+    }
+
+    protected void updateRouteStat(String routeId) {
+        log.debug("update stats of " + routeId);
+        ConsolePerformanceCounter counter = consoleLifecycleStrategy.getCounter(routeId);
+        if (counter != null) {
+            try {
+                repository.updateRoute(routeId, counter.getExchangesCompleted(), counter.getExchangesFailed(), counter.getExchangesTotal());
+            } catch (Exception e) {
+                log.error("Error while retrieving performance statistics on route " + routeId);
+            }
+        }
     }
 
     public boolean isEnabled(EventObject event) {
@@ -73,10 +107,6 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
     @Override
     public boolean isStarted() {
         return true;
-    }
-
-    public void setTraceHandler(ConsoleTraceHandler traceHandler) {
-        this.traceHandler = traceHandler;
     }
 
     public void setRepository(ConsoleRepository repository) {

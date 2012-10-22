@@ -1,7 +1,10 @@
 package com.ninja_squad.console.notifier;
 
+import com.google.common.collect.Maps;
 import com.ninja_squad.console.State;
 import org.apache.camel.*;
+import org.apache.camel.impl.EventDrivenConsumerRoute;
+import org.apache.camel.management.InstrumentationProcessor;
 import org.apache.camel.spi.LifecycleStrategy;
 import org.apache.camel.spi.RouteContext;
 import org.joda.time.DateTime;
@@ -10,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class ConsoleLifecycleStrategy implements LifecycleStrategy {
@@ -17,6 +21,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
     private Logger log = LoggerFactory.getLogger(getClass());
 
     private ConsoleRepository repository = new ConsoleRepositoryJongo();
+    private Map<String, ConsolePerformanceCounter> counters = Maps.newHashMap();
 
     /**
      * Store a notification of the application state and time
@@ -26,6 +31,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
      */
     @Override
     public void onContextStart(CamelContext context) throws VetoCamelContextStartException {
+
         log.debug("Started " + context.getName());
         InstanceState instanceState = new InstanceState();
         instanceState.setName(context.getName());
@@ -88,6 +94,21 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
     public void onRoutesAdd(Collection<Route> routes) {
         for (Iterator<Route> iterator = routes.iterator(); iterator.hasNext(); ) {
             Route routeCamel = iterator.next();
+
+            //adding a performance counter on the route
+            if (routeCamel instanceof EventDrivenConsumerRoute) {
+                EventDrivenConsumerRoute edcr = (EventDrivenConsumerRoute) routeCamel;
+                Processor processor = edcr.getProcessor();
+                if (processor instanceof InstrumentationProcessor) {
+                    InstrumentationProcessor ip = (InstrumentationProcessor) processor;
+                    ConsolePerformanceCounter counter = new ConsolePerformanceCounter(routeCamel.getId());
+                    ip.setCounter(counter);
+                    counters.put(routeCamel.getId(), counter);
+                }
+            }
+
+
+            //saving route in database
             log.debug("Route added " + routeCamel.getId());
             com.ninja_squad.console.Route route = repository.findRoute(routeCamel.getId());
             if (route == null) {
@@ -97,6 +118,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
                 repository.save(route);
             }
 
+            //saving state in database
             RouteState routeState = repository.lastRouteState(routeCamel.getId());
             if (routeState == null || routeState.getState().equals(State.Stopped)) {
                 routeState = new RouteState();
@@ -151,5 +173,9 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
 
     public void setRepository(ConsoleRepository repository) {
         this.repository = repository;
+    }
+
+    public ConsolePerformanceCounter getCounter(String routeId) {
+        return counters.get(routeId);
     }
 }

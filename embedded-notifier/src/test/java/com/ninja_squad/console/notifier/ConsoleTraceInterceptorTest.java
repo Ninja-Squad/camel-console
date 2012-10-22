@@ -1,5 +1,6 @@
 package com.ninja_squad.console.notifier;
 
+import org.apache.camel.AsyncCallback;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -11,13 +12,13 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.*;
 
-public class ConsoleTraceHandlerTest {
+public class ConsoleTraceInterceptorTest {
 
     @Test
-    public void notifyShouldHandleTrace() throws Exception {
+    public void notifyShouldHandleCreateANotificationAndUpdateStats() throws Exception {
         //given an ExchangeSentEvent
         CamelContext camelContext = new DefaultCamelContext();
         Exchange exchange = new DefaultExchange(camelContext);
@@ -40,10 +41,15 @@ public class ConsoleTraceHandlerTest {
         };
 
         //when the EventNotifier receives it
-        ConsoleTraceHandler handler = spy(new ConsoleTraceHandler());
-        handler.traceExchange(node, processor, null, exchange);
+        ConsoleTraceInterceptor consoleTraceInterceptor = spy(new ConsoleTraceInterceptor(mock(ConsoleEventNotifier.class), node, processor));
+        consoleTraceInterceptor.process(exchange, new AsyncCallback() {
+            @Override
+            public void done(boolean doneSync) {
+
+            }
+        });
 
         //then notifyExchangeSentEvent should have been called
-        verify(handler).addNotification(any(String.class), any(Notification.class));
+        verify(consoleTraceInterceptor).recordTime(any(Exchange.class), anyLong());
     }
 }

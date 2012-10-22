@@ -46,4 +46,14 @@ public interface ConsoleRepository {
      * @return
      */
     RouteState lastRouteState(String routeId);
+
+    /**
+     * Update the route with fresh statistics
+     *
+     * @param routeId
+     * @param exchangesCompleted
+     * @param exchangesFailed
+     * @param exchangesTotal
+     */
+    void updateRoute(String routeId, long exchangesCompleted, long exchangesFailed, long exchangesTotal);
 }
