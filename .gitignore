@@ -8,3 +8,11 @@ console-jmx/target/classes
 console-jmx/target/test-classes
 console-common/target
 console-jmx/target
+console-common/target/
+console-jmx/target/
+console-web/target/
+embedded-notifier/target/
+console-common/target/
+console-jmx/target/
+console-web/target/
+embedded-notifier/target/
