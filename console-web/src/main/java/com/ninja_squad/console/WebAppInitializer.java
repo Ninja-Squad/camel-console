@@ -1,4 +1,4 @@
-package test;
+package com.ninja_squad.console;
 
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.ContextLoaderListener;

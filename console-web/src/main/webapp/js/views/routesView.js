@@ -7,10 +7,19 @@ define([ 'underscore', 'backbone', 'collections/routes', 'hbs!templates/routes'
             this.template = routesTemplate;
             // Initialize the collection
             this.collection = new Routes();
-            // Render the view when the collection is retreived from the server
+            // Render the view when the collection is retrieved from the server
             this.collection.on('reset', this.render, this)
             // Request unpaginated URL
-            this.collection.fetch({ data: { page: 'no'} });
+            this.collection.fetch({ data:{ page:'no'} });
+        },
+
+        events:{
+            'click .route':'route'
+        },
+
+        route: function(route){
+            console.log("route", route.currentTarget.id);
+            Backbone.history.navigate("route/" + route.currentTarget.id, true);
         }
 
     });
@@ -21,7 +30,7 @@ define([ 'underscore', 'backbone', 'collections/routes', 'hbs!templates/routes'
      * Usage: class='{{sprintf "Welcome %s !" username}}'
      */
     Handlebars.registerHelper('percent', function (value1, value2) {
-        return value1/value2 * 100;
+        return value1 / value2 * 100;
     });
 
     return RoutesView;
