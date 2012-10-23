@@ -1,20 +1,19 @@
-package com.ninja_squad.console.notifier;
+package com.ninja_squad.console;
 
-import com.ninja_squad.console.State;
+public class InstanceState {
 
-public class RouteState {
-    private String routeId;
+    private String name;
 
     private State state;
 
     private String timestamp;
 
-    public String getRouteId() {
-        return routeId;
+    public String getName() {
+        return name;
     }
 
-    public void setRouteId(String routeId) {
-        this.routeId = routeId;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public State getState() {
@@ -35,8 +34,8 @@ public class RouteState {
 
     @Override
     public String toString() {
-        return "RouteState{" +
-                "routeId='" + routeId + '\'' +
+        return "InstanceState{" +
+                "name='" + name + '\'' +
                 ", state=" + state +
                 ", timestamp='" + timestamp + '\'' +
                 '}';

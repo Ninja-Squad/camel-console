@@ -1,6 +1,8 @@
 package com.ninja_squad.console.notifier;
 
+import com.ninja_squad.console.InstanceState;
 import com.ninja_squad.console.Route;
+import com.ninja_squad.console.RouteState;
 import com.ninja_squad.console.State;
 import org.apache.camel.CamelContext;
 import org.apache.camel.builder.RouteBuilder;

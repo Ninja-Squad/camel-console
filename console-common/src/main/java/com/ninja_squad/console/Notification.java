@@ -1,6 +1,5 @@
-package com.ninja_squad.console.notifier;
+package com.ninja_squad.console;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.joda.time.DateTime;
 
 public class Notification {
@@ -8,7 +7,6 @@ public class Notification {
     private String routeId;
     private String destination;
     private String exchangeId;
-    @JsonIgnore
     private Object body;
     private String timestamp;
     private String source;

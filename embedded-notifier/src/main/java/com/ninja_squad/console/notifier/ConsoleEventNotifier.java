@@ -2,6 +2,8 @@ package com.ninja_squad.console.notifier;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.ninja_squad.console.Message;
+import com.ninja_squad.console.Notification;
 import org.apache.camel.management.event.ExchangeCompletedEvent;
 import org.apache.camel.management.event.ExchangeFailedEvent;
 import org.apache.camel.support.EventNotifierSupport;

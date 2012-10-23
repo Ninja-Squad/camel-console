@@ -1,17 +1,20 @@
 package com.ninja_squad.console.notifier;
 
+import com.ninja_squad.console.InstanceState;
+import com.ninja_squad.console.Message;
 import com.ninja_squad.console.Route;
+import com.ninja_squad.console.RouteState;
 
 public interface ConsoleRepository {
     /**
-     * Save a new {@link Message} when exchange is completed (failed or not)
+     * Save a new {@link com.ninja_squad.console.Message} when exchange is completed (failed or not)
      *
      * @param message
      */
     void save(Message message);
 
     /**
-     * Save a new {@link InstanceState} of the application
+     * Save a new {@link com.ninja_squad.console.InstanceState} of the application
      *
      * @param state
      */
@@ -33,7 +36,7 @@ public interface ConsoleRepository {
     Route findRoute(String routeId);
 
     /**
-     * Save a new {@link RouteState}
+     * Save a new {@link com.ninja_squad.console.RouteState}
      *
      * @param routeState
      */

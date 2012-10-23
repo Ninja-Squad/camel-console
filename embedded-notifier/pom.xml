@@ -4,23 +4,18 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.ninja-squad</groupId>
+    <parent>
+        <groupId>com.ninja-squad</groupId>
+        <artifactId>camel-console</artifactId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
     <artifactId>console-notifier</artifactId>
-    <version>1.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <junit.version>4.10</junit.version>
-        <fest-assert.version>2.0M8</fest-assert.version>
-        <mockito.version>1.9.0</mockito.version>
         <camel.version>2.10.1</camel.version>
-        <slf4j.version>1.6.6</slf4j.version>
-        <logback.version>1.0.6</logback.version>
-        <guava.version>13.0.1</guava.version>
         <mongo.version>2.9.1</mongo.version>
         <jongo.version>0.2</jongo.version>
-        <joda-time.version>2.1</joda-time.version>
         <embed-mongo.version>1.26</embed-mongo.version>
     </properties>
 
@@ -37,52 +32,14 @@
             <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-            <version>${logback.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>${guava.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.jongo</groupId>
             <artifactId>jongo</artifactId>
             <version>${jongo.version}</version>
         </dependency>
         <dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-            <version>${joda-time.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
             <version>${mongo.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.easytesting</groupId>
-            <artifactId>fest-assert-core</artifactId>
-            <version>${fest-assert.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-all</artifactId>
-            <version>${mockito.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>
@@ -91,6 +48,5 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
 
 </project>

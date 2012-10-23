@@ -1,5 +1,6 @@
 package com.ninja_squad.console.notifier;
 
+import com.ninja_squad.console.Notification;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;

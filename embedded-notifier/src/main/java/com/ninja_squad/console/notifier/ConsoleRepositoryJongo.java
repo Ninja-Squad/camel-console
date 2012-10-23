@@ -1,7 +1,10 @@
 package com.ninja_squad.console.notifier;
 
 import com.mongodb.Mongo;
+import com.ninja_squad.console.InstanceState;
+import com.ninja_squad.console.Message;
 import com.ninja_squad.console.Route;
+import com.ninja_squad.console.RouteState;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 

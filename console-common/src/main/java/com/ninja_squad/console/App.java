@@ -20,10 +20,11 @@ public class App {
 
     /**
      * Add a instance to the current app
+     *
      * @param instance
      * @return the current instance
      */
-    public App addInstance(Instance instance){
+    public App addInstance(Instance instance) {
         instances.add(instance);
         return this;
     }

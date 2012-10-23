@@ -1,4 +1,4 @@
-package com.ninja_squad.console.notifier;
+package com.ninja_squad.console;
 
 import com.google.common.collect.Sets;
 

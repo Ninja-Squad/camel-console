@@ -1,6 +1,8 @@
 package com.ninja_squad.console.notifier;
 
 import com.google.common.collect.Sets;
+import com.ninja_squad.console.Message;
+import com.ninja_squad.console.Notification;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultCamelContext;
