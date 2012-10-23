@@ -38,6 +38,7 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
         //get notifications related
         final String id = event.getExchange().getExchangeId();
         persistMessage(id);
+        updateRouteStat(event.getExchange().getFromRouteId());
     }
 
     protected void notifyExchangeCompletedEvent(ExchangeCompletedEvent event) {
@@ -79,13 +80,16 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
     }
 
     protected void updateRouteStat(String routeId) {
-        log.debug("update stats of " + routeId);
         ConsolePerformanceCounter counter = consoleLifecycleStrategy.getCounter(routeId);
         if (counter != null) {
             try {
+                log.debug("update stats of " + routeId + " : "
+                        + counter.getExchangesCompleted() + "/"
+                        + counter.getExchangesFailed() + "/"
+                        + counter.getExchangesTotal() + " from " + counter.toString()) ;
                 repository.updateRoute(routeId, counter.getExchangesCompleted(), counter.getExchangesFailed(), counter.getExchangesTotal());
             } catch (Exception e) {
-                log.error("Error while retrieving performance statistics on route " + routeId);
+                log.error("Error while retrieving performance statistics on route " + routeId, e);
             }
         }
     }

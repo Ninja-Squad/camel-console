@@ -169,6 +169,7 @@ public class ConsolePerformanceCounter implements PerformanceCounter, ManagedPer
     }
 
     public synchronized void completedExchange(Exchange exchange, long time) {
+        log.debug("exchange completed on " + exchange.getFromRouteId() + " in " + time + "ms from " + this.toString());
         exchangesTotal.increment();
         exchangesCompleted.increment();
 

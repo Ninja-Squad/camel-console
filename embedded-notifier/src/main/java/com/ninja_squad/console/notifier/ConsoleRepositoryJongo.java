@@ -68,11 +68,8 @@ public class ConsoleRepositoryJongo implements ConsoleRepository {
 
     @Override
     public void updateRoute(String routeId, long exchangesCompleted, long exchangesFailed, long exchangesTotal) {
-        Route route = routes.findOne("{routeId:#}", routeId).as(Route.class);
-        routes.remove("{routeId:#}", routeId);
-        route.setExchangesCompleted(exchangesCompleted);
-        route.setExchangesFailed(exchangesFailed);
-        route.setExchangesTotal(exchangesTotal);
-        routes.save(route);
+        routes.update("{routeId:#}", routeId)
+                .with("{$set:{exchangesCompleted: #, exchangesFailed: #, exchangesTotal: #}}",
+                        exchangesCompleted, exchangesFailed, exchangesTotal);
     }
 }

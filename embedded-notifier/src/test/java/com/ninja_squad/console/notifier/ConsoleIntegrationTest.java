@@ -108,13 +108,14 @@ public class ConsoleIntegrationTest {
                 });
             }
         });
-        //add the intercept strategy
+        //add the lifecycle strategy
+        context.addLifecycleStrategy(consoleLifecycleStrategy);
         notifier = spy(new ConsoleEventNotifier(consoleLifecycleStrategy));
-        context.addInterceptStrategy(new ConsoleTracer(notifier));
         // and the management strategy
         context.getManagementStrategy().addEventNotifier(notifier);
+        //add the intercept strategy
+        context.addInterceptStrategy(new ConsoleTracer(notifier));
 
-        context.addLifecycleStrategy(consoleLifecycleStrategy);
         context.start();
     }
 
@@ -196,6 +197,21 @@ public class ConsoleIntegrationTest {
         for (DBObject notification : notifs) {
             log.debug(notification.toString());
             assertThat(notification.get("step")).isIn(0, 1, 2, 3, 4);
+        }
+
+        //should have updated the exchanges per route
+        dbObjects = routes.find();
+        for (DBObject route : dbObjects) {
+            log.debug(route.toString());
+            if (route.get("routeId").equals("route3")) {
+                assertThat(route.get("exchangesTotal")).isEqualTo(1);
+                assertThat(route.get("exchangesCompleted")).isEqualTo(0);
+                assertThat(route.get("exchangesFailed")).isEqualTo(1);
+            } else {
+                assertThat(route.get("exchangesTotal")).isEqualTo(0);
+                assertThat(route.get("exchangesCompleted")).isEqualTo(0);
+                assertThat(route.get("exchangesFailed")).isEqualTo(0);
+            }
         }
 
         stopCamelApp();

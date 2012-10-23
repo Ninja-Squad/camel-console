@@ -103,10 +103,10 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
                     InstrumentationProcessor ip = (InstrumentationProcessor) processor;
                     ConsolePerformanceCounter counter = new ConsolePerformanceCounter(routeCamel.getId());
                     ip.setCounter(counter);
+                    log.debug("Adding a counter" + counter.toString() + " to " + routeCamel.getId());
                     counters.put(routeCamel.getId(), counter);
                 }
             }
-
 
             //saving route in database
             log.debug("Route added " + routeCamel.getId());
