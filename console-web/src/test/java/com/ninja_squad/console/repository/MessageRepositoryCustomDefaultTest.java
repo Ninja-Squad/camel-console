@@ -29,7 +29,7 @@ import static org.fest.assertions.api.Assertions.assertThat;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
-public class MessageDefaultRepositoryTest {
+public class MessageRepositoryCustomDefaultTest {
 
     static int port = 27016;
     private MongodProcess mongod;
@@ -38,7 +38,7 @@ public class MessageDefaultRepositoryTest {
     private MongoTemplate mongoTemplate;
 
     @Inject
-    private MessageDefaultRepository repository;
+    private MessageRepositoryCustomDefault repositoryCustomDefault;
 
     @Configuration
     static class ContextConfiguration {
@@ -50,8 +50,8 @@ public class MessageDefaultRepositoryTest {
         }
 
         @Bean
-        public MessageDefaultRepository messageDefaultRepository() {
-            return new MessageDefaultRepository();
+        public MessageRepositoryCustomDefault messageDefaultRepository() {
+            return new MessageRepositoryCustomDefault();
         }
 
     }
@@ -84,7 +84,7 @@ public class MessageDefaultRepositoryTest {
         saveMessage(timestamp);
 
         // when mapreducing them
-        List<TimestampCount> count = repository.getNotificationBySecond();
+        List<TimestampCount> count = repositoryCustomDefault.getMessagesPerSecond();
 
         // then
         assertThat(count).hasSize(3);

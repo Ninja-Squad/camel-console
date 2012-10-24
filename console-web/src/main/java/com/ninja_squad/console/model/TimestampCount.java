@@ -6,8 +6,11 @@ import lombok.*;
 @EqualsAndHashCode
 @ToString
 public class TimestampCount {
+
     @Setter
     private long _id;
+
+    @Getter
     @Setter
     private long value;
 
