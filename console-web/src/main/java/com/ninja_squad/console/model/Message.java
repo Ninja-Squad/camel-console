@@ -6,7 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "routes")
-public class Route  extends com.ninja_squad.console.Route {
+public class Message extends com.ninja_squad.console.Message {
 
     @Id
     @Getter

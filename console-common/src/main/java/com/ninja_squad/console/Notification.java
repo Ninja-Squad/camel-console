@@ -30,7 +30,7 @@ public class Notification {
     }
 
     public void setTimestamp(DateTime now) {
-        this.timestamp = now.toString();
+        this.timestamp = String.valueOf(now.getMillis());
     }
 
     public void setSource(String source) {

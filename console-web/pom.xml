@@ -14,6 +14,8 @@
 
     <properties>
         <resthub.spring.stack.version>2.0-rc2</resthub.spring.stack.version>
+        <spring.version>3.1.2.RELEASE</spring.version>
+        <embed-mongo.version>1.26</embed-mongo.version>
         <jetty.version>8.1.3.v20120416</jetty.version>
         <jetty.port>8080</jetty.port>
     </properties>
@@ -28,6 +30,18 @@
             <groupId>org.resthub</groupId>
             <artifactId>resthub-web-server</artifactId>
             <version>${resthub.spring.stack.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>${spring.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.flapdoodle.embed</groupId>
+            <artifactId>de.flapdoodle.embed.mongo</artifactId>
+            <version>${embed-mongo.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

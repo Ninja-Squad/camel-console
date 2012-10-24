@@ -23,7 +23,7 @@
         <level value="debug" />
     </logger>
 
-    <root level="warn">
+    <root level="info">
         <appender-ref ref="STDOUT" />
     </root>
 </configuration>
