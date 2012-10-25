@@ -34,6 +34,17 @@ require.config({
                 'jquery'
             ],
             exports:'Backbone.Paginator'
+        },
+        'flot':{
+            deps:[
+                'jquery'
+            ]
+        },
+        'flot-selection':{
+            deps:[
+                'jquery',
+                'flot'
+            ]
         }
     },
 
@@ -57,7 +68,9 @@ require.config({
         'backbone-paginator':'libs/backbone.paginator',
         async:'libs/async',
         keymaster:'libs/keymaster',
-        hbs:'libs/resthub/require-handlebars'
+        hbs:'libs/resthub/require-handlebars',
+        flot:'libs/jquery.flot',
+        'flot-selection':'libs/jquery.flot.selection'
     }
 });
 

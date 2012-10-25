@@ -28,7 +28,7 @@ public class MessageRepositoryCustomDefault implements MessageRepositoryCustom {
                         options().finalizeFunction("classpath:js/finalize.js").outputTypeInline(),
                         TimestampCount.class);
         List<TimestampCount> timestampCounts = Lists.newArrayList(count);
-        MessageRepositoryCustomDefault.log.info("MapReducer " + timestampCounts.toString());
+        log.debug("MapReducer " + timestampCounts.toString());
         return timestampCounts;
     }
 

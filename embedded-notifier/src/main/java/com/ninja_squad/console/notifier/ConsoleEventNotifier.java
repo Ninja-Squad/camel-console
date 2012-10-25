@@ -7,6 +7,7 @@ import com.ninja_squad.console.Notification;
 import org.apache.camel.management.event.ExchangeCompletedEvent;
 import org.apache.camel.management.event.ExchangeFailedEvent;
 import org.apache.camel.support.EventNotifierSupport;
+import org.joda.time.DateTime;
 
 import java.util.Collection;
 import java.util.EventObject;
@@ -77,6 +78,7 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
         Message message = new Message();
         message.setExchangeId(id);
         message.setNotifications(notifications);
+        message.setTimestamp(String.valueOf(DateTime.now().getMillis()));
         repository.save(message);
         removeNotifications(id);
     }

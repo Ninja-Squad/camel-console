@@ -17,4 +17,8 @@ public class TimestampCount {
     public long getId() {
         return _id;
     }
+
+    public String toJson(){
+        return "[" + _id + "," + value + "]";
+    }
 }
