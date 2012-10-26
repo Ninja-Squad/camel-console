@@ -45,6 +45,12 @@ require.config({
                 'jquery',
                 'flot'
             ]
+        },
+        'flot-stack':{
+            deps:[
+                'jquery',
+                'flot'
+            ]
         }
     },
 
@@ -70,11 +76,16 @@ require.config({
         keymaster:'libs/keymaster',
         hbs:'libs/resthub/require-handlebars',
         flot:'libs/jquery.flot',
-        'flot-selection':'libs/jquery.flot.selection'
+        'flot-selection':'libs/jquery.flot.selection',
+        'flot-stack':'libs/jquery.flot.stack'
     }
 });
 
-require(['router'], function (AppRouter) {
+require(['router', 'handlebars'], function (AppRouter, Handlebars) {
+
+    Handlebars.registerHelper('percent', function(value, total) {
+        return new Handlebars.SafeString(value * 100 / total);
+    });
 
     new AppRouter();
 

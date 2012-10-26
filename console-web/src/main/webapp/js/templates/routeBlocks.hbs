@@ -1,0 +1,26 @@
+<td>{{ name }}</td>
+<td>
+    <div class="numblock numblock-messages">
+        <div class="top">{{ messageCount }}</div>
+        <div class="bottom">
+            <div class="left">{{ successCount }}</div>
+            <div class="right">{{ failureCount }}</div>
+        </div>
+    </div>
+</td>
+<td>
+    <div class="progress progress-success-rate">
+        <div class="bar bar-success" style="width: {{{percent successCount messageCount }}}%"></div>
+        <div class="bar bar-danger" style="width: {{{ percent failureCount messageCount }}}%"></div>
+        <div class="progress-text">{{ successRate }} %</div>
+    </div>
+</td>
+<td>
+    <div class="numblock numblock-times">
+        <div class="top">{{ averageTime }}</div>
+        <div class="bottom">
+            <div class="left">{{ minimumTime }}</div>
+            <div class="right">{{ maximumTime }}</div>
+        </div>
+    </div>
+</td>

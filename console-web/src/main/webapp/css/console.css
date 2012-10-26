@@ -1,0 +1,114 @@
+.numblock {
+    width: 200px; 
+    border: 1px solid #DDDDDD; 
+    border-radius: 3px; 
+    text-align: center; 
+    font-weight: bold;
+    background-color: #EEEEEE;
+    background-image: -moz-linear-gradient(center top , #FFFFFF, #E6E6E6);
+    background-repeat: repeat-x;
+    margin: auto;
+}
+
+.numblock .top {
+    width: 200px; 
+    border-bottom: 1px solid #DDDDDD; 
+    font-size: xx-large; 
+    line-height: normal;
+}
+
+.numblock .bottom {
+    display: table-row;
+}
+
+.numblock .bottom .left {
+    width: 100px; 
+    display: table-cell; 
+    border-right: 1px solid #DDDDDD;
+}
+
+.numblock .bottom .right {
+    width: 100px; 
+    display: table-cell;
+}
+
+.numblock-messages .top {
+    color: #339BB9; 
+}
+
+.numblock-messages .bottom .left {
+    color: #5EB95E;
+}
+
+.numblock-messages .bottom .right {
+    color: #DD514C;
+}
+
+.numblock-times .top {
+    color: #AEAEAE;
+}
+
+.numblock-times .bottom .left {
+    color: #D4B989;
+}
+
+.numblock-times .bottom .right {
+    color: #8F6E34;
+}
+
+.progress-success-rate {
+    width: 200px;
+    margin: auto;
+}
+
+.progress-text {
+    position: absolute; 
+    text-align: center; 
+    width: inherit; 
+    color: white;
+}
+
+.table th.block {
+    text-align: center;
+}
+.table th.num, .table td.num {
+    text-align: right;
+    font-weight: bold;
+}
+.table td.messageCount {
+    color: #339BB9; 
+}
+.table td.successCount {
+    color: #5EB95E; 
+}
+.table td.failureCount {
+    color: #DD514C; 
+}
+.table td.averageTime {
+    color: #AEAEAE; 
+}
+.table td.minimumTime {
+    color: #D4B989; 
+}
+.table td.maximumTime {
+    color: #8F6E34; 
+}
+.table th[data-sort] {
+    cursor: pointer;
+    background-position: right;
+    background-repeat: no-repeat;
+    background-image: url(../img/arrow_off.png);
+    padding-right: 20px;
+}
+
+.table th[data-sort].sorted-asc {
+    background-image: url(../img/arrow_down.png);
+}
+
+.table th[data-sort].sorted-desc {
+    background-image: url(../img/arrow_up.png);
+}
+
+.btn-group {
+    margin-bottom: 12px;
+}
