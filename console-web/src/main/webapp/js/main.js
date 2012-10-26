@@ -77,7 +77,8 @@ require.config({
         hbs:'libs/resthub/require-handlebars',
         flot:'libs/jquery.flot',
         'flot-selection':'libs/jquery.flot.selection',
-        'flot-stack':'libs/jquery.flot.stack'
+        'flot-stack':'libs/jquery.flot.stack',
+        'flot-resize':'libs/jquery.flot.resize'
     }
 });
 

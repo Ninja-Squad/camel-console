@@ -3,6 +3,7 @@ define(['underscore',
         'hbs!templates/graph',
         'flot', 
         'flot-stack',
+        'flot-resize',
         'bootstrap',
         'models/Statistics'], function (_, Backbone, graphTemplate) {
     var GraphView = Backbone.View.extend({
