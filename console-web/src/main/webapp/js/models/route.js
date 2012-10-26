@@ -11,7 +11,7 @@ define(['backbone'], function(Backbone) {
             maximumTime: 0
         },
         initialize: function() {
-            this.set('successRate', Math.round(this.get('successCount') * 100 / this.get('messageCount')));
+            this.set('successRate', Math.floor(this.get('successCount') * 100 / this.get('messageCount')));
         }
     });
     

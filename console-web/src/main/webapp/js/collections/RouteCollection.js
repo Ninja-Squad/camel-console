@@ -1,6 +1,7 @@
 define(['backbone', 'models/Route'], function (Backbone, Route) {
     var RouteCollection = Backbone.Collection.extend({
         model: Route,
+        url: 'api/route',
         initialize: function() {
             this.setSortAttribute('name');
             this.asc = true;
@@ -23,6 +24,14 @@ define(['backbone', 'models/Route'], function (Backbone, Route) {
                 }
                 return (this.asc ? result : -result);
             }
+        },
+        parse: function(response) {
+            return $.map(response.content, function(item) {
+                return {name: item.routeId + ' (' + item.uri + ')',
+                        messageCount: item.exchangesTotal,
+                        successCount: item.exchangesCompleted,
+                        failureCount: item.exchangesFailed};
+            });
         }
     });
     

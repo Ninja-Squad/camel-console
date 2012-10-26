@@ -30,10 +30,12 @@ define(['backbone', 'views/GraphView', 'views/RouteTableView', 'models/Statistic
         
             var stats = new Statistics({successes: successes, failures: failures, averageTimes: averageTimes, minimumTimes: minimumTimes, maximumTimes: maximumTimes});
             var routeCollection = new RouteCollection();
+            /*
             routeCollection.add(new Route({name: 'Long route name 3', messageCount: 234, successCount: 200, failureCount: 34, averageTime: 57, minimumTime: 12, maximumTime: 345}));
             routeCollection.add(new Route({name: 'Long route name 2', messageCount: 224, successCount: 200, failureCount: 24, averageTime: 47, minimumTime: 12, maximumTime: 345}));
             routeCollection.add(new Route({name: 'Long route name 1', messageCount: 244, successCount: 200, failureCount: 44, averageTime: 37, minimumTime: 12, maximumTime: 345}));
-            
+            */
+            routeCollection.fetch();
             new RouteTableView({collection: routeCollection, el: '#routes'}).render();
             new GraphView({model: stats, el: '#stats'}).render();
         },
