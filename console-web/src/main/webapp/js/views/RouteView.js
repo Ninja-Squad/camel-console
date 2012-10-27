@@ -22,6 +22,7 @@ define(['underscore',
             this.$el.html(html);
             this.$('.numblock-messages').tooltip({title: this.messagesTooltipTitle});
             this.$('.numblock-times').tooltip({title: this.timesTooltipTitle});
+            this.$('span').tooltip();
             return this;
         },
         setMode: function(mode) {

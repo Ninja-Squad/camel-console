@@ -27,7 +27,8 @@ define(['backbone', 'models/Route'], function (Backbone, Route) {
         },
         parse: function(response) {
             return $.map(response.content, function(item) {
-                return {name: item.routeId + ' (' + item.uri + ')',
+                return {name: item.routeId,
+                        uri: item.uri,
                         messageCount: item.exchangesTotal,
                         successCount: item.exchangesCompleted,
                         failureCount: item.exchangesFailed};

@@ -2,6 +2,7 @@ define(['backbone'], function(Backbone) {
     var Route = Backbone.Model.extend({
         defaults: {
             name: 'unnamed',
+            uri: '',
             messageCount: 0,
             successCount: 0,
             failureCount: 0,
