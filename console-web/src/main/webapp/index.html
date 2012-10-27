@@ -1,34 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Camel Console</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
-
-    <link href="css/bootstrap.css" rel="stylesheet">
-    <style>
-      body {
-        padding-top: 30px;
-      }
-    </style>
-    <link href="css/bootstrap-responsive.css" rel="stylesheet">
-
-    <!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-
-  </head>
-
-  <body>
-
-    <div class="container">
-      <div id="main"> </div>
-    </div>
-      
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script data-main="js/main" src="js/libs/require.js"></script>
-  </body>
+    <head>
+        <meta charset="utf-8">
+        <title>Camel Console</title>
+        <link href="css/bootstrap.css" rel="stylesheet"/>
+        <link href="css/console.css" rel="stylesheet"/>
+        <script data-main="js/main" src="js/libs/require.js"></script>
+        
+    </head>
+    <body>
+        <div class="container-fluid">
+            <h1 class="page-header">Routes</h1>
+            <div id="stats"></div>
+            <hr/>
+            <div id="routes"></div>
+        </div>
+    </body>
 </html>
