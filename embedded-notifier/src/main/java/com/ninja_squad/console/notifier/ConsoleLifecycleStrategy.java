@@ -137,6 +137,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
         for (Iterator<Route> iterator = routes.iterator(); iterator.hasNext(); ) {
             Route routeCamel = iterator.next();
             log.debug("Route stopped : " + routeCamel.getId());
+            // saving state in database
             RouteState routeState = repository.lastRouteState(routeCamel.getId());
             if (routeState == null || routeState.getState().equals(State.Started)) {
                 routeState = new RouteState();
