@@ -14,6 +14,7 @@ public class Notification {
     private boolean failed;
     private Object errorBody;
     private Object errorHeaders;
-    private Throwable exception;
+    private String exception;
+    private String exceptionMessage;
 
 }

@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Properties;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -38,17 +39,20 @@ public class ConsoleIntegrationTest {
     private ConsoleEventNotifier notifier;
     private ConsoleLifecycleStrategy consoleLifecycleStrategy;
 
-
     @Before
     public void setUp() throws Exception {
+        //getting properties
+        Properties properties = new Properties();
+        properties.load(getClass().getClassLoader().getResourceAsStream("database.properties"));
+        String host = properties.getProperty("mongodb.host");
+        int port = Integer.parseInt(properties.getProperty("mongodb.port"));
 
         //setting up mongodb embedded
-        int port = 27017;
         MongodConfig mongodConfig = new MongodConfig(Version.Main.V2_0, port, Network.localhostIsIPv6());
         MongodStarter runtime = MongodStarter.getDefaultInstance();
         MongodExecutable mongodExecutable = runtime.prepare(mongodConfig);
         mongod = mongodExecutable.start();
-        Mongo mongo = new Mongo("localhost", port);
+        Mongo mongo = new Mongo(host, port);
         DB db = mongo.getDB("console");
         notifications = db.getCollection("notifications");
         routes = db.getCollection("routes");
@@ -56,8 +60,10 @@ public class ConsoleIntegrationTest {
         states = db.getCollection("states");
 
         //setting up notifiers and tracers
-        notifier = spy(new ConsoleEventNotifier(consoleLifecycleStrategy));
+        notifier = spy(new ConsoleEventNotifier(properties));
+        ConsoleRepositoryJongo repository = new ConsoleRepositoryJongo(host, port);
         consoleLifecycleStrategy = spy(new ConsoleLifecycleStrategy());
+        consoleLifecycleStrategy.setRepository(repository);
     }
 
     @After
@@ -110,7 +116,6 @@ public class ConsoleIntegrationTest {
         });
         //add the lifecycle strategy
         context.addLifecycleStrategy(consoleLifecycleStrategy);
-        notifier = spy(new ConsoleEventNotifier(consoleLifecycleStrategy));
         // and the management strategy
         context.getManagementStrategy().addEventNotifier(notifier);
         //add the intercept strategy
@@ -152,21 +157,6 @@ public class ConsoleIntegrationTest {
             assertThat(notification.get("step")).isIn(0, 1, 2);
         }
 
-        //should have updated the exchanges per route
-        dbObjects = routes.find();
-        for (DBObject route : dbObjects) {
-            log.debug(route.toString());
-            if (route.get("routeId").equals("route2")) {
-                assertThat(route.get("exchangesTotal")).isEqualTo(1);
-                assertThat(route.get("exchangesCompleted")).isEqualTo(1);
-                assertThat(route.get("exchangesFailed")).isEqualTo(0);
-            } else {
-                assertThat(route.get("exchangesTotal")).isEqualTo(0);
-                assertThat(route.get("exchangesCompleted")).isEqualTo(0);
-                assertThat(route.get("exchangesFailed")).isEqualTo(0);
-            }
-        }
-
         stopCamelApp();
     }
 
@@ -186,7 +176,7 @@ public class ConsoleIntegrationTest {
         //and notifyExchangeFailedEvent should have been called
         verify(notifier, timeout(1000).times(1)).notifyExchangeFailedEvent(any(ExchangeFailedEvent.class));
 
-        Thread.sleep(2000);
+        Thread.sleep(3000);
 
         //should be 1 message in database
         DBCursor dbObjects = notifications.find();
@@ -197,21 +187,6 @@ public class ConsoleIntegrationTest {
         for (DBObject notification : notifs) {
             log.debug(notification.toString());
             assertThat(notification.get("step")).isIn(0, 1, 2, 3, 4);
-        }
-
-        //should have updated the exchanges per route
-        dbObjects = routes.find();
-        for (DBObject route : dbObjects) {
-            log.debug(route.toString());
-            if (route.get("routeId").equals("route3")) {
-                assertThat(route.get("exchangesTotal")).isEqualTo(1);
-                assertThat(route.get("exchangesCompleted")).isEqualTo(0);
-                assertThat(route.get("exchangesFailed")).isEqualTo(1);
-            } else {
-                assertThat(route.get("exchangesTotal")).isEqualTo(0);
-                assertThat(route.get("exchangesCompleted")).isEqualTo(0);
-                assertThat(route.get("exchangesFailed")).isEqualTo(0);
-            }
         }
 
         stopCamelApp();

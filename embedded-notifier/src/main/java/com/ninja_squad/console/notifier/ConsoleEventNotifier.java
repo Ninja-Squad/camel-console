@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.ninja_squad.console.Message;
 import com.ninja_squad.console.Notification;
+import lombok.Setter;
 import org.apache.camel.management.event.ExchangeCompletedEvent;
 import org.apache.camel.management.event.ExchangeFailedEvent;
 import org.apache.camel.support.EventNotifierSupport;
@@ -11,20 +12,24 @@ import org.joda.time.DateTime;
 
 import java.util.Collection;
 import java.util.EventObject;
+import java.util.Properties;
 
 public class ConsoleEventNotifier extends EventNotifierSupport {
 
+    @Setter
     private ConsoleRepository repository;
-
-    private ConsoleLifecycleStrategy consoleLifecycleStrategy;
 
     private Multimap<String, Notification> exchanges = HashMultimap.create();
 
-    public ConsoleEventNotifier(ConsoleLifecycleStrategy consoleLifecycleStrategy) {
-        this.repository = new ConsoleRepositoryJongo();
-        this.consoleLifecycleStrategy = consoleLifecycleStrategy;
+    public ConsoleEventNotifier(Properties properties) {
+        String property = properties.getProperty("mongodb.port");
+        int port = Integer.parseInt(property == null ? "27017" : property);
+        String host = properties.getProperty("mongodb.host");
+        host = host == null ? "localhost" : host;
+        this.repository = new ConsoleRepositoryJongo(host, port);
     }
 
+    @Override
     public void notify(EventObject event) throws Exception {
         if (event instanceof ExchangeCompletedEvent) {
             ExchangeCompletedEvent sent = (ExchangeCompletedEvent) event;
@@ -35,22 +40,28 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
         }
     }
 
-    protected void notifyExchangeFailedEvent(ExchangeFailedEvent event) {
-        log.debug(event.getExchange().getFromRouteId() + " : " + event.getExchange().getExchangeId()
-                + " failed.");
-        //get notifications related
-        final String id = event.getExchange().getExchangeId();
-        persistMessage(id);
-        updateRouteStat(event.getExchange().getFromRouteId());
-    }
-
     protected void notifyExchangeCompletedEvent(ExchangeCompletedEvent event) {
         log.debug(event.getExchange().getFromRouteId() + " : " + event.getExchange().getExchangeId()
                 + " completed.");
         //get notifications related
         final String id = event.getExchange().getExchangeId();
-        persistMessage(id);
-        updateRouteStat(event.getExchange().getFromRouteId());
+        Message message = buildMessage(id);
+        message.setFailed(false);
+        persistMessage(message);
+    }
+
+    protected void notifyExchangeFailedEvent(ExchangeFailedEvent event) {
+        log.debug(event.getExchange().getFromRouteId() + " : " + event.getExchange().getExchangeId()
+                + " failed.");
+        //get notifications related
+        final String id = event.getExchange().getExchangeId();
+        Message message = buildMessage(id);
+        message.setFailed(true);
+        if (event.getExchange().getException() != null) {
+            message.setException(event.getExchange().getException().getClass().getSimpleName());
+            message.setExceptionMessage(event.getExchange().getException().getMessage());
+        }
+        persistMessage(message);
     }
 
     protected synchronized void addNotification(String exchangeId, Notification notification) {
@@ -62,16 +73,19 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
     }
 
     protected synchronized Collection<Notification> getNotifications(String id) {
-        //then remove events
-        Collection<Notification> notifications = exchanges.get(id);
-        return notifications;
+        return exchanges.get(id);
     }
 
     protected synchronized void removeNotifications(String id) {
         exchanges.removeAll(id);
     }
 
-    private void persistMessage(String id) {
+    private void persistMessage(Message message) {
+        repository.save(message);
+        removeNotifications(message.getExchangeId());
+    }
+
+    private Message buildMessage(String id) {
         Collection<Notification> notifications = getNotifications(id);
         log.debug("notifications for event " + id + " : " + notifications);
         //persist them
@@ -79,25 +93,10 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
         message.setExchangeId(id);
         message.setNotifications(notifications);
         message.setTimestamp(DateTime.now().getMillis());
-        repository.save(message);
-        removeNotifications(id);
+        return message;
     }
 
-    protected void updateRouteStat(String routeId) {
-        ConsolePerformanceCounter counter = consoleLifecycleStrategy.getCounter(routeId);
-        if (counter != null) {
-            try {
-                log.debug("update stats of " + routeId + " : "
-                        + counter.getExchangesCompleted() + "/"
-                        + counter.getExchangesFailed() + "/"
-                        + counter.getExchangesTotal() + " from " + counter.toString()) ;
-                repository.updateRoute(routeId, counter.getExchangesCompleted(), counter.getExchangesFailed(), counter.getExchangesTotal());
-            } catch (Exception e) {
-                log.error("Error while retrieving performance statistics on route " + routeId, e);
-            }
-        }
-    }
-
+    @Override
     public boolean isEnabled(EventObject event) {
         return true;
     }
@@ -115,9 +114,5 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
     @Override
     public boolean isStarted() {
         return true;
-    }
-
-    public void setRepository(ConsoleRepository repository) {
-        this.repository = repository;
     }
 }

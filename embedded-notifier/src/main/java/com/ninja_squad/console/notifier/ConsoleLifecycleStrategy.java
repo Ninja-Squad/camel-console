@@ -22,7 +22,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
 
     private Logger log = LoggerFactory.getLogger(getClass());
 
-    private ConsoleRepository repository = new ConsoleRepositoryJongo();
+    private ConsoleRepository repository;
     private Map<String, ConsolePerformanceCounter> counters = Maps.newHashMap();
 
     /**

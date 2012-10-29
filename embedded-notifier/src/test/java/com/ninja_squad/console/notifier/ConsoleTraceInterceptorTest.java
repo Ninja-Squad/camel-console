@@ -13,6 +13,7 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import java.util.Map;
+import java.util.Properties;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -22,7 +23,7 @@ import static org.mockito.Mockito.*;
 public class ConsoleTraceInterceptorTest {
 
     ProcessorDefinition<?> node = mock(ProcessorDefinition.class);
-    ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier(mock(ConsoleLifecycleStrategy.class)));
+    ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier(mock(Properties.class)));
     ConsoleTraceInterceptor consoleTraceInterceptor = spy(new ConsoleTraceInterceptor(notifier, node, mock(Processor.class)));
 
     @Test
@@ -141,7 +142,8 @@ public class ConsoleTraceInterceptorTest {
         assertThat(notification.isFailed()).isEqualTo(true);
         assertThat(notification.getErrorBody()).isEqualTo(body);
         assertThat(notification.getErrorHeaders()).isEqualTo(headers);
-        assertThat(notification.getException()).isEqualTo(exception);
+        assertThat(notification.getException()).isEqualTo("NullPointerException");
+        assertThat(notification.getExceptionMessage()).isNull();
     }
 
     @Test

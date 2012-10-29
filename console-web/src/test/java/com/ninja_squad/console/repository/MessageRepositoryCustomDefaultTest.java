@@ -104,7 +104,7 @@ public class MessageRepositoryCustomDefaultTest {
 
     private void saveMessage(DateTime timestamp) {
         Message message = new Message();
-        message.setTimestamp(String.valueOf(timestamp.getMillis()));
+        message.setTimestamp(timestamp.getMillis());
         mongoTemplate.save(message);
     }
 }

@@ -12,6 +12,8 @@ public class Message {
     private long timestamp;
     private long duration;
     private boolean failed;
+    private String exception;
+    private String exceptionMessage;
     private Collection<Notification> notifications = Sets.newHashSet();
 
 }
