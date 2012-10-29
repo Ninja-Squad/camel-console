@@ -90,6 +90,7 @@ public class ConsoleTraceInterceptor extends DelegateAsyncProcessor {
         notification.setFailed(true);
         notification.setErrorBody(exchange.getIn().getBody());
         notification.setErrorHeaders(exchange.getIn().getHeaders());
+        notification.setException(exchange.getException());
         storeNotification(notification);
         return notification;
     }

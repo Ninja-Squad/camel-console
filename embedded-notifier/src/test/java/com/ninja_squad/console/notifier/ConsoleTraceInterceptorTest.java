@@ -131,6 +131,8 @@ public class ConsoleTraceInterceptorTest {
         headers.put("header1", "A");
         exchange.getIn().setHeaders(headers);
         doReturn("destination").when(node).getLabel();
+        NullPointerException exception = new NullPointerException();
+        exchange.setException(exception);
 
         // when the exchange is completed
         Notification notification = consoleTraceInterceptor.failedExchange(exchange, 110L);
@@ -139,6 +141,7 @@ public class ConsoleTraceInterceptorTest {
         assertThat(notification.isFailed()).isEqualTo(true);
         assertThat(notification.getErrorBody()).isEqualTo(body);
         assertThat(notification.getErrorHeaders()).isEqualTo(headers);
+        assertThat(notification.getException()).isEqualTo(exception);
     }
 
     @Test
