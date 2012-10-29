@@ -14,6 +14,9 @@
         <lombok.version>0.11.4</lombok.version>
         <slf4j.version>1.6.6</slf4j.version>
         <logback.version>1.0.6</logback.version>
+        <joda-time.version>2.1</joda-time.version>
+        <guava.version>13.0.1</guava.version>
+        <!-- test -->
         <junit.version>4.10</junit.version>
         <fest-assert.version>2.0M8</fest-assert.version>
         <mockito.version>1.9.0</mockito.version>
@@ -22,6 +25,8 @@
     <modules>
         <module>console-common</module>
         <module>console-jmx</module>
+        <module>console-web</module>
+        <module>embedded-notifier</module>
     </modules>
 
     <dependencies>
@@ -39,6 +44,16 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>${joda-time.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
         <!-- test -->
         <dependency>
