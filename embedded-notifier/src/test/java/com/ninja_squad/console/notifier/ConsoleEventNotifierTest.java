@@ -15,7 +15,6 @@ import org.mockito.ArgumentCaptor;
 
 import java.util.Collection;
 import java.util.EventObject;
-import java.util.Properties;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -30,7 +29,7 @@ public class ConsoleEventNotifierTest {
         EventObject event = new DefaultEventFactory().createExchangeCompletedEvent(exchange);
 
         //when the EventNotifier receives it
-        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier(mock(Properties.class)));
+        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
         doNothing().when(notifier).notifyExchangeCompletedEvent(any(ExchangeCompletedEvent.class));
         notifier.notify(event);
 
@@ -47,7 +46,7 @@ public class ConsoleEventNotifierTest {
         ExchangeCompletedEvent event = (ExchangeCompletedEvent) new DefaultEventFactory().createExchangeCompletedEvent(exchange);
 
         //when the EventNotifier receives it
-        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier(mock(Properties.class)));
+        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
         Notification notif1 = new Notification();
         notif1.setRouteId("1");
         notif1.setExchangeId("1");
@@ -84,7 +83,7 @@ public class ConsoleEventNotifierTest {
         ExchangeFailedEvent event = (ExchangeFailedEvent) new DefaultEventFactory().createExchangeFailedEvent(exchange);
 
         //when the EventNotifier receives it
-        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier(mock(Properties.class)));
+        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
         Notification notif1 = new Notification();
         notif1.setRouteId("1");
         notif1.setExchangeId("1");

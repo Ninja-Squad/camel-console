@@ -23,7 +23,7 @@ import static org.mockito.Mockito.*;
 public class ConsoleTraceInterceptorTest {
 
     ProcessorDefinition<?> node = mock(ProcessorDefinition.class);
-    ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier(mock(Properties.class)));
+    ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
     ConsoleTraceInterceptor consoleTraceInterceptor = spy(new ConsoleTraceInterceptor(notifier, node, mock(Processor.class)));
 
     @Test

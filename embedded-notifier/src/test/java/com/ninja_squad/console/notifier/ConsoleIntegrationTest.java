@@ -60,7 +60,7 @@ public class ConsoleIntegrationTest {
         states = db.getCollection("states");
 
         //setting up notifiers and tracers
-        notifier = spy(new ConsoleEventNotifier(properties));
+        notifier = spy(new ConsoleEventNotifier());
         ConsoleRepositoryJongo repository = new ConsoleRepositoryJongo(host, port);
         consoleLifecycleStrategy = spy(new ConsoleLifecycleStrategy());
         consoleLifecycleStrategy.setRepository(repository);

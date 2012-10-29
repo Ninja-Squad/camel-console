@@ -10,6 +10,7 @@ import org.apache.camel.management.event.ExchangeFailedEvent;
 import org.apache.camel.support.EventNotifierSupport;
 import org.joda.time.DateTime;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.EventObject;
 import java.util.Properties;
@@ -21,11 +22,19 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
 
     private Multimap<String, Notification> exchanges = HashMultimap.create();
 
-    public ConsoleEventNotifier(Properties properties) {
-        String property = properties.getProperty("mongodb.port");
-        int port = Integer.parseInt(property == null ? "27017" : property);
-        String host = properties.getProperty("mongodb.host");
+    public ConsoleEventNotifier() {
+        String property = null;
+        String host = null;
+        try {
+            Properties properties = new Properties();
+            properties.load(getClass().getClassLoader().getResourceAsStream("database.properties"));
+            property = properties.getProperty("mongodb.port");
+            host = properties.getProperty("mongodb.host");
+        } catch (IOException e) {
+            log.error("no database.properties on classpath : will use default values localhost:27017");
+        }
         host = host == null ? "localhost" : host;
+        int port = Integer.parseInt(property == null ? "27017" : property);
         this.repository = new ConsoleRepositoryJongo(host, port);
     }
 
