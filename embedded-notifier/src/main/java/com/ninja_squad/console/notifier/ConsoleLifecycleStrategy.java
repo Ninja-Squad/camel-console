@@ -13,6 +13,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,6 +26,22 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
     private ConsoleRepository repository;
     private Map<String, ConsolePerformanceCounter> counters = Maps.newHashMap();
 
+    public ConsoleLifecycleStrategy() {
+        String property = null;
+        String host = null;
+        try {
+            java.util.Properties properties = new java.util.Properties();
+            properties.load(getClass().getClassLoader().getResourceAsStream("database.properties"));
+            property = properties.getProperty("mongodb.port");
+            host = properties.getProperty("mongodb.host");
+        } catch (IOException e) {
+            log.error("no database.properties on classpath : will use default values localhost:27017");
+        }
+        host = host == null ? "localhost" : host;
+        int port = Integer.parseInt(property == null ? "27017" : property);
+        this.repository = new ConsoleRepositoryJongo(host, port);
+    }
+
     /**
      * Store a notification of the application state and time
      *
@@ -33,7 +50,6 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
      */
     @Override
     public void onContextStart(CamelContext context) throws VetoCamelContextStartException {
-
         log.debug("Started " + context.getName());
         InstanceState instanceState = new InstanceState();
         instanceState.setName(context.getName());
