@@ -32,6 +32,11 @@ import java.util.List;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.extractProperty;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
@@ -156,6 +161,7 @@ public class NotificationSubscriberTest {
     public void getRoundedTimestampShouldReturnRoundedTimestamp() throws Exception {
         // given a timestamp
         long timestamp = 1351523921246L;
+        subscriber = spy(subscriber);
 
         // when rounding
         long roundedSeconds = subscriber.getRoundedTimestamp(timestamp, TimeUnit.SECONDS);
@@ -174,5 +180,6 @@ public class NotificationSubscriberTest {
         assertThat(roundedWeeks).isEqualTo(1351375200000L);
         assertThat(roundedMonths).isEqualTo(1349042400000L);
         assertThat(roundedYears).isEqualTo(1325372400000L);
+        verify(subscriber, times(13)).getRoundedTimestamp(anyLong(), any(TimeUnit.class));
     }
 }

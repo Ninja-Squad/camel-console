@@ -1,5 +1,7 @@
 package com.ninja_squad.console.subscriber;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import com.ninja_squad.console.Notification;
@@ -9,7 +11,6 @@ import com.ninja_squad.console.repository.MessageRepository;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
-import org.springframework.cache.annotation.Cacheable;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -22,6 +23,10 @@ public class NotificationSubscriber {
     @Named("messageRepository")
     @Setter
     private MessageRepository repository;
+
+    private Cache<String, Long> cache = CacheBuilder.newBuilder()
+            .maximumSize(1000)
+            .build();
 
     public void subscribe() {
         log.debug("Start subscribing");
@@ -43,6 +48,10 @@ public class NotificationSubscriber {
     }
 
     protected long getRoundedTimestamp(long timestamp, TimeUnit unit) {
+        Long cached = cache.getIfPresent(timestamp + unit.toString());
+        if(cached != null) {
+            return cached;
+        }
         DateTime time = new DateTime(timestamp);
         log.debug("Rounding " + time + " in " + unit);
         switch (unit) {
@@ -75,6 +84,7 @@ public class NotificationSubscriber {
                 break;
         }
         log.debug("Rounded " + time);
+        cache.put(timestamp + unit.toString(), time.getMillis());
         return time.getMillis();
     }
 
