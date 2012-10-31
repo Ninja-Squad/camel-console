@@ -40,6 +40,10 @@ public class NotificationSubscriber {
             for (TimeUnit unit : TimeUnit.values()) {
                 updateMessagesPer(unit, timestamp, duration, isFailed);
             }
+
+            // notification is not pending anymore
+            pendingNotification.setHandled(true);
+            messageRepository.save(pendingNotification);
         }
     }
 

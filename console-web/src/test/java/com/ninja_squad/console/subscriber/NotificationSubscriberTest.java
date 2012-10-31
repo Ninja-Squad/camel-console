@@ -249,6 +249,8 @@ public class NotificationSubscriberTest {
         statistic = all.get(7);
         millis = new DateTime(2012, 10, 31, 16, 00, 30, 00).getMillis();
         assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.SECONDS, 0, 1, 300, 300, 300));
+        // no more pending notifications
+        assertThat(messageRepository.findByHandledIsFalseOrderByTimestampAsc()).hasSize(0);
 
     }
 }

@@ -1,6 +1,7 @@
 package com.ninja_squad.console.model;
 
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.springframework.data.annotation.Id;
@@ -15,6 +16,7 @@ public class Statistic {
     @Id
     private String id;
 
+    @Getter
     private long range;
     private TimeUnit timeUnit;
     private int failed;
@@ -54,5 +56,9 @@ public class Statistic {
 
     public synchronized void updateMax(int duration) {
         max = duration > max ? duration : max;
+    }
+
+    public String toJson() {
+        return "[" + range + "," + failed + "," + completed + "," + min + "," + max + "," + average + "]";
     }
 }
