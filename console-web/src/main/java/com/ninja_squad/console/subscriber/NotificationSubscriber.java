@@ -1,52 +1,67 @@
 package com.ninja_squad.console.subscriber;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import com.ninja_squad.console.Notification;
 import com.ninja_squad.console.model.Message;
+import com.ninja_squad.console.model.Statistic;
 import com.ninja_squad.console.model.TimeUnit;
 import com.ninja_squad.console.repository.MessageRepository;
+import com.ninja_squad.console.repository.StatisticRepository;
 import com.ninja_squad.console.utils.TimeUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.joda.time.DateTime;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 
 @Slf4j
 public class NotificationSubscriber {
 
     @Inject
-    @Named("messageRepository")
     @Setter
-    private MessageRepository repository;
+    private MessageRepository messageRepository;
+
+    @Inject
+    @Setter
+    private StatisticRepository statisticRepository;
 
     public void subscribe() {
         log.debug("Start subscribing");
         List<Message> pendingNotifications = getPendingNotifications();
         for (Message pendingNotification : pendingNotifications) {
-            //compute duration
-            long duration = computeDuration(pendingNotification);
+            // compute duration
+            int duration = computeDuration(pendingNotification);
             pendingNotification.setDuration(duration);
 
-            //add message to each range
+            // add message to each range
             long timestamp = pendingNotification.getTimestamp();
             boolean isFailed = pendingNotification.isFailed();
             updateMessagesPerSecond(timestamp, duration, isFailed);
         }
     }
 
-    protected void updateMessagesPerSecond(long timestamp, long duration, boolean isFailed) {
+    protected Statistic updateMessagesPerSecond(long timestamp, int duration, boolean isFailed) {
         long range = TimeUtils.getRoundedTimestamp(timestamp, TimeUnit.SECONDS);
+        Statistic statistic = statisticRepository.findOneByRange(range);
+        if (statistic == null) {
+            // create a new one
+            statistic = new Statistic(range, isFailed ? 1 : 0, isFailed ? 0 : 1, duration, duration, duration);
+        } else {
+            // update existing one
+            statistic = updateStatistic(statistic, duration, isFailed);
+        }
+        return statisticRepository.save(statistic);
     }
 
-    protected long computeDuration(Message message) {
+    protected Statistic updateStatistic(Statistic statistic, int duration, boolean failed) {
+        if (failed) { statistic.addFailed(); } else { statistic.addCompleted(duration); }
+        return statistic;
+    }
+
+    protected int computeDuration(Message message) {
         List<Notification> notifications = getOrderedSteps(message);
-        return message.getTimestamp() - notifications.get(0).getTimestamp();
+        return (int) (message.getTimestamp() - notifications.get(0).getTimestamp());
     }
 
     protected List<Notification> getOrderedSteps(Message pendingNotification) {
@@ -60,6 +75,6 @@ public class NotificationSubscriber {
     }
 
     protected List<Message> getPendingNotifications() {
-        return repository.findByHandledIsFalseOrderByTimestampAsc();
+        return messageRepository.findByHandledIsFalseOrderByTimestampAsc();
     }
 }

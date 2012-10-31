@@ -4,9 +4,9 @@ import com.google.common.collect.Lists;
 import com.mongodb.Mongo;
 import com.ninja_squad.console.Notification;
 import com.ninja_squad.console.model.Message;
-import com.ninja_squad.console.model.TimeUnit;
+import com.ninja_squad.console.model.Statistic;
 import com.ninja_squad.console.repository.MessageRepository;
-import com.ninja_squad.console.utils.TimeUtils;
+import com.ninja_squad.console.repository.StatisticRepository;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -28,16 +28,10 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.extractProperty;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
@@ -47,8 +41,10 @@ public class NotificationSubscriberTest {
     private static MongodProcess mongod;
 
     @Inject
-    @Named("messageRepository")
-    private MessageRepository repository;
+    private MessageRepository messageRepository;
+
+    @Inject
+    private StatisticRepository statisticRepository;
 
     @Inject
     private NotificationSubscriber subscriber;
@@ -71,6 +67,7 @@ public class NotificationSubscriberTest {
         public NotificationSubscriber subscriber() {
             return new NotificationSubscriber();
         }
+
     }
 
     @BeforeClass
@@ -83,12 +80,13 @@ public class NotificationSubscriberTest {
 
     @AfterClass
     public static void tearDownDatabase() throws Exception {
-        if (mongod != null) mongod.stop();
+        if (mongod != null) { mongod.stop(); }
     }
 
     @Before
     public void setUp() throws Exception {
-        repository.deleteAll();
+        messageRepository.deleteAll();
+        statisticRepository.deleteAll();
     }
 
     private Message createMessage(String id, DateTime time, boolean handled) {
@@ -96,7 +94,7 @@ public class NotificationSubscriberTest {
         message.setId(id);
         message.setTimestamp(time.getMillis());
         message.setHandled(handled);
-        message = repository.save(message);
+        message = messageRepository.save(message);
         return message;
     }
 
@@ -156,6 +154,44 @@ public class NotificationSubscriberTest {
 
         // then should be 2000
         assertThat(time).isEqualTo(2000);
+    }
+
+    @Test
+    public void updateMessagesPerSecondShouldCreateStats() throws Exception {
+        // given a message completed in 200ms
+        long now = 1351523921246L;
+
+        // when updateMessagesPerSecond
+        Statistic statistic = subscriber.updateMessagesPerSecond(now, 200, false);
+
+        // then should be 1 message in range with 200 everywhere
+        assertThat(statistic).isEqualTo(new Statistic(1351523921000L, 0, 1, 200, 200, 200));
+    }
+
+    @Test
+    public void updateMessagesPerSecondShouldUpdateStats() throws Exception {
+        // given a message completed in 200ms in the same range than a previous one
+        long now = 1351523921246L;
+        statisticRepository.save(new Statistic(1351523921000L, 0, 1, 100, 100, 100));
+
+        // when updateMessagesPerSecond
+        Statistic statistic = subscriber.updateMessagesPerSecond(now, 200, false);
+
+        // then should be 2 messages in the range with update min and average
+        assertThat(statistic).isEqualTo(new Statistic(1351523921000L, 0, 2, 100, 200, 150));
+    }
+
+    @Test
+    public void updateMessagesPerSecondShouldUpdateStatsIfFailed() throws Exception {
+        // given a message completed in 200ms in the same range than a previous one
+        long now = 1351523921246L;
+        statisticRepository.save(new Statistic(1351523921000L, 0, 1, 100, 100, 100));
+
+        // when updateMessagesPerSecond
+        Statistic statistic = subscriber.updateMessagesPerSecond(now, 200, true);
+
+        // then should be 2 messages in the range with update min and average
+        assertThat(statistic).isEqualTo(new Statistic(1351523921000L, 1, 1, 100, 100, 100));
     }
 
 }
