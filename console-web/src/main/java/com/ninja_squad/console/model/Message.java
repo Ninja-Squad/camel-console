@@ -15,5 +15,5 @@ public class Message extends com.ninja_squad.console.Message {
 
     @Getter
     @Setter
-    private boolean handled;
+    private Boolean handled;
 }

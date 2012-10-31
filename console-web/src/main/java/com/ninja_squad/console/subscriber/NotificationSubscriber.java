@@ -12,6 +12,7 @@ import com.ninja_squad.console.utils.TimeUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.List;
 
@@ -26,6 +27,7 @@ public class NotificationSubscriber {
     @Setter
     private StatisticRepository statisticRepository;
 
+    @PostConstruct
     public void subscribe() {
         log.debug("Start subscribing");
         List<Message> pendingNotifications = getPendingNotifications();
@@ -83,6 +85,6 @@ public class NotificationSubscriber {
     }
 
     protected List<Message> getPendingNotifications() {
-        return messageRepository.findByHandledIsFalseOrderByTimestampAsc();
+        return messageRepository.findByHandledExistsOrderByTimestampAsc(false);
     }
 }

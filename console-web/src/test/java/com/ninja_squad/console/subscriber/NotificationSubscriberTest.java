@@ -95,7 +95,7 @@ public class NotificationSubscriberTest {
         Message message = new Message();
         message.setId(id);
         message.setTimestamp(time.getMillis());
-        message.setHandled(handled);
+        if (handled) { message.setHandled(true); } else { message.setHandled(null); }
         return messageRepository.save(message);
     }
 
@@ -250,7 +250,7 @@ public class NotificationSubscriberTest {
         millis = new DateTime(2012, 10, 31, 16, 00, 30, 00).getMillis();
         assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.SECONDS, 0, 1, 300, 300, 300));
         // no more pending notifications
-        assertThat(messageRepository.findByHandledIsFalseOrderByTimestampAsc()).hasSize(0);
+        assertThat(messageRepository.findByHandledExistsOrderByTimestampAsc(false)).hasSize(0);
 
     }
 }

@@ -7,6 +7,6 @@ import java.util.List;
 
 public interface MessageRepository extends MongoRepository<Message, String> {
 
-    List<Message> findByHandledIsFalseOrderByTimestampAsc();
+    List<Message> findByHandledExistsOrderByTimestampAsc(boolean exists);
 
 }

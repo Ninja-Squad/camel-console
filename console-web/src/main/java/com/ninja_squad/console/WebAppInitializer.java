@@ -1,6 +1,5 @@
 package com.ninja_squad.console;
 
-import com.ninja_squad.console.subscriber.NotificationSubscriber;
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
@@ -25,9 +24,7 @@ public class WebAppInitializer implements WebApplicationInitializer {
         dispatcher.setLoadOnStartup(1);
         dispatcher.addMapping("/*");
 
-        servletContext.addListener(new ContextLoaderListener(appContext));
-
-        // start fetching new notifications
-        new NotificationSubscriber().subscribe();
+        ContextLoaderListener contextLoaderListener = new ContextLoaderListener(appContext);
+        servletContext.addListener(contextLoaderListener);
     }
 }
