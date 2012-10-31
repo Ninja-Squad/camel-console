@@ -17,15 +17,12 @@ public class ConsoleTraceInterceptor extends DelegateAsyncProcessor {
 
     private ConsoleEventNotifier eventNotifier;
 
-    private ConsolePerformanceCounter counter;
-
     private final ProcessorDefinition<?> node;
 
     public ConsoleTraceInterceptor(ConsoleEventNotifier eventNotifier, ProcessorDefinition<?> node, Processor target) {
         super(target);
         this.eventNotifier = eventNotifier;
         this.node = node;
-        counter = new ConsolePerformanceCounter(node.toString());
     }
 
     @Override
@@ -43,56 +40,65 @@ public class ConsoleTraceInterceptor extends DelegateAsyncProcessor {
         }
 
         // only record time if stats is enabled
-        final StopWatch watch = (counter != null) ? new StopWatch() : null;
+        final StopWatch watch = new StopWatch();
 
         boolean sync = super.process(exchange, new AsyncCallback() {
             public void done(boolean doneSync) {
                 try {
-                    // record end time
+                    // record end time and store exchange
                     if (watch != null) {
-                        recordTime(exchange, watch.stop());
+                        recordTimeAndTrace(exchange, watch.stop());
                     }
                 } finally {
                     // and let the original callback know we are done as well
                     callback.done(doneSync);
                 }
             }
-
-            @Override
-            public String toString() {
-                return ConsoleTraceInterceptor.this.toString();
-            }
         });
-
-        try {
-            traceExchange(exchange, counter);
-        } catch (Exception e) {
-            log.info("Error while tracing exchange");
-        }
-
         return sync;
     }
 
-    protected void recordTime(Exchange exchange, long duration) {
+    protected void recordTimeAndTrace(Exchange exchange, long duration) {
+        Notification notification;
         if (!exchange.isFailed() && exchange.getException() == null) {
-            counter.completedExchange(exchange, duration);
+            notification = completedExchange(exchange, duration);
         } else {
-            counter.failedExchange(exchange);
+            notification = failedExchange(exchange, duration);
         }
+        storeNotification(notification);
     }
 
-    protected void traceExchange(Exchange exchange, ConsolePerformanceCounter counter) throws Exception {
+    protected Notification buildNotification(Exchange exchange, long duration) {
         Notification notification = new Notification();
         notification.setRouteId(exchange.getFromRouteId());
         String exchangeId = exchange.getExchangeId();
         notification.setExchangeId(exchangeId);
-        notification.setBody(exchange.getIn().getBody());
-        notification.setTimestamp(DateTime.now());
-        notification.setSource(exchange.getFromEndpoint() == null ? "" : exchange.getFromEndpoint().getEndpointUri());
+        notification.setTimestamp(DateTime.now().getMillis());
         notification.setDestination(node.getLabel());
-        notification.setDuration(counter.getLastProcessingTime());
-        eventNotifier.addNotification(exchangeId, notification);
+        notification.setDuration(duration);
+        return notification;
+    }
+
+    protected Notification completedExchange(Exchange exchange, long duration) {
+        Notification notification = buildNotification(exchange, duration);
+        notification.setFailed(false);
+        return notification;
+    }
+
+    protected Notification failedExchange(Exchange exchange, long duration) {
+        Notification notification = buildNotification(exchange, duration);
+        notification.setFailed(true);
+        notification.setErrorBody(exchange.getIn().getBody());
+        notification.setErrorHeaders(exchange.getIn().getHeaders());
+        notification.setException(exchange.getException().getClass().getSimpleName());
+        notification.setExceptionMessage(exchange.getException().getMessage());
+        storeNotification(notification);
+        return notification;
+    }
+
+    protected void storeNotification(Notification notification) {
         log.debug(notification.toString());
+        eventNotifier.addNotification(notification.getExchangeId(), notification);
     }
 
 }

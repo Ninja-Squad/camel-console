@@ -13,4 +13,7 @@ public class Message extends com.ninja_squad.console.Message {
     @Setter
     private String id;
 
+    @Getter
+    @Setter
+    private Boolean handled;
 }
