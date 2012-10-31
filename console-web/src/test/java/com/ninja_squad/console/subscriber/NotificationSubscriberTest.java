@@ -6,6 +6,7 @@ import com.ninja_squad.console.Notification;
 import com.ninja_squad.console.model.Message;
 import com.ninja_squad.console.model.TimeUnit;
 import com.ninja_squad.console.repository.MessageRepository;
+import com.ninja_squad.console.utils.TimeUtils;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -157,29 +158,4 @@ public class NotificationSubscriberTest {
         assertThat(time).isEqualTo(2000);
     }
 
-    @Test
-    public void getRoundedTimestampShouldReturnRoundedTimestamp() throws Exception {
-        // given a timestamp
-        long timestamp = 1351523921246L;
-        subscriber = spy(subscriber);
-
-        // when rounding
-        long roundedSeconds = subscriber.getRoundedTimestamp(timestamp, TimeUnit.SECONDS);
-        long roundedMinutes = subscriber.getRoundedTimestamp(timestamp, TimeUnit.MINUTES);
-        long roundedHours = subscriber.getRoundedTimestamp(timestamp, TimeUnit.HOURS);
-        long roundedDays = subscriber.getRoundedTimestamp(timestamp, TimeUnit.DAYS);
-        long roundedWeeks = subscriber.getRoundedTimestamp(timestamp, TimeUnit.WEEKS);
-        long roundedMonths = subscriber.getRoundedTimestamp(timestamp, TimeUnit.MONTHS);
-        long roundedYears = subscriber.getRoundedTimestamp(timestamp, TimeUnit.YEARS);
-
-        // then should be rounded in seconds
-        assertThat(roundedSeconds).isEqualTo(1351523921000L);
-        assertThat(roundedMinutes).isEqualTo(1351523880000L);
-        assertThat(roundedHours).isEqualTo(1351522800000L);
-        assertThat(roundedDays).isEqualTo(1351465200000L);
-        assertThat(roundedWeeks).isEqualTo(1351375200000L);
-        assertThat(roundedMonths).isEqualTo(1349042400000L);
-        assertThat(roundedYears).isEqualTo(1325372400000L);
-        verify(subscriber, times(13)).getRoundedTimestamp(anyLong(), any(TimeUnit.class));
-    }
 }

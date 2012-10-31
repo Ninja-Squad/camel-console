@@ -8,6 +8,7 @@ import com.ninja_squad.console.Notification;
 import com.ninja_squad.console.model.Message;
 import com.ninja_squad.console.model.TimeUnit;
 import com.ninja_squad.console.repository.MessageRepository;
+import com.ninja_squad.console.utils.TimeUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
@@ -23,10 +24,6 @@ public class NotificationSubscriber {
     @Named("messageRepository")
     @Setter
     private MessageRepository repository;
-
-    private Cache<String, Long> cache = CacheBuilder.newBuilder()
-            .maximumSize(1000)
-            .build();
 
     public void subscribe() {
         log.debug("Start subscribing");
@@ -44,48 +41,7 @@ public class NotificationSubscriber {
     }
 
     protected void updateMessagesPerSecond(long timestamp, long duration, boolean isFailed) {
-        long range = getRoundedTimestamp(timestamp, TimeUnit.SECONDS);
-    }
-
-    protected long getRoundedTimestamp(long timestamp, TimeUnit unit) {
-        Long cached = cache.getIfPresent(timestamp + unit.toString());
-        if(cached != null) {
-            return cached;
-        }
-        DateTime time = new DateTime(timestamp);
-        log.debug("Rounding " + time + " in " + unit);
-        switch (unit) {
-            case SECONDS:
-                time = time.minusMillis(time.getMillisOfSecond());
-                break;
-            case MINUTES:
-                long roundedS = getRoundedTimestamp(timestamp, TimeUnit.SECONDS);
-                time = new DateTime(roundedS).minusSeconds(time.getSecondOfMinute());
-                break;
-            case HOURS:
-                long roundedM = getRoundedTimestamp(timestamp, TimeUnit.MINUTES);
-                time = new DateTime(roundedM).minusMinutes(time.getMinuteOfHour());
-                break;
-            case DAYS:
-                long roundedD = getRoundedTimestamp(timestamp, TimeUnit.HOURS);
-                time = new DateTime(roundedD).minusHours(time.getHourOfDay());
-                break;
-            case WEEKS:
-                long roundedW = getRoundedTimestamp(timestamp, TimeUnit.DAYS);
-                time = new DateTime(roundedW).minusDays(time.getDayOfWeek());
-                break;
-            case MONTHS:
-                long roundedMo = getRoundedTimestamp(timestamp, TimeUnit.DAYS);
-                time = new DateTime(roundedMo).minusDays(time.getDayOfMonth() - 1);
-                break;
-            case YEARS:
-                long roundedY = getRoundedTimestamp(timestamp, TimeUnit.DAYS);
-                time = new DateTime(roundedY).minusDays(time.getDayOfYear() - 1);
-                break;
-        }
-        log.debug("Rounded " + time);
-        cache.put(timestamp + unit.toString(), time.getMillis());
-        return time.getMillis();
+        long range = TimeUtils.getRoundedTimestamp(timestamp, TimeUnit.SECONDS);
     }
 
     protected long computeDuration(Message message) {
