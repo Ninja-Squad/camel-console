@@ -24,7 +24,7 @@
 
     <modules>
         <module>console-common</module>
-        <module>console-jmx</module>
+        <!--module>console-jmx</module-->
         <module>console-web</module>
         <module>embedded-notifier</module>
     </modules>
