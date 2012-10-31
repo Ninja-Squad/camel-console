@@ -18,7 +18,7 @@ import javax.inject.Named;
 import java.util.List;
 
 @Controller
-@RequestMapping(value = "/api/message")
+@RequestMapping(value = "/api/statistic")
 @Slf4j
 public class StatisticController extends RepositoryBasedRestController<Statistic, String, StatisticRepository> {
 
