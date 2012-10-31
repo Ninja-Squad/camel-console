@@ -1,10 +1,11 @@
 package com.ninja_squad.console.repository;
 
 import com.ninja_squad.console.model.Statistic;
+import com.ninja_squad.console.model.TimeUnit;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface StatisticRepository extends MongoRepository<Statistic, String> {
 
-    Statistic findOneByRange(long range);
+    Statistic findOneByRangeAndTimeUnit(long range, TimeUnit timeUnit);
 
 }

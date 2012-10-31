@@ -1,17 +1,19 @@
 package com.ninja_squad.console.model;
 
-import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @NoArgsConstructor
-@AllArgsConstructor
 @ToString
-@EqualsAndHashCode
+@EqualsAndHashCode(exclude = "id")
 @Document(collection = "statistics")
 public class Statistic {
+
+    @Id
+    private String id;
 
     private long range;
     private TimeUnit timeUnit;
@@ -20,6 +22,16 @@ public class Statistic {
     private int min;
     private int max;
     private int average;
+
+    public Statistic(long range, TimeUnit timeUnit, int failed, int completed, int min, int max, int average) {
+        this.average = average;
+        this.completed = completed;
+        this.failed = failed;
+        this.max = max;
+        this.min = min;
+        this.range = range;
+        this.timeUnit = timeUnit;
+    }
 
     public synchronized void addFailed() {
         failed++;

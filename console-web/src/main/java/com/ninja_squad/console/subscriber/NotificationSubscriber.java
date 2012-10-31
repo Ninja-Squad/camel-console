@@ -45,7 +45,7 @@ public class NotificationSubscriber {
 
     protected Statistic updateMessagesPer(TimeUnit unit, long timestamp, int duration, boolean isFailed) {
         long range = TimeUtils.getRoundedTimestamp(timestamp, unit);
-        Statistic statistic = statisticRepository.findOneByRange(range);
+        Statistic statistic = statisticRepository.findOneByRangeAndTimeUnit(range, unit);
         if (statistic == null) {
             // create a new one
             statistic = new Statistic(range, unit, isFailed ? 1 : 0, isFailed ? 0 : 1, duration, duration, duration);
@@ -64,6 +64,7 @@ public class NotificationSubscriber {
 
     protected int computeDuration(Message message) {
         List<Notification> notifications = getOrderedSteps(message);
+        if(notifications.isEmpty()) return 0;
         return (int) (message.getTimestamp() - notifications.get(0).getTimestamp());
     }
 

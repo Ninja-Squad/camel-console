@@ -29,6 +29,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import javax.inject.Inject;
+import java.util.Collection;
 import java.util.List;
 
 import static org.fest.assertions.api.Assertions.assertThat;
@@ -95,8 +96,13 @@ public class NotificationSubscriberTest {
         message.setId(id);
         message.setTimestamp(time.getMillis());
         message.setHandled(handled);
-        message = messageRepository.save(message);
-        return message;
+        return messageRepository.save(message);
+    }
+
+    private Message createMessage(String id, DateTime now, boolean handled, Collection<Notification> notifications) {
+        Message message = createMessage(id, now, handled);
+        message.setNotifications(notifications);
+        return messageRepository.save(message);
     }
 
     @Test
@@ -195,4 +201,54 @@ public class NotificationSubscriberTest {
         assertThat(statistic).isEqualTo(new Statistic(1351523921000L, TimeUnit.SECONDS, 1, 1, 100, 100, 100));
     }
 
+    @Test
+    public void subscribeShouldHandlePendingNotifsAndUpdateStats() throws Exception {
+        // given 3 pending notifications 2 in the same second, all in the same minute
+        DateTime now = new DateTime(2012, 10, 31, 16, 00, 00, 432);
+        createMessage("1", now, true);
+        Notification notification0 = new Notification();
+        notification0.setStep(0);
+        notification0.setTimestamp(now.minusMillis(200).getMillis());
+        createMessage("2", now, false, Lists.newArrayList(notification0));
+        createMessage("3", now, true);
+        notification0 = new Notification();
+        notification0.setStep(0);
+        notification0.setTimestamp(now.minusMillis(100).getMillis());
+        createMessage("4", now, false, Lists.newArrayList(notification0));
+        now = new DateTime(2012, 10, 31, 16, 00, 30, 232);
+        notification0 = new Notification();
+        notification0.setStep(0);
+        notification0.setTimestamp(now.minusMillis(300).getMillis());
+        createMessage("5", now, false, Lists.newArrayList(notification0));
+
+        // when subscribing
+        subscriber.subscribe();
+
+        // then we should have a new Statistic for each time unit and 2 for SECONDS
+        List<Statistic> all = statisticRepository.findAll();
+        assertThat(all).hasSize(TimeUnit.values().length + 1);
+        Statistic statistic = all.get(0);
+        long millis = new DateTime(2012, 10, 31, 16, 00, 00, 00).getMillis();
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.SECONDS, 0, 2, 100, 200, 150));
+        statistic = all.get(1);
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.MINUTES, 0, 3, 100, 300, 200));
+        statistic = all.get(2);
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.HOURS, 0, 3, 100, 300, 200));
+        statistic = all.get(3);
+        millis = new DateTime(2012, 10, 31, 00, 00, 00, 00).getMillis();
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.DAYS, 0, 3, 100, 300, 200));
+        statistic = all.get(4);
+        millis = new DateTime(2012, 10, 28, 00, 00, 00, 00).getMillis();
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.WEEKS, 0, 3, 100, 300, 200));
+        statistic = all.get(5);
+        millis = new DateTime(2012, 10, 01, 00, 00, 00, 00).getMillis();
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.MONTHS, 0, 3, 100, 300, 200));
+        statistic = all.get(6);
+        millis = new DateTime(2012, 01, 01, 00, 00, 00, 00).getMillis();
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.YEARS, 0, 3, 100, 300, 200));
+        statistic = all.get(7);
+        millis = new DateTime(2012, 10, 31, 16, 00, 30, 00).getMillis();
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.SECONDS, 0, 1, 300, 300, 300));
+
+    }
 }
