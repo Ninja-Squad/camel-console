@@ -37,20 +37,23 @@ public class NotificationSubscriber {
             // add message to each range
             long timestamp = pendingNotification.getTimestamp();
             boolean isFailed = pendingNotification.isFailed();
-            updateMessagesPerSecond(timestamp, duration, isFailed);
+            for (TimeUnit unit : TimeUnit.values()) {
+                updateMessagesPer(unit, timestamp, duration, isFailed);
+            }
         }
     }
 
-    protected Statistic updateMessagesPerSecond(long timestamp, int duration, boolean isFailed) {
-        long range = TimeUtils.getRoundedTimestamp(timestamp, TimeUnit.SECONDS);
+    protected Statistic updateMessagesPer(TimeUnit unit, long timestamp, int duration, boolean isFailed) {
+        long range = TimeUtils.getRoundedTimestamp(timestamp, unit);
         Statistic statistic = statisticRepository.findOneByRange(range);
         if (statistic == null) {
             // create a new one
-            statistic = new Statistic(range, isFailed ? 1 : 0, isFailed ? 0 : 1, duration, duration, duration);
+            statistic = new Statistic(range, unit, isFailed ? 1 : 0, isFailed ? 0 : 1, duration, duration, duration);
         } else {
             // update existing one
             statistic = updateStatistic(statistic, duration, isFailed);
         }
+        // saving it
         return statisticRepository.save(statistic);
     }
 

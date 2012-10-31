@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Statistic {
 
     private long range;
+    private TimeUnit timeUnit;
     private int failed;
     private int completed;
     private int min;
