@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 @Slf4j
 public class NotificationSubscriber {
@@ -30,23 +31,29 @@ public class NotificationSubscriber {
     @PostConstruct
     public void subscribe() {
         log.debug("Start subscribing");
-        List<Message> pendingNotifications = getPendingNotifications();
-        for (Message pendingNotification : pendingNotifications) {
-            // compute duration
-            int duration = computeDuration(pendingNotification);
-            pendingNotification.setDuration(duration);
+        Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                List<Message> pendingNotifications = getPendingNotifications();
+                log.debug(pendingNotifications.size() + " pending notifications");
+                for (Message pendingNotification : pendingNotifications) {
+                    // compute duration
+                    int duration = computeDuration(pendingNotification);
+                    pendingNotification.setDuration(duration);
 
-            // add message to each range
-            long timestamp = pendingNotification.getTimestamp();
-            boolean isFailed = pendingNotification.isFailed();
-            for (TimeUnit unit : TimeUnit.values()) {
-                updateMessagesPer(unit, timestamp, duration, isFailed);
+                    // add message to each range
+                    long timestamp = pendingNotification.getTimestamp();
+                    boolean isFailed = pendingNotification.isFailed();
+                    for (TimeUnit unit : TimeUnit.values()) {
+                        updateMessagesPer(unit, timestamp, duration, isFailed);
+                    }
+
+                    // notification is not pending anymore
+                    pendingNotification.setHandled(true);
+                    messageRepository.save(pendingNotification);
+                }
             }
-
-            // notification is not pending anymore
-            pendingNotification.setHandled(true);
-            messageRepository.save(pendingNotification);
-        }
+        }, 0, 1, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     protected Statistic updateMessagesPer(TimeUnit unit, long timestamp, int duration, boolean isFailed) {
@@ -70,7 +77,7 @@ public class NotificationSubscriber {
 
     protected int computeDuration(Message message) {
         List<Notification> notifications = getOrderedSteps(message);
-        if(notifications.isEmpty()) return 0;
+        if (notifications.isEmpty()) { return 0; }
         return (int) (message.getTimestamp() - notifications.get(0).getTimestamp());
     }
 
