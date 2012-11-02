@@ -11,10 +11,12 @@ import org.apache.camel.management.event.DefaultEventFactory;
 import org.apache.camel.management.event.ExchangeCompletedEvent;
 import org.apache.camel.management.event.ExchangeFailedEvent;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.Collection;
 import java.util.EventObject;
 
+import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 public class ConsoleEventNotifierTest {
@@ -27,7 +29,7 @@ public class ConsoleEventNotifierTest {
         EventObject event = new DefaultEventFactory().createExchangeCompletedEvent(exchange);
 
         //when the EventNotifier receives it
-        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier(mock(ConsoleLifecycleStrategy.class)));
+        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
         doNothing().when(notifier).notifyExchangeCompletedEvent(any(ExchangeCompletedEvent.class));
         notifier.notify(event);
 
@@ -44,12 +46,11 @@ public class ConsoleEventNotifierTest {
         ExchangeCompletedEvent event = (ExchangeCompletedEvent) new DefaultEventFactory().createExchangeCompletedEvent(exchange);
 
         //when the EventNotifier receives it
-        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier(mock(ConsoleLifecycleStrategy.class)));
-        doNothing().when(notifier).updateRouteStat(event.getExchange().getFromRouteId());
+        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
         Notification notif1 = new Notification();
         notif1.setRouteId("1");
         notif1.setExchangeId("1");
-        notif1.setStep(1);
+        notif1.setStep(0);
         Notification notif2 = new Notification();
         notif2.setRouteId("1");
         notif2.setExchangeId("1");
@@ -60,13 +61,17 @@ public class ConsoleEventNotifierTest {
         notifier.setRepository(repository);
         notifier.notifyExchangeCompletedEvent(event);
 
-        //then notifyExchangeSentEvent should have been called
-        Message message = new Message();
-        message.setExchangeId("1");
-        message.setNotifications(notifications);
-        verify(repository).save(message);
+        //then save and removeNotifications should have been called
+        ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
+        verify(repository).save(captor.capture());
+        Message message = captor.getValue();
+        assertThat(message.getDuration()).isEqualTo(0);
+        assertThat(message.getExchangeId()).isEqualTo("1");
+        assertThat(message.getNotifications()).isEqualTo(notifications);
+        assertThat(message.getTimestamp()).isNotEqualTo(0);
+        assertThat(message.isFailed()).isFalse();
+
         verify(notifier).removeNotifications("1");
-        verify(notifier).updateRouteStat(event.getExchange().getFromRouteId());
     }
 
     @Test
@@ -78,7 +83,7 @@ public class ConsoleEventNotifierTest {
         ExchangeFailedEvent event = (ExchangeFailedEvent) new DefaultEventFactory().createExchangeFailedEvent(exchange);
 
         //when the EventNotifier receives it
-        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier(mock(ConsoleLifecycleStrategy.class)));
+        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
         Notification notif1 = new Notification();
         notif1.setRouteId("1");
         notif1.setExchangeId("1");
@@ -93,44 +98,15 @@ public class ConsoleEventNotifierTest {
         notifier.setRepository(repository);
         notifier.notifyExchangeFailedEvent(event);
 
-        //then notifyExchangeSentEvent should have been called
-        Message message = new Message();
-        message.setExchangeId("1");
-        message.setNotifications(notifications);
-        verify(repository).save(message);
+        //then save and removeNotifications should have been called
+        ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
+        verify(repository).save(captor.capture());
+        Message message = captor.getValue();
+        assertThat(message.getDuration()).isEqualTo(0);
+        assertThat(message.getExchangeId()).isEqualTo("1");
+        assertThat(message.getNotifications()).isEqualTo(notifications);
+        assertThat(message.getTimestamp()).isNotEqualTo(0);
+        assertThat(message.isFailed()).isTrue();
         verify(notifier).removeNotifications("1");
     }
-
-    @Test
-    public void notifyExchangeEventShouldUpdateRouteStats() throws Exception {
-        //given an ExchangeSentEvent
-        CamelContext camelContext = new DefaultCamelContext();
-        Exchange exchange = new DefaultExchange(camelContext);
-        exchange.setExchangeId("1");
-        ExchangeFailedEvent event = (ExchangeFailedEvent) new DefaultEventFactory().createExchangeFailedEvent(exchange);
-
-        //when the EventNotifier receives it
-        ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier(mock(ConsoleLifecycleStrategy.class)));
-        Notification notif1 = new Notification();
-        notif1.setRouteId("1");
-        notif1.setExchangeId("1");
-        notif1.setStep(1);
-        Notification notif2 = new Notification();
-        notif2.setRouteId("1");
-        notif2.setExchangeId("1");
-        notif2.setStep(1);
-        Collection<Notification> notifications = Sets.newHashSet(notif1, notif2);
-        doReturn(notifications).when(notifier).getNotifications("1");
-        ConsoleRepository repository = mock(ConsoleRepositoryJongo.class);
-        notifier.setRepository(repository);
-        notifier.notifyExchangeFailedEvent(event);
-
-        //then notifyExchangeSentEvent should have been called
-        Message message = new Message();
-        message.setExchangeId("1");
-        message.setNotifications(notifications);
-        verify(repository).save(message);
-        verify(notifier).removeNotifications("1");
-    }
-
 }

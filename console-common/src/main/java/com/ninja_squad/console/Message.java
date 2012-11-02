@@ -9,7 +9,11 @@ import java.util.Collection;
 public class Message {
 
     private String exchangeId;
-    private String timestamp;
+    private long timestamp;
+    private long duration;
+    private boolean failed;
+    private String exception;
+    private String exceptionMessage;
     private Collection<Notification> notifications = Sets.newHashSet();
 
 }
