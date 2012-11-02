@@ -78,7 +78,8 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
 
         //last point to zero (only if the next range fits in the selection)
         long afterLastTimestamp = TimeUtils.getNextRange(last.getRange(), unit);
-        if (afterLastTimestamp < now.getMillis()) {
+        long currentTimestampRounded = TimeUtils.getRoundedTimestamp(now.getMillis(), unit);
+        if (afterLastTimestamp < currentTimestampRounded) {
             Statistic after = new Statistic(afterLastTimestamp, unit, 0, 0, 0, 0, 0);
             log.debug("add 0 on the last point " + after);
             last = after;
@@ -86,7 +87,6 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
         }
 
         //current point to zero (only if current time is not yet in counts)
-        long currentTimestampRounded = TimeUtils.getRoundedTimestamp(now.getMillis(), unit);
         if (currentTimestampRounded > last.getRange()) {
             Statistic current = new Statistic(currentTimestampRounded, unit, 0, 0, 0, 0, 0);
             log.debug("add 0 on the current point " + current);
