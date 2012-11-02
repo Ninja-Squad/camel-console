@@ -12,8 +12,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 public class WebAppConfigurer {
 
     @Bean
-    public NotificationSubscriber notificationSubscriber(){
+    public NotificationSubscriber notificationSubscriber() {
         return new NotificationSubscriber();
     }
-
 }
