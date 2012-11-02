@@ -55,4 +55,35 @@ public class TimeUtils {
         cache.put(timestamp + unit.toString(), time.getMillis());
         return time.getMillis();
     }
+
+    public static long getNextRange(long timestamp, TimeUnit unit) {
+        if (unit == null) { return timestamp; }
+        DateTime time = new DateTime(timestamp);
+        log.debug("Next timestamp for " + time + " in " + unit);
+        switch (unit) {
+            case SECOND:
+                time = time.plusSeconds(1);
+                break;
+            case MINUTE:
+                time = time.plusMinutes(1);
+                break;
+            case HOUR:
+                time = time.plusHours(1);
+                break;
+            case DAY:
+                time = time.plusDays(1);
+                break;
+            case WEEK:
+                time = time.plusWeeks(1);
+                break;
+            case MONTH:
+                time = time.plusMonths(1);
+                break;
+            case YEAR:
+                time = time.plusYears(1);
+                break;
+        }
+        log.debug("Next " + time);
+        return getRoundedTimestamp(time.getMillis(), unit);
+    }
 }

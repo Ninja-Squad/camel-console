@@ -9,6 +9,7 @@ import static org.mockito.Matchers.anyLong;
 import static org.mockito.Mockito.*;
 
 public class TimeUtilsTest {
+
     @Test
     public void getRoundedTimestampShouldReturnRoundedTimestamp() throws Exception {
         // given a timestamp
@@ -33,5 +34,29 @@ public class TimeUtilsTest {
         assertThat(roundedMonths).isEqualTo(1349042400000L);
         assertThat(roundedYears).isEqualTo(1325372400000L);
         verify(timeUtils, times(13)).getRoundedTimestamp(anyLong(), any(TimeUnit.class));
+    }
+
+    @Test
+    public void getNextRangeShouldReturnTheNextRangeForTheTimeUnit() throws Exception {
+        // given a timestamp
+        long timestamp = 1351523921246L;
+
+        // when getting next range
+        long roundedSeconds = TimeUtils.getNextRange(timestamp, TimeUnit.SECOND);
+        long roundedMinutes = TimeUtils.getNextRange(timestamp, TimeUnit.MINUTE);
+        long roundedHours = TimeUtils.getNextRange(timestamp, TimeUnit.HOUR);
+        long roundedDays = TimeUtils.getNextRange(timestamp, TimeUnit.DAY);
+        long roundedWeeks = TimeUtils.getNextRange(timestamp, TimeUnit.WEEK);
+        long roundedMonths = TimeUtils.getNextRange(timestamp, TimeUnit.MONTH);
+        long roundedYears = TimeUtils.getNextRange(timestamp, TimeUnit.YEAR);
+
+        // then should be next rounded range
+        assertThat(roundedSeconds).isEqualTo(1351523922000L);
+        assertThat(roundedMinutes).isEqualTo(1351523940000L);
+        assertThat(roundedHours).isEqualTo(1351526400000L);
+        assertThat(roundedDays).isEqualTo(1351551600000L);
+        assertThat(roundedWeeks).isEqualTo(1351983600000L);
+        assertThat(roundedMonths).isEqualTo(1351724400000L);
+        assertThat(roundedYears).isEqualTo(1356994800000L);
     }
 }

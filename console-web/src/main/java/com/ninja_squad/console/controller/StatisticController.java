@@ -6,6 +6,7 @@ import com.ninja_squad.console.controller.converter.TimeUnitEnumConverter;
 import com.ninja_squad.console.model.Statistic;
 import com.ninja_squad.console.model.TimeUnit;
 import com.ninja_squad.console.repository.StatisticRepository;
+import com.ninja_squad.console.utils.TimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
 import org.resthub.web.controller.RepositoryBasedRestController;
@@ -55,8 +56,9 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
         List<Statistic> counts = Lists.newArrayList();
         for (Statistic statistic : stats) {
             //first missing points to zero
-            if (statistic.getRange() - last.getRange() > 1000) {
-                Statistic zero = new Statistic(last.getRange() + 1000, unit, 0, 0, 0, 0, 0);
+            long nextRangeAfterLast = TimeUtils.getNextRange(last.getRange(), unit);
+            if (statistic.getRange() > nextRangeAfterLast) {
+                Statistic zero = new Statistic(nextRangeAfterLast, unit, 0, 0, 0, 0, 0);
                 counts.add(zero);
             }
             //last missing point to zero
