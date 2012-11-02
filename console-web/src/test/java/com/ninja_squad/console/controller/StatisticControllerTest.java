@@ -24,7 +24,7 @@ public class StatisticControllerTest {
 
         // when toJson
         DateTime now = new DateTime(2012, 10, 30, 0, 0, 0, DateTimeZone.UTC);
-        String json = controller.toJson(counts, TimeUnit.SECOND, now);
+        String json = controller.toJson(counts, TimeUnit.SECOND, null, null, now);
 
         // then the result should have null values to fill the missing datas
         assertThat(json).isEqualTo("[[1351153523000,0,1,100,100,100], [1351153524000,0,0,0,0,0], " +
@@ -47,7 +47,7 @@ public class StatisticControllerTest {
 
         // when toJson
         DateTime now = new DateTime(2012, 10, 24, 0, 0, 0, DateTimeZone.UTC);
-        String json = controller.toJson(counts, TimeUnit.MONTH, now);
+        String json = controller.toJson(counts, TimeUnit.MONTH, null, null, now);
 
         // then the result should have null values to fill the missing datas
         long february = new DateTime(2012, 2, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
@@ -58,5 +58,72 @@ public class StatisticControllerTest {
                 "[" + march + ",0,1,100,100,100], [" + april + ",0,0,0,0,0], " +
                 "[" + august + ",0,0,0,0,0], [" + september + ",0,1,100,100,100], " +
                 "[" + october + ",0,0,0,0,0]]");
+    }
+
+    @Test
+    public void filterRangeShouldRemoveOutOfRangeStats() throws Exception {
+        // given some stats
+        long february = new DateTime(2012, 2, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long april = new DateTime(2012, 4, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long august = new DateTime(2012, 8, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long october = new DateTime(2012, 10, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        List<Statistic> statistics = Lists.newArrayList(new Statistic(february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+
+        // when we filter from april to september
+        long september = new DateTime(2012, 9, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        List<Statistic> filtered = new StatisticController().filterRanges(statistics, april, september);
+
+        // then the stats out of range should be removed
+        assertThat(filtered).hasSize(2);
+        assertThat(filtered).contains(new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+    }
+
+    @Test
+    public void filterRangeShouldRemoveOutOfRangeStatsWithFromNull() throws Exception {
+        // given some stats
+        long february = new DateTime(2012, 2, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long april = new DateTime(2012, 4, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long august = new DateTime(2012, 8, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long october = new DateTime(2012, 10, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        List<Statistic> statistics = Lists.newArrayList(new Statistic(february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+
+        // when we filter from april to september
+        long september = new DateTime(2012, 9, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        List<Statistic> filtered = new StatisticController().filterRanges(statistics, null, september);
+
+        // then the stats out of range should be removed
+        assertThat(filtered).hasSize(3);
+        assertThat(filtered).contains(new Statistic(february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+    }
+
+    public void filterRangeShouldRemoveOutOfRangeStatsWithToNull() throws Exception {
+        // given some stats
+        long february = new DateTime(2012, 2, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long april = new DateTime(2012, 4, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long august = new DateTime(2012, 8, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long october = new DateTime(2012, 10, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        List<Statistic> statistics = Lists.newArrayList(new Statistic(february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+
+        // when we filter from april to september
+        long september = new DateTime(2012, 9, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        List<Statistic> filtered = new StatisticController().filterRanges(statistics, april, null);
+
+        // then the stats out of range should be removed
+        assertThat(filtered).hasSize(3);
+        assertThat(filtered).contains(new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic(october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
     }
 }

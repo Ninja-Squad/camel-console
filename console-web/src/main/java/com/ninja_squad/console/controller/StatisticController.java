@@ -1,6 +1,9 @@
 package com.ninja_squad.console.controller;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
+import com.google.common.base.Predicates;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.ninja_squad.console.controller.converter.TimeUnitEnumConverter;
 import com.ninja_squad.console.model.Statistic;
@@ -44,14 +47,16 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
 
     @RequestMapping(value = "/per/{unit}", method = RequestMethod.GET)
     @ResponseBody
-    public String getStatisticsPerSecond(@PathVariable TimeUnit unit) {
-        log.debug("Stats for " + unit.toString());
+    public String getStatisticsPerSecond(
+            @PathVariable TimeUnit unit, @RequestParam(required = false) Long from,
+            @RequestParam(required = false) Long to) {
+        log.debug("Stats for " + unit.toString() + (from != null ? " from " + from : "") + (to != null ? " to " + to : ""));
         if (unit == null) { return "[]"; }
         List<Statistic> statsPerSecond = repository.findAllByTimeUnit(unit);
-        return toJson(statsPerSecond, unit, DateTime.now());
+        return toJson(statsPerSecond, unit, from, to, DateTime.now());
     }
 
-    protected String toJson(List<Statistic> stats, TimeUnit unit, DateTime now) {
+    protected String toJson(List<Statistic> stats, TimeUnit unit, Long from, Long to, DateTime now) {
         if (stats.isEmpty()) { return "[]"; }
         Statistic last = stats.get(0);
         List<Statistic> counts = Lists.newArrayList();
@@ -93,6 +98,8 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
             counts.add(current);
         }
 
+        counts = filterRanges(counts, from, to);
+
         List<String> json = Lists.transform(counts, new Function<Statistic, String>() {
             @Override
             public String apply(Statistic input) {
@@ -102,6 +109,24 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
         });
         log.debug(json.toString());
         return json.toString();
+    }
+
+    protected List<Statistic> filterRanges(List<Statistic> counts, final Long from, final Long to) {
+        Predicate<Statistic> isAfterFrom = (from == null) ? Predicates.<Statistic>alwaysTrue() :
+                new Predicate<Statistic>() {
+                    @Override
+                    public boolean apply(Statistic input) {
+                        return input.getRange() >= from;
+                    }
+                };
+        Predicate<Statistic> isBeforeTo = (to == null) ? Predicates.<Statistic>alwaysTrue() :
+                new Predicate<Statistic>() {
+                    @Override
+                    public boolean apply(Statistic input) {
+                        return input.getRange() <= to;
+                    }
+                };
+        return Lists.newArrayList(Iterables.filter(counts, Predicates.and(isAfterFrom, isBeforeTo)));
     }
 
 }
