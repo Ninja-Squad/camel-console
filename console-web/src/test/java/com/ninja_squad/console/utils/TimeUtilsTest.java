@@ -16,13 +16,13 @@ public class TimeUtilsTest {
         TimeUtils timeUtils = spy(new TimeUtils());
 
         // when rounding
-        long roundedSeconds = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.SECONDS);
-        long roundedMinutes = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.MINUTES);
-        long roundedHours = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.HOURS);
-        long roundedDays = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.DAYS);
-        long roundedWeeks = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.WEEKS);
-        long roundedMonths = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.MONTHS);
-        long roundedYears = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.YEARS);
+        long roundedSeconds = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.SECOND);
+        long roundedMinutes = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.MINUTE);
+        long roundedHours = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.HOUR);
+        long roundedDays = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.DAY);
+        long roundedWeeks = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.WEEK);
+        long roundedMonths = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.MONTH);
+        long roundedYears = timeUtils.getRoundedTimestamp(timestamp, TimeUnit.YEAR);
 
         // then should be rounded in seconds
         assertThat(roundedSeconds).isEqualTo(1351523921000L);

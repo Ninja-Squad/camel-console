@@ -22,31 +22,31 @@ public class TimeUtils {
         DateTime time = new DateTime(timestamp);
         log.debug("Rounding " + time + " in " + unit);
         switch (unit) {
-            case SECONDS:
+            case SECOND:
                 time = time.minusMillis(time.getMillisOfSecond());
                 break;
-            case MINUTES:
-                long roundedS = getRoundedTimestamp(timestamp, TimeUnit.SECONDS);
+            case MINUTE:
+                long roundedS = getRoundedTimestamp(timestamp, TimeUnit.SECOND);
                 time = new DateTime(roundedS).minusSeconds(time.getSecondOfMinute());
                 break;
-            case HOURS:
-                long roundedM = getRoundedTimestamp(timestamp, TimeUnit.MINUTES);
+            case HOUR:
+                long roundedM = getRoundedTimestamp(timestamp, TimeUnit.MINUTE);
                 time = new DateTime(roundedM).minusMinutes(time.getMinuteOfHour());
                 break;
-            case DAYS:
-                long roundedD = getRoundedTimestamp(timestamp, TimeUnit.HOURS);
+            case DAY:
+                long roundedD = getRoundedTimestamp(timestamp, TimeUnit.HOUR);
                 time = new DateTime(roundedD).minusHours(time.getHourOfDay());
                 break;
-            case WEEKS:
-                long roundedW = getRoundedTimestamp(timestamp, TimeUnit.DAYS);
+            case WEEK:
+                long roundedW = getRoundedTimestamp(timestamp, TimeUnit.DAY);
                 time = new DateTime(roundedW).minusDays(time.getDayOfWeek());
                 break;
-            case MONTHS:
-                long roundedMo = getRoundedTimestamp(timestamp, TimeUnit.DAYS);
+            case MONTH:
+                long roundedMo = getRoundedTimestamp(timestamp, TimeUnit.DAY);
                 time = new DateTime(roundedMo).minusDays(time.getDayOfMonth() - 1);
                 break;
-            case YEARS:
-                long roundedY = getRoundedTimestamp(timestamp, TimeUnit.DAYS);
+            case YEAR:
+                long roundedY = getRoundedTimestamp(timestamp, TimeUnit.DAY);
                 time = new DateTime(roundedY).minusDays(time.getDayOfYear() - 1);
                 break;
         }

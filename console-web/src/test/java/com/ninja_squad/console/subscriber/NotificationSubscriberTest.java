@@ -169,36 +169,36 @@ public class NotificationSubscriberTest {
         long now = 1351523921246L;
 
         // when updateMessagesPerSecond
-        Statistic statistic = subscriber.updateMessagesPer(TimeUnit.SECONDS, now, 200, false);
+        Statistic statistic = subscriber.updateMessagesPer(TimeUnit.SECOND, now, 200, false);
 
         // then should be 1 message in range with 200 everywhere
-        assertThat(statistic).isEqualTo(new Statistic(1351523921000L, TimeUnit.SECONDS, 0, 1, 200, 200, 200));
+        assertThat(statistic).isEqualTo(new Statistic(1351523921000L, TimeUnit.SECOND, 0, 1, 200, 200, 200));
     }
 
     @Test
     public void updateMessagesPerSecondShouldUpdateStats() throws Exception {
         // given a message completed in 200ms in the same range than a previous one
         long now = 1351523921246L;
-        statisticRepository.save(new Statistic(1351523921000L, TimeUnit.SECONDS, 0, 1, 100, 100, 100));
+        statisticRepository.save(new Statistic(1351523921000L, TimeUnit.SECOND, 0, 1, 100, 100, 100));
 
         // when updateMessagesPerSecond
-        Statistic statistic = subscriber.updateMessagesPer(TimeUnit.SECONDS, now, 200, false);
+        Statistic statistic = subscriber.updateMessagesPer(TimeUnit.SECOND, now, 200, false);
 
         // then should be 2 messages in the range with update min and average
-        assertThat(statistic).isEqualTo(new Statistic(1351523921000L, TimeUnit.SECONDS, 0, 2, 100, 200, 150));
+        assertThat(statistic).isEqualTo(new Statistic(1351523921000L, TimeUnit.SECOND, 0, 2, 100, 200, 150));
     }
 
     @Test
     public void updateMessagesPerSecondShouldUpdateStatsIfFailed() throws Exception {
         // given a message completed in 200ms in the same range than a previous one
         long now = 1351523921246L;
-        statisticRepository.save(new Statistic(1351523921000L, TimeUnit.SECONDS, 0, 1, 100, 100, 100));
+        statisticRepository.save(new Statistic(1351523921000L, TimeUnit.SECOND, 0, 1, 100, 100, 100));
 
         // when updateMessagesPerSecond
-        Statistic statistic = subscriber.updateMessagesPer(TimeUnit.SECONDS, now, 200, true);
+        Statistic statistic = subscriber.updateMessagesPer(TimeUnit.SECOND, now, 200, true);
 
         // then should be 2 messages in the range with update min and average
-        assertThat(statistic).isEqualTo(new Statistic(1351523921000L, TimeUnit.SECONDS, 1, 1, 100, 100, 100));
+        assertThat(statistic).isEqualTo(new Statistic(1351523921000L, TimeUnit.SECOND, 1, 1, 100, 100, 100));
     }
 
     @Test
@@ -224,31 +224,31 @@ public class NotificationSubscriberTest {
         // when subscribing
         subscriber.subscribe();
 
-        // then we should have a new Statistic for each time unit and 2 for SECONDS
+        // then we should have a new Statistic for each time unit and 2 for SECOND
         List<Statistic> all = statisticRepository.findAll();
         assertThat(all).hasSize(TimeUnit.values().length + 1);
         Statistic statistic = all.get(0);
         long millis = new DateTime(2012, 10, 31, 16, 00, 00, 00).getMillis();
-        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.SECONDS, 0, 2, 100, 200, 150));
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.SECOND, 0, 2, 100, 200, 150));
         statistic = all.get(1);
-        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.MINUTES, 0, 3, 100, 300, 200));
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.MINUTE, 0, 3, 100, 300, 200));
         statistic = all.get(2);
-        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.HOURS, 0, 3, 100, 300, 200));
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.HOUR, 0, 3, 100, 300, 200));
         statistic = all.get(3);
         millis = new DateTime(2012, 10, 31, 00, 00, 00, 00).getMillis();
-        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.DAYS, 0, 3, 100, 300, 200));
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.DAY, 0, 3, 100, 300, 200));
         statistic = all.get(4);
         millis = new DateTime(2012, 10, 28, 00, 00, 00, 00).getMillis();
-        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.WEEKS, 0, 3, 100, 300, 200));
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.WEEK, 0, 3, 100, 300, 200));
         statistic = all.get(5);
         millis = new DateTime(2012, 10, 01, 00, 00, 00, 00).getMillis();
-        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.MONTHS, 0, 3, 100, 300, 200));
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.MONTH, 0, 3, 100, 300, 200));
         statistic = all.get(6);
         millis = new DateTime(2012, 01, 01, 00, 00, 00, 00).getMillis();
-        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.YEARS, 0, 3, 100, 300, 200));
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.YEAR, 0, 3, 100, 300, 200));
         statistic = all.get(7);
         millis = new DateTime(2012, 10, 31, 16, 00, 30, 00).getMillis();
-        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.SECONDS, 0, 1, 300, 300, 300));
+        assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.SECOND, 0, 1, 300, 300, 300));
         // no more pending notifications
         assertThat(messageRepository.findByHandledExistsOrderByTimestampAsc(false)).hasSize(0);
 
