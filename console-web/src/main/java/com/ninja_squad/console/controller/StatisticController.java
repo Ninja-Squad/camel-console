@@ -32,6 +32,7 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
 
     /**
      * Allow to have cleaner urls as /by/second instead of /by/SECOND
+     *
      * @param binder
      */
     @InitBinder
@@ -59,6 +60,7 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
             long nextRangeAfterLast = TimeUtils.getNextRange(last.getRange(), unit);
             if (statistic.getRange() > nextRangeAfterLast) {
                 Statistic zero = new Statistic(nextRangeAfterLast, unit, 0, 0, 0, 0, 0);
+                log.debug("add 0 on the first range after last " + zero);
                 counts.add(zero);
                 last = zero;
             }
@@ -67,17 +69,29 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
             log.debug("previous from " + statistic.getRange() + " is " + previousRangeFromCurrent);
             if (previousRangeFromCurrent > last.getRange()) {
                 Statistic zero = new Statistic(previousRangeFromCurrent, unit, 0, 0, 0, 0, 0);
+                log.debug("add 0 on the previous range from current " + zero);
                 counts.add(zero);
             }
             last = statistic;
             counts.add(statistic);
         }
-        //last point to zero
-        Statistic after = new Statistic(TimeUtils.getNextRange(last.getRange(), unit), unit, 0, 0, 0, 0, 0);
-        counts.add(after);
-        //current point to zero
-        Statistic current = new Statistic(now.getMillis(), unit, 0, 0, 0, 0, 0);
-        counts.add(current);
+
+        //last point to zero (only if the next range fits in the selection)
+        long afterLastTimestamp = TimeUtils.getNextRange(last.getRange(), unit);
+        if (afterLastTimestamp < now.getMillis()) {
+            Statistic after = new Statistic(afterLastTimestamp, unit, 0, 0, 0, 0, 0);
+            log.debug("add 0 on the last point " + after);
+            last = after;
+            counts.add(after);
+        }
+
+        //current point to zero (only if current time is not yet in counts)
+        long currentTimestampRounded = TimeUtils.getRoundedTimestamp(now.getMillis(), unit);
+        if (currentTimestampRounded > last.getRange()) {
+            Statistic current = new Statistic(currentTimestampRounded, unit, 0, 0, 0, 0, 0);
+            log.debug("add 0 on the current point " + current);
+            counts.add(current);
+        }
 
         List<String> json = Lists.transform(counts, new Function<Statistic, String>() {
             @Override

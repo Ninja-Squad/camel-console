@@ -67,8 +67,8 @@ public class TimeUtils {
 
     public static long getRange(long timestamp, TimeUnit unit, boolean next) {
         if (unit == null) { return timestamp; }
-        DateTime time = new DateTime(timestamp);
-        log.debug(next ? "Next" : "Previous" + " timestamp for " + time + " in " + unit);
+        DateTime time = new DateTime(timestamp, DateTimeZone.UTC);
+        log.debug((next ? "Next" : "Previous") + " timestamp for " + time + " in " + unit);
         switch (unit) {
             case SECOND:
                 time = next ? time.plusSeconds(1) : time.minusSeconds(1);
@@ -92,7 +92,7 @@ public class TimeUtils {
                 time = next ? time.plusYears(1) : time.minusYears(1);
                 break;
         }
-        log.debug(next ? "Next " : "Previous " + time);
+        log.debug((next ? "Next " : "Previous ") + time);
         return getRoundedTimestamp(time.getMillis(), unit);
     }
 }
