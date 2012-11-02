@@ -60,17 +60,20 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
             if (statistic.getRange() > nextRangeAfterLast) {
                 Statistic zero = new Statistic(nextRangeAfterLast, unit, 0, 0, 0, 0, 0);
                 counts.add(zero);
+                last = zero;
             }
             //last missing point to zero
-            if (statistic.getRange() - last.getRange() > 2000) {
-                Statistic zero = new Statistic(statistic.getRange() - 1000, unit, 0, 0, 0, 0, 0);
+            long previousRangeFromCurrent = TimeUtils.getPreviousRange(statistic.getRange(), unit);
+            log.debug("previous from " + statistic.getRange() + " is " + previousRangeFromCurrent);
+            if (previousRangeFromCurrent > last.getRange()) {
+                Statistic zero = new Statistic(previousRangeFromCurrent, unit, 0, 0, 0, 0, 0);
                 counts.add(zero);
             }
             last = statistic;
             counts.add(statistic);
         }
         //last point to zero
-        Statistic after = new Statistic(last.getRange() + 1000, unit, 0, 0, 0, 0, 0);
+        Statistic after = new Statistic(TimeUtils.getNextRange(last.getRange(), unit), unit, 0, 0, 0, 0, 0);
         counts.add(after);
         //current point to zero
         Statistic current = new Statistic(now.getMillis(), unit, 0, 0, 0, 0, 0);

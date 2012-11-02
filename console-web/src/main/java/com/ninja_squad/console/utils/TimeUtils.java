@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.ninja_squad.console.model.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 @Slf4j
 public class TimeUtils {
@@ -19,7 +20,7 @@ public class TimeUtils {
         Long cached = cache.getIfPresent(timestamp + unit.toString());
         if (cached != null) { return cached; }
         // if not compute it
-        DateTime time = new DateTime(timestamp);
+        DateTime time = new DateTime(timestamp, DateTimeZone.UTC);
         log.debug("Rounding " + time + " in " + unit);
         switch (unit) {
             case SECOND:
@@ -27,27 +28,27 @@ public class TimeUtils {
                 break;
             case MINUTE:
                 long roundedS = getRoundedTimestamp(timestamp, TimeUnit.SECOND);
-                time = new DateTime(roundedS).minusSeconds(time.getSecondOfMinute());
+                time = new DateTime(roundedS, DateTimeZone.UTC).minusSeconds(time.getSecondOfMinute());
                 break;
             case HOUR:
                 long roundedM = getRoundedTimestamp(timestamp, TimeUnit.MINUTE);
-                time = new DateTime(roundedM).minusMinutes(time.getMinuteOfHour());
+                time = new DateTime(roundedM, DateTimeZone.UTC).minusMinutes(time.getMinuteOfHour());
                 break;
             case DAY:
                 long roundedD = getRoundedTimestamp(timestamp, TimeUnit.HOUR);
-                time = new DateTime(roundedD).minusHours(time.getHourOfDay());
+                time = new DateTime(roundedD, DateTimeZone.UTC).minusHours(time.getHourOfDay());
                 break;
             case WEEK:
                 long roundedW = getRoundedTimestamp(timestamp, TimeUnit.DAY);
-                time = new DateTime(roundedW).minusDays(time.getDayOfWeek());
+                time = new DateTime(roundedW, DateTimeZone.UTC).minusDays(time.getDayOfWeek());
                 break;
             case MONTH:
                 long roundedMo = getRoundedTimestamp(timestamp, TimeUnit.DAY);
-                time = new DateTime(roundedMo).minusDays(time.getDayOfMonth() - 1);
+                time = new DateTime(roundedMo, DateTimeZone.UTC).minusDays(time.getDayOfMonth() - 1);
                 break;
             case YEAR:
                 long roundedY = getRoundedTimestamp(timestamp, TimeUnit.DAY);
-                time = new DateTime(roundedY).minusDays(time.getDayOfYear() - 1);
+                time = new DateTime(roundedY, DateTimeZone.UTC).minusDays(time.getDayOfYear() - 1);
                 break;
         }
         log.debug("Rounded " + time);
@@ -57,33 +58,41 @@ public class TimeUtils {
     }
 
     public static long getNextRange(long timestamp, TimeUnit unit) {
+        return getRange(timestamp, unit, true);
+    }
+
+    public static long getPreviousRange(long timestamp, TimeUnit unit) {
+        return getRange(timestamp, unit, false);
+    }
+
+    public static long getRange(long timestamp, TimeUnit unit, boolean next) {
         if (unit == null) { return timestamp; }
         DateTime time = new DateTime(timestamp);
-        log.debug("Next timestamp for " + time + " in " + unit);
+        log.debug(next ? "Next" : "Previous" + " timestamp for " + time + " in " + unit);
         switch (unit) {
             case SECOND:
-                time = time.plusSeconds(1);
+                time = next ? time.plusSeconds(1) : time.minusSeconds(1);
                 break;
             case MINUTE:
-                time = time.plusMinutes(1);
+                time = next ? time.plusMinutes(1) : time.minusMinutes(1);
                 break;
             case HOUR:
-                time = time.plusHours(1);
+                time = next ? time.plusHours(1) : time.minusHours(1);
                 break;
             case DAY:
-                time = time.plusDays(1);
+                time = next ? time.plusDays(1) : time.minusDays(1);
                 break;
             case WEEK:
-                time = time.plusWeeks(1);
+                time = next ? time.plusWeeks(1) : time.minusWeeks(1);
                 break;
             case MONTH:
-                time = time.plusMonths(1);
+                time = next ? time.plusMonths(1) : time.minusMonths(1);
                 break;
             case YEAR:
-                time = time.plusYears(1);
+                time = next ? time.plusYears(1) : time.minusYears(1);
                 break;
         }
-        log.debug("Next " + time);
+        log.debug(next ? "Next " : "Previous " + time);
         return getRoundedTimestamp(time.getMillis(), unit);
     }
 }
