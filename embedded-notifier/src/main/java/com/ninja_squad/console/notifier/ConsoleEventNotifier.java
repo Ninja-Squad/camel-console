@@ -10,7 +10,6 @@ import org.apache.camel.management.event.ExchangeFailedEvent;
 import org.apache.camel.support.EventNotifierSupport;
 import org.joda.time.DateTime;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.EventObject;
 import java.util.Properties;
@@ -30,7 +29,7 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
             properties.load(getClass().getClassLoader().getResourceAsStream("database.properties"));
             property = properties.getProperty("mongodb.port");
             host = properties.getProperty("mongodb.host");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("no database.properties on classpath : will use default values localhost:27017");
         }
         host = host == null ? "localhost" : host;
