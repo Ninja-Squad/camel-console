@@ -13,7 +13,6 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,7 +33,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
             properties.load(getClass().getClassLoader().getResourceAsStream("database.properties"));
             property = properties.getProperty("mongodb.port");
             host = properties.getProperty("mongodb.host");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("no database.properties on classpath : will use default values localhost:27017");
         }
         host = host == null ? "localhost" : host;
