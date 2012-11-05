@@ -5,6 +5,7 @@ import com.ninja_squad.console.InstanceState;
 import com.ninja_squad.console.Message;
 import com.ninja_squad.console.Route;
 import com.ninja_squad.console.RouteState;
+import com.ninja_squad.console.model.ExchangeStatistic;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 
@@ -19,6 +20,7 @@ public class ConsoleRepositoryJongo implements ConsoleRepository {
     private MongoCollection states;
     private MongoCollection routes;
     private MongoCollection routeStates;
+    private MongoCollection exchangeStats;
 
     public ConsoleRepositoryJongo(String host, int port) {
         Mongo mongo = null;
@@ -32,6 +34,7 @@ public class ConsoleRepositoryJongo implements ConsoleRepository {
         states = jongo.getCollection("states");
         routeStates = jongo.getCollection("routestates");
         routes = jongo.getCollection("routes");
+        exchangeStats = jongo.getCollection("exchanges");
     }
 
     @Override
@@ -70,9 +73,8 @@ public class ConsoleRepositoryJongo implements ConsoleRepository {
     }
 
     @Override
-    public void updateRoute(String routeId, long exchangesCompleted, long exchangesFailed, long exchangesTotal) {
-        routes.update("{routeId:#}", routeId)
-                .with("{$set:{exchangesCompleted: #, exchangesFailed: #, exchangesTotal: #}}",
-                        exchangesCompleted, exchangesFailed, exchangesTotal);
+    public void save(ExchangeStatistic exchangeStatistic) {
+        exchangeStats.save(exchangeStatistic);
     }
+
 }

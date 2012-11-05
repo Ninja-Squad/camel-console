@@ -15,6 +15,7 @@ import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import de.flapdoodle.embed.process.runtime.Network;
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -22,6 +23,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.test.context.ContextConfiguration;
@@ -48,7 +50,6 @@ public class NotificationSubscriberTest {
     @Inject
     private StatisticRepository statisticRepository;
 
-    @Inject
     private NotificationSubscriber subscriber;
 
     @Configuration
@@ -63,11 +64,6 @@ public class NotificationSubscriberTest {
         @Override
         public Mongo mongo() throws Exception {
             return new Mongo("localhost", port);
-        }
-
-        @Bean
-        public NotificationSubscriber subscriber() {
-            return new NotificationSubscriber();
         }
 
     }
@@ -89,13 +85,16 @@ public class NotificationSubscriberTest {
     public void setUp() throws Exception {
         messageRepository.deleteAll();
         statisticRepository.deleteAll();
+        subscriber = new NotificationSubscriber();
+        subscriber.setMessageRepository(messageRepository);
+        subscriber.setStatisticRepository(statisticRepository);
     }
 
     private Message createMessage(String id, DateTime time, boolean handled) {
         Message message = new Message();
         message.setId(id);
         message.setTimestamp(time.getMillis());
-        if (handled) { message.setHandled(true); } else { message.setHandled(null); }
+        if (handled) { message.setHandled(true); }
         return messageRepository.save(message);
     }
 
@@ -204,7 +203,7 @@ public class NotificationSubscriberTest {
     @Test
     public void subscribeShouldHandlePendingNotifsAndUpdateStats() throws Exception {
         // given 3 pending notifications 2 in the same second, all in the same minute
-        DateTime now = new DateTime(2012, 10, 31, 16, 00, 00, 432);
+        DateTime now = new DateTime(2012, 10, 31, 16, 0, 0, 432, DateTimeZone.UTC);
         createMessage("1", now, true);
         Notification notification0 = new Notification();
         notification0.setStep(0);
@@ -215,39 +214,41 @@ public class NotificationSubscriberTest {
         notification0.setStep(0);
         notification0.setTimestamp(now.minusMillis(100).getMillis());
         createMessage("4", now, false, Lists.newArrayList(notification0));
-        now = new DateTime(2012, 10, 31, 16, 00, 30, 232);
+        now = new DateTime(2012, 10, 31, 16, 0, 30, 232, DateTimeZone.UTC);
         notification0 = new Notification();
         notification0.setStep(0);
         notification0.setTimestamp(now.minusMillis(300).getMillis());
         createMessage("5", now, false, Lists.newArrayList(notification0));
 
-        // when subscribing
+        // when subscribing (already started as it's a @PostConstruct method)
         subscriber.subscribe();
+        Thread.sleep(2000);
 
         // then we should have a new Statistic for each time unit and 2 for SECOND
-        List<Statistic> all = statisticRepository.findAll();
+        Sort sort = new Sort(Sort.Direction.DESC, "timestamp");
+        List<Statistic> all = statisticRepository.findAll(sort);
         assertThat(all).hasSize(TimeUnit.values().length + 1);
         Statistic statistic = all.get(0);
-        long millis = new DateTime(2012, 10, 31, 16, 00, 00, 00).getMillis();
+        long millis = new DateTime(2012, 10, 31, 16, 0, 0, 0, DateTimeZone.UTC).getMillis();
         assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.SECOND, 0, 2, 100, 200, 150));
         statistic = all.get(1);
         assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.MINUTE, 0, 3, 100, 300, 200));
         statistic = all.get(2);
         assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.HOUR, 0, 3, 100, 300, 200));
         statistic = all.get(3);
-        millis = new DateTime(2012, 10, 31, 00, 00, 00, 00).getMillis();
+        millis = new DateTime(2012, 10, 31, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.DAY, 0, 3, 100, 300, 200));
         statistic = all.get(4);
-        millis = new DateTime(2012, 10, 28, 00, 00, 00, 00).getMillis();
+        millis = new DateTime(2012, 10, 28, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.WEEK, 0, 3, 100, 300, 200));
         statistic = all.get(5);
-        millis = new DateTime(2012, 10, 01, 00, 00, 00, 00).getMillis();
+        millis = new DateTime(2012, 10, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.MONTH, 0, 3, 100, 300, 200));
         statistic = all.get(6);
-        millis = new DateTime(2012, 01, 01, 00, 00, 00, 00).getMillis();
+        millis = new DateTime(2012, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.YEAR, 0, 3, 100, 300, 200));
         statistic = all.get(7);
-        millis = new DateTime(2012, 10, 31, 16, 00, 30, 00).getMillis();
+        millis = new DateTime(2012, 10, 31, 16, 0, 30, 0, DateTimeZone.UTC).getMillis();
         assertThat(statistic).isEqualTo(new Statistic(millis, TimeUnit.SECOND, 0, 1, 300, 300, 300));
         // no more pending notifications
         assertThat(messageRepository.findByHandledExistsOrderByTimestampAsc(false)).hasSize(0);

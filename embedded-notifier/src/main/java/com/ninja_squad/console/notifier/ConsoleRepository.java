@@ -4,6 +4,7 @@ import com.ninja_squad.console.InstanceState;
 import com.ninja_squad.console.Message;
 import com.ninja_squad.console.Route;
 import com.ninja_squad.console.RouteState;
+import com.ninja_squad.console.model.ExchangeStatistic;
 
 public interface ConsoleRepository {
     /**
@@ -51,12 +52,10 @@ public interface ConsoleRepository {
     RouteState lastRouteState(String routeId);
 
     /**
-     * Update the route with fresh statistics
+     * Save a new statistic on an exchange
      *
-     * @param routeId
-     * @param exchangesCompleted
-     * @param exchangesFailed
-     * @param exchangesTotal
+     * @param exchangeStatistic
      */
-    void updateRoute(String routeId, long exchangesCompleted, long exchangesFailed, long exchangesTotal);
+    void save(ExchangeStatistic exchangeStatistic);
+
 }
