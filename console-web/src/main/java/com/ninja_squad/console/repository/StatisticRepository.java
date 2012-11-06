@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface StatisticRepository extends MongoRepository<Statistic, String> {
 
-    Statistic findOneByRangeAndTimeUnit(long range, TimeUnit timeUnit);
+    Statistic findOneByElementIdAndRangeAndTimeUnit(String elementId, long range, TimeUnit timeUnit);
 
-    List<Statistic> findAllByTimeUnit(TimeUnit timeUnit);
+    List<Statistic> findAllByElementIdAndTimeUnit(String elementId, TimeUnit timeUnit);
 }

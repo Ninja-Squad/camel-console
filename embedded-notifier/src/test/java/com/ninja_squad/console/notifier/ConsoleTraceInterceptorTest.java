@@ -1,7 +1,7 @@
 package com.ninja_squad.console.notifier;
 
 import com.google.common.collect.Maps;
-import com.ninja_squad.console.Notification;
+import com.ninja_squad.console.StepStatistic;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
@@ -13,7 +13,6 @@ import org.joda.time.DateTime;
 import org.junit.Test;
 
 import java.util.Map;
-import java.util.Properties;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -90,17 +89,17 @@ public class ConsoleTraceInterceptorTest {
 
         // when the exchange is completed
         long start = DateTime.now().getMillis();
-        Notification notification = consoleTraceInterceptor.buildNotification(exchange, 110L);
+        StepStatistic stepStatistic = consoleTraceInterceptor.buildStepStatistic(exchange, 110L);
 
-        // then the notification should be filled
-        assertThat(notification.getExchangeId()).isEqualTo(exchange.getExchangeId());
-        assertThat(notification.getDestination()).isEqualTo("destination");
-        assertThat(notification.getDuration()).isEqualTo(110L);
-        assertThat(notification.getErrorBody()).isNull();
-        assertThat(notification.getErrorHeaders()).isNull();
-        assertThat(notification.getRouteId()).isEqualTo("route1");
-        assertThat(notification.getStep()).isEqualTo(0);
-        assertThat(notification.getTimestamp())
+        // then the stepStatistic should be filled
+        assertThat(stepStatistic.getExchangeId()).isEqualTo(exchange.getExchangeId());
+        assertThat(stepStatistic.getDestination()).isEqualTo("destination");
+        assertThat(stepStatistic.getDuration()).isEqualTo(110L);
+        assertThat(stepStatistic.getErrorBody()).isNull();
+        assertThat(stepStatistic.getErrorHeaders()).isNull();
+        assertThat(stepStatistic.getRouteId()).isEqualTo("route1");
+        assertThat(stepStatistic.getStep()).isEqualTo(0);
+        assertThat(stepStatistic.getTimestamp())
                 .isGreaterThanOrEqualTo(start)
                 .isLessThanOrEqualTo(DateTime.now().getMillis());
     }
@@ -114,10 +113,10 @@ public class ConsoleTraceInterceptorTest {
         doReturn("destination").when(node).getLabel();
 
         // when the exchange is completed
-        Notification notification = consoleTraceInterceptor.completedExchange(exchange, 110L);
+        StepStatistic stepStatistic = consoleTraceInterceptor.completedExchange(exchange, 110L);
 
-        // then the notification should be filled
-        assertThat(notification.isFailed()).isEqualTo(false);
+        // then the stepStatistic should be filled
+        assertThat(stepStatistic.isFailed()).isEqualTo(false);
     }
 
     @Test
@@ -136,26 +135,26 @@ public class ConsoleTraceInterceptorTest {
         exchange.setException(exception);
 
         // when the exchange is completed
-        Notification notification = consoleTraceInterceptor.failedExchange(exchange, 110L);
+        StepStatistic stepStatistic = consoleTraceInterceptor.failedExchange(exchange, 110L);
 
-        // then the notification should be filled
-        assertThat(notification.isFailed()).isEqualTo(true);
-        assertThat(notification.getErrorBody()).isEqualTo(body);
-        assertThat(notification.getErrorHeaders()).isEqualTo(headers);
-        assertThat(notification.getException()).isEqualTo("NullPointerException");
-        assertThat(notification.getExceptionMessage()).isNull();
+        // then the stepStatistic should be filled
+        assertThat(stepStatistic.isFailed()).isEqualTo(true);
+        assertThat(stepStatistic.getErrorBody()).isEqualTo(body);
+        assertThat(stepStatistic.getErrorHeaders()).isEqualTo(headers);
+        assertThat(stepStatistic.getException()).isEqualTo("NullPointerException");
+        assertThat(stepStatistic.getExceptionMessage()).isNull();
     }
 
     @Test
     public void storeNotificationShouldCallEventNotifier() throws Exception {
-        // given a notification completed
-        Notification notification = new Notification();
-        notification.setExchangeId("1");
+        // given a stepStatistic completed
+        StepStatistic stepStatistic = new StepStatistic();
+        stepStatistic.setExchangeId("1");
 
-        // when the notification is stored
-        consoleTraceInterceptor.storeNotification(notification);
+        // when the stepStatistic is stored
+        consoleTraceInterceptor.storeStepStatistic(stepStatistic);
 
         // then event notifier should be called
-        verify(notifier).addNotification("1", notification);
+        verify(notifier).addStepStatistic("1", stepStatistic);
     }
 }

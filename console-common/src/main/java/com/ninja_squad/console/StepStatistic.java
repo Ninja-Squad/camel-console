@@ -1,19 +1,20 @@
 package com.ninja_squad.console;
 
-import com.google.common.collect.Sets;
 import lombok.Data;
 
-import java.util.Collection;
-
 @Data
-public class Message {
+public class StepStatistic {
 
+    private String routeId;
+    private String destination;
     private String exchangeId;
     private long timestamp;
+    private int step;
     private long duration;
     private boolean failed;
+    private Object errorBody;
+    private Object errorHeaders;
     private String exception;
     private String exceptionMessage;
-    private Collection<Notification> notifications = Sets.newHashSet();
 
 }
