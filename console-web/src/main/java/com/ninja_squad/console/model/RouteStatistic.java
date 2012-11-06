@@ -5,7 +5,7 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "routes_statistics")
+@Document(collection = "route_statistics")
 public class RouteStatistic extends com.ninja_squad.console.RouteStatistic {
 
     @Id

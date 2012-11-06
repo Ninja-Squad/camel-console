@@ -5,7 +5,7 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "notifications")
+@Document(collection = "exchange_statistics")
 public class ExchangeStatistic extends com.ninja_squad.console.ExchangeStatistic {
 
     @Id

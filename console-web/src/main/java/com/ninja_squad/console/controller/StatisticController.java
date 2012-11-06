@@ -36,7 +36,7 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
     /**
      * Allow to have cleaner urls as /by/second instead of /by/SECOND
      *
-     * @param binder
+     * @param binder to complete
      */
     @InitBinder
     public void initBinder(WebDataBinder binder) {
@@ -45,15 +45,14 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
     }
 
 
-    @RequestMapping(value = "/per/{unit}", method = RequestMethod.GET)
+    @RequestMapping(value = "{elementId}/per/{unit}", method = RequestMethod.GET)
     @ResponseBody
-    public String getStatisticsPerSecond(
-            @PathVariable TimeUnit unit, @RequestParam(required = false) Long from,
-            @RequestParam(required = false) Long to) {
-        log.debug("Stats for " + unit.toString() + (from != null ? " from " + from : "") + (to != null ? " to " + to : ""));
-        if (unit == null) { return "[]"; }
-        // TODO
-        List<Statistic> statsPerSecond = repository.findAllByElementIdAndTimeUnit("", unit);
+    public String getStatisticsPerSecond(@PathVariable String elementId,
+                                         @PathVariable TimeUnit unit, @RequestParam(required = false) Long from,
+                                         @RequestParam(required = false) Long to) {
+        log.debug("Stats for " + elementId + " by " + unit.toString() + (from != null ? " from " + from : "") + (to != null ? " to " + to : ""));
+        if (elementId == null || elementId.isEmpty() || unit == null) { return "[]"; }
+        List<Statistic> statsPerSecond = repository.findAllByElementIdAndTimeUnit(elementId, unit);
         return toJson(statsPerSecond, unit, from, to, DateTime.now());
     }
 
