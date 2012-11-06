@@ -1,6 +1,6 @@
 package com.ninja_squad.console.controller;
 
-import com.ninja_squad.console.model.Message;
+import com.ninja_squad.console.model.Route;
 import com.ninja_squad.console.repository.RouteRepository;
 import org.resthub.web.controller.RepositoryBasedRestController;
 import org.springframework.stereotype.Controller;
@@ -11,7 +11,7 @@ import javax.inject.Named;
 
 @Controller
 @RequestMapping(value = "/api/route")
-public class RouteController extends RepositoryBasedRestController<Message, String, RouteRepository> {
+public class RouteController extends RepositoryBasedRestController<Route, String, RouteRepository> {
 
     @Inject
     @Named("routeRepository")

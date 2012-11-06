@@ -1,8 +1,8 @@
 package com.ninja_squad.console.notifier;
 
 import com.google.common.collect.Sets;
-import com.ninja_squad.console.Message;
-import com.ninja_squad.console.Notification;
+import com.ninja_squad.console.ExchangeStatistic;
+import com.ninja_squad.console.StepStatistic;
 import org.apache.camel.CamelContext;
 import org.apache.camel.Exchange;
 import org.apache.camel.impl.DefaultCamelContext;
@@ -47,31 +47,31 @@ public class ConsoleEventNotifierTest {
 
         //when the EventNotifier receives it
         ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
-        Notification notif1 = new Notification();
-        notif1.setRouteId("1");
-        notif1.setExchangeId("1");
-        notif1.setStep(0);
-        Notification notif2 = new Notification();
-        notif2.setRouteId("1");
-        notif2.setExchangeId("1");
-        notif2.setStep(1);
-        Collection<Notification> notifications = Sets.newHashSet(notif1, notif2);
+        StepStatistic stepStatistic1 = new StepStatistic();
+        stepStatistic1.setRouteId("1");
+        stepStatistic1.setExchangeId("1");
+        stepStatistic1.setStep(0);
+        StepStatistic stepStatistic2 = new StepStatistic();
+        stepStatistic2.setRouteId("1");
+        stepStatistic2.setExchangeId("1");
+        stepStatistic2.setStep(1);
+        Collection<StepStatistic> stepStatistics = Sets.newHashSet(stepStatistic1, stepStatistic2);
         ConsoleRepository repository = mock(ConsoleRepositoryJongo.class);
-        doReturn(notifications).when(notifier).getNotifications("1");
+        doReturn(stepStatistics).when(notifier).getStepStatistics("1");
         notifier.setRepository(repository);
         notifier.notifyExchangeCompletedEvent(event);
 
-        //then save and removeNotifications should have been called
-        ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
+        //then save and removeStepStatistics should have been called
+        ArgumentCaptor<ExchangeStatistic> captor = ArgumentCaptor.forClass(ExchangeStatistic.class);
         verify(repository).save(captor.capture());
-        Message message = captor.getValue();
-        assertThat(message.getDuration()).isEqualTo(0);
-        assertThat(message.getExchangeId()).isEqualTo("1");
-        assertThat(message.getNotifications()).isEqualTo(notifications);
-        assertThat(message.getTimestamp()).isNotEqualTo(0);
-        assertThat(message.isFailed()).isFalse();
+        ExchangeStatistic exchangeStatistic = captor.getValue();
+        assertThat(exchangeStatistic.getDuration()).isEqualTo(0);
+        assertThat(exchangeStatistic.getExchangeId()).isEqualTo("1");
+        assertThat(exchangeStatistic.getSteps()).isEqualTo(stepStatistics);
+        assertThat(exchangeStatistic.getTimestamp()).isNotEqualTo(0);
+        assertThat(exchangeStatistic.isFailed()).isFalse();
 
-        verify(notifier).removeNotifications("1");
+        verify(notifier).removeStepStatistics("1");
     }
 
     @Test
@@ -84,29 +84,29 @@ public class ConsoleEventNotifierTest {
 
         //when the EventNotifier receives it
         ConsoleEventNotifier notifier = spy(new ConsoleEventNotifier());
-        Notification notif1 = new Notification();
-        notif1.setRouteId("1");
-        notif1.setExchangeId("1");
-        notif1.setStep(1);
-        Notification notif2 = new Notification();
-        notif2.setRouteId("1");
-        notif2.setExchangeId("1");
-        notif2.setStep(1);
-        Collection<Notification> notifications = Sets.newHashSet(notif1, notif2);
-        doReturn(notifications).when(notifier).getNotifications("1");
+        StepStatistic stepStatistic1 = new StepStatistic();
+        stepStatistic1.setRouteId("1");
+        stepStatistic1.setExchangeId("1");
+        stepStatistic1.setStep(1);
+        StepStatistic stepStatistic2 = new StepStatistic();
+        stepStatistic2.setRouteId("1");
+        stepStatistic2.setExchangeId("1");
+        stepStatistic2.setStep(1);
+        Collection<StepStatistic> notifications = Sets.newHashSet(stepStatistic1, stepStatistic2);
+        doReturn(notifications).when(notifier).getStepStatistics("1");
         ConsoleRepository repository = mock(ConsoleRepositoryJongo.class);
         notifier.setRepository(repository);
         notifier.notifyExchangeFailedEvent(event);
 
-        //then save and removeNotifications should have been called
-        ArgumentCaptor<Message> captor = ArgumentCaptor.forClass(Message.class);
+        //then save and removeStepStatistics should have been called
+        ArgumentCaptor<ExchangeStatistic> captor = ArgumentCaptor.forClass(ExchangeStatistic.class);
         verify(repository).save(captor.capture());
-        Message message = captor.getValue();
-        assertThat(message.getDuration()).isEqualTo(0);
-        assertThat(message.getExchangeId()).isEqualTo("1");
-        assertThat(message.getNotifications()).isEqualTo(notifications);
-        assertThat(message.getTimestamp()).isNotEqualTo(0);
-        assertThat(message.isFailed()).isTrue();
-        verify(notifier).removeNotifications("1");
+        ExchangeStatistic exchangeStatistic = captor.getValue();
+        assertThat(exchangeStatistic.getDuration()).isEqualTo(0);
+        assertThat(exchangeStatistic.getExchangeId()).isEqualTo("1");
+        assertThat(exchangeStatistic.getSteps()).isEqualTo(notifications);
+        assertThat(exchangeStatistic.getTimestamp()).isNotEqualTo(0);
+        assertThat(exchangeStatistic.isFailed()).isTrue();
+        verify(notifier).removeStepStatistics("1");
     }
 }

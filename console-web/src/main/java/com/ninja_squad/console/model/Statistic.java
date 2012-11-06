@@ -13,9 +13,12 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "statistics")
 public class Statistic {
 
+    public static final String ALL = "overall";
+
     @Id
     private String id;
-
+    @Getter
+    private String elementId;
     @Getter
     private long range;
     private TimeUnit timeUnit;
@@ -25,7 +28,7 @@ public class Statistic {
     private int max;
     private int average;
 
-    public Statistic(long range, TimeUnit timeUnit, int failed, int completed, int min, int max, int average) {
+    public Statistic(String elementId, long range, TimeUnit timeUnit, int failed, int completed, int min, int max, int average) {
         this.average = average;
         this.completed = completed;
         this.failed = failed;
@@ -33,6 +36,7 @@ public class Statistic {
         this.min = min;
         this.range = range;
         this.timeUnit = timeUnit;
+        this.elementId = elementId;
     }
 
     public synchronized void addFailed() {
