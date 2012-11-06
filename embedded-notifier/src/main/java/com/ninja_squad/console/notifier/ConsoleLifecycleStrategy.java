@@ -1,6 +1,5 @@
 package com.ninja_squad.console.notifier;
 
-import com.google.common.collect.Maps;
 import com.ninja_squad.console.InstanceState;
 import com.ninja_squad.console.RouteState;
 import com.ninja_squad.console.State;
@@ -13,10 +12,7 @@ import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class ConsoleLifecycleStrategy implements LifecycleStrategy {
@@ -24,7 +20,6 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
     private Logger log = LoggerFactory.getLogger(getClass());
 
     private ConsoleRepository repository;
-    private Map<String, ConsolePerformanceCounter> counters = Maps.newHashMap();
 
     public ConsoleLifecycleStrategy() {
         String property = null;
@@ -34,7 +29,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
             properties.load(getClass().getClassLoader().getResourceAsStream("database.properties"));
             property = properties.getProperty("mongodb.port");
             host = properties.getProperty("mongodb.host");
-        } catch (IOException e) {
+        } catch (Exception e) {
             log.error("no database.properties on classpath : will use default values localhost:27017");
         }
         host = host == null ? "localhost" : host;
@@ -45,7 +40,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
     /**
      * Store a notification of the application state and time
      *
-     * @param context
+     * @param context of the Camel app
      * @throws VetoCamelContextStartException
      */
     @Override
@@ -61,7 +56,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
     /**
      * Store a notification of the application state and hour
      *
-     * @param context
+     * @param context of the Camel app
      */
     @Override
     public void onContextStop(CamelContext context) {
@@ -106,23 +101,20 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
     /**
      * Add the route in the database if it's not already, or update its state.
      *
-     * @param routes
+     * @param routes being added to the app
      */
     @Override
     public void onRoutesAdd(Collection<Route> routes) {
-        for (Iterator<Route> iterator = routes.iterator(); iterator.hasNext(); ) {
-            Route routeCamel = iterator.next();
-
+        for (Route routeCamel : routes) {
             //adding a performance counter on the route
             if (routeCamel instanceof EventDrivenConsumerRoute) {
                 EventDrivenConsumerRoute edcr = (EventDrivenConsumerRoute) routeCamel;
                 Processor processor = edcr.getProcessor();
                 if (processor instanceof InstrumentationProcessor) {
                     InstrumentationProcessor ip = (InstrumentationProcessor) processor;
-                    ConsolePerformanceCounter counter = new ConsolePerformanceCounter(routeCamel.getId());
+                    ConsolePerformanceCounter counter = new ConsolePerformanceCounter(routeCamel.getId(), repository);
                     ip.setCounter(counter);
                     log.debug("Adding a counter" + counter.toString() + " to " + routeCamel.getId());
-                    counters.put(routeCamel.getId(), counter);
                 }
             }
 
@@ -142,7 +134,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
                 routeState = new RouteState();
                 routeState.setRouteId(routeCamel.getId());
                 routeState.setState(State.Started);
-                routeState.setTimestamp(DateTime.now().toString());
+                routeState.setTimestamp(DateTime.now().getMillis());
                 repository.save(routeState);
             }
         }
@@ -150,8 +142,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
 
     @Override
     public void onRoutesRemove(Collection<Route> routes) {
-        for (Iterator<Route> iterator = routes.iterator(); iterator.hasNext(); ) {
-            Route routeCamel = iterator.next();
+        for (Route routeCamel : routes) {
             log.debug("Route stopped : " + routeCamel.getId());
             // saving state in database
             RouteState routeState = repository.lastRouteState(routeCamel.getId());
@@ -159,7 +150,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
                 routeState = new RouteState();
                 routeState.setRouteId(routeCamel.getId());
                 routeState.setState(State.Stopped);
-                routeState.setTimestamp(DateTime.now().toString());
+                routeState.setTimestamp(DateTime.now().getMillis());
                 repository.save(routeState);
             }
         }
@@ -194,7 +185,4 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
         this.repository = repository;
     }
 
-    public ConsolePerformanceCounter getCounter(String routeId) {
-        return counters.get(routeId);
-    }
 }

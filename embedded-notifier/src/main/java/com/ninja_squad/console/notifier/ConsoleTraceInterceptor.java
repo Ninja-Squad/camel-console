@@ -1,6 +1,6 @@
 package com.ninja_squad.console.notifier;
 
-import com.ninja_squad.console.Notification;
+import com.ninja_squad.console.StepStatistic;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -42,63 +42,60 @@ public class ConsoleTraceInterceptor extends DelegateAsyncProcessor {
         // only record time if stats is enabled
         final StopWatch watch = new StopWatch();
 
-        boolean sync = super.process(exchange, new AsyncCallback() {
+        return super.process(exchange, new AsyncCallback() {
             public void done(boolean doneSync) {
                 try {
                     // record end time and store exchange
-                    if (watch != null) {
-                        recordTimeAndTrace(exchange, watch.stop());
-                    }
+                    recordTimeAndTrace(exchange, watch.stop());
                 } finally {
                     // and let the original callback know we are done as well
                     callback.done(doneSync);
                 }
             }
         });
-        return sync;
     }
 
     protected void recordTimeAndTrace(Exchange exchange, long duration) {
-        Notification notification;
+        StepStatistic stepStatistic;
         if (!exchange.isFailed() && exchange.getException() == null) {
-            notification = completedExchange(exchange, duration);
+            stepStatistic = completedExchange(exchange, duration);
         } else {
-            notification = failedExchange(exchange, duration);
+            stepStatistic = failedExchange(exchange, duration);
         }
-        storeNotification(notification);
+        storeStepStatistic(stepStatistic);
     }
 
-    protected Notification buildNotification(Exchange exchange, long duration) {
-        Notification notification = new Notification();
-        notification.setRouteId(exchange.getFromRouteId());
+    protected StepStatistic buildStepStatistic(Exchange exchange, long duration) {
+        StepStatistic stepStatistic = new StepStatistic();
+        stepStatistic.setRouteId(exchange.getFromRouteId());
         String exchangeId = exchange.getExchangeId();
-        notification.setExchangeId(exchangeId);
-        notification.setTimestamp(DateTime.now().getMillis());
-        notification.setDestination(node.getLabel());
-        notification.setDuration(duration);
-        return notification;
+        stepStatistic.setExchangeId(exchangeId);
+        stepStatistic.setTimestamp(DateTime.now().getMillis());
+        stepStatistic.setDestination(node.getLabel());
+        stepStatistic.setDuration(duration);
+        return stepStatistic;
     }
 
-    protected Notification completedExchange(Exchange exchange, long duration) {
-        Notification notification = buildNotification(exchange, duration);
-        notification.setFailed(false);
-        return notification;
+    protected StepStatistic completedExchange(Exchange exchange, long duration) {
+        StepStatistic stepStatistic = buildStepStatistic(exchange, duration);
+        stepStatistic.setFailed(false);
+        return stepStatistic;
     }
 
-    protected Notification failedExchange(Exchange exchange, long duration) {
-        Notification notification = buildNotification(exchange, duration);
-        notification.setFailed(true);
-        notification.setErrorBody(exchange.getIn().getBody());
-        notification.setErrorHeaders(exchange.getIn().getHeaders());
-        notification.setException(exchange.getException().getClass().getSimpleName());
-        notification.setExceptionMessage(exchange.getException().getMessage());
-        storeNotification(notification);
-        return notification;
+    protected StepStatistic failedExchange(Exchange exchange, long duration) {
+        StepStatistic stepStatistic = buildStepStatistic(exchange, duration);
+        stepStatistic.setFailed(true);
+        stepStatistic.setErrorBody(exchange.getIn().getBody());
+        stepStatistic.setErrorHeaders(exchange.getIn().getHeaders());
+        stepStatistic.setException(exchange.getException().getClass().getSimpleName());
+        stepStatistic.setExceptionMessage(exchange.getException().getMessage());
+        storeStepStatistic(stepStatistic);
+        return stepStatistic;
     }
 
-    protected void storeNotification(Notification notification) {
-        log.debug(notification.toString());
-        eventNotifier.addNotification(notification.getExchangeId(), notification);
+    protected void storeStepStatistic(StepStatistic stepStatistic) {
+        log.debug(stepStatistic.toString());
+        eventNotifier.addStepStatistic(stepStatistic.getExchangeId(), stepStatistic);
     }
 
 }
