@@ -1,12 +1,15 @@
-package com.ninja_squad.console.model;
+package com.ninja_squad.console;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
-public class ExchangeStatistic {
+public class RouteStatistic {
 
+    private long timestamp;
     private String exchangeId;
     private String routeId;
     private boolean failed;

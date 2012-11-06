@@ -17,9 +17,9 @@ public class StatisticControllerTest {
     public void shouldAddNullValueForMissingPoints() throws Exception {
         // given a time series with missing value
         StatisticController controller = new StatisticController();
-        Statistic count1 = new Statistic(1351153523000L, TimeUnit.SECOND, 0, 1, 100, 100, 100);
-        Statistic count2 = new Statistic(1351153525000L, TimeUnit.SECOND, 0, 1, 100, 100, 100);
-        Statistic count3 = new Statistic(1351153529000L, TimeUnit.SECOND, 0, 1, 100, 100, 100);
+        Statistic count1 = new Statistic("route1", 1351153523000L, TimeUnit.SECOND, 0, 1, 100, 100, 100);
+        Statistic count2 = new Statistic("route1", 1351153525000L, TimeUnit.SECOND, 0, 1, 100, 100, 100);
+        Statistic count3 = new Statistic("route1", 1351153529000L, TimeUnit.SECOND, 0, 1, 100, 100, 100);
         List<Statistic> counts = Lists.newArrayList(count1, count2, count3);
 
         // when toJson
@@ -38,11 +38,11 @@ public class StatisticControllerTest {
         // given a time series with missing value
         StatisticController controller = new StatisticController();
         long january = new DateTime(2012, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
-        Statistic count1 = new Statistic(january, TimeUnit.MONTH, 0, 1, 100, 100, 100);
+        Statistic count1 = new Statistic("route1", january, TimeUnit.MONTH, 0, 1, 100, 100, 100);
         long march = new DateTime(2012, 3, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
-        Statistic count2 = new Statistic(march, TimeUnit.MONTH, 0, 1, 100, 100, 100);
+        Statistic count2 = new Statistic("route1", march, TimeUnit.MONTH, 0, 1, 100, 100, 100);
         long september = new DateTime(2012, 9, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
-        Statistic count3 = new Statistic(september, TimeUnit.MONTH, 0, 1, 100, 100, 100);
+        Statistic count3 = new Statistic("route1", september, TimeUnit.MONTH, 0, 1, 100, 100, 100);
         List<Statistic> counts = Lists.newArrayList(count1, count2, count3);
 
         // when toJson
@@ -67,10 +67,10 @@ public class StatisticControllerTest {
         long april = new DateTime(2012, 4, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         long august = new DateTime(2012, 8, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         long october = new DateTime(2012, 10, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
-        List<Statistic> statistics = Lists.newArrayList(new Statistic(february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+        List<Statistic> statistics = Lists.newArrayList(new Statistic("route1", february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
 
         // when we filter from april to september
         long september = new DateTime(2012, 9, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
@@ -78,8 +78,8 @@ public class StatisticControllerTest {
 
         // then the stats out of range should be removed
         assertThat(filtered).hasSize(2);
-        assertThat(filtered).contains(new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+        assertThat(filtered).contains(new Statistic("route1", april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", august, TimeUnit.MONTH, 0, 0, 0, 0, 0));
     }
 
     @Test
@@ -89,10 +89,10 @@ public class StatisticControllerTest {
         long april = new DateTime(2012, 4, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         long august = new DateTime(2012, 8, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         long october = new DateTime(2012, 10, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
-        List<Statistic> statistics = Lists.newArrayList(new Statistic(february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+        List<Statistic> statistics = Lists.newArrayList(new Statistic("route1", february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
 
         // when we filter from april to september
         long september = new DateTime(2012, 9, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
@@ -100,9 +100,9 @@ public class StatisticControllerTest {
 
         // then the stats out of range should be removed
         assertThat(filtered).hasSize(3);
-        assertThat(filtered).contains(new Statistic(february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+        assertThat(filtered).contains(new Statistic("route1", february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", august, TimeUnit.MONTH, 0, 0, 0, 0, 0));
     }
 
     public void filterRangeShouldRemoveOutOfRangeStatsWithToNull() throws Exception {
@@ -111,10 +111,10 @@ public class StatisticControllerTest {
         long april = new DateTime(2012, 4, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         long august = new DateTime(2012, 8, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         long october = new DateTime(2012, 10, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
-        List<Statistic> statistics = Lists.newArrayList(new Statistic(february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+        List<Statistic> statistics = Lists.newArrayList(new Statistic("route1", february, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
 
         // when we filter from april to september
         long september = new DateTime(2012, 9, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
@@ -122,8 +122,8 @@ public class StatisticControllerTest {
 
         // then the stats out of range should be removed
         assertThat(filtered).hasSize(3);
-        assertThat(filtered).contains(new Statistic(april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
-                new Statistic(october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
+        assertThat(filtered).contains(new Statistic("route1", april, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", august, TimeUnit.MONTH, 0, 0, 0, 0, 0),
+                new Statistic("route1", october, TimeUnit.MONTH, 0, 0, 0, 0, 0));
     }
 }

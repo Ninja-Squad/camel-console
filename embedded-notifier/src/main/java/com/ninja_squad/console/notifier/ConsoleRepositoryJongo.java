@@ -1,26 +1,28 @@
 package com.ninja_squad.console.notifier;
 
 import com.mongodb.Mongo;
-import com.ninja_squad.console.InstanceState;
-import com.ninja_squad.console.Message;
-import com.ninja_squad.console.Route;
-import com.ninja_squad.console.RouteState;
-import com.ninja_squad.console.model.ExchangeStatistic;
+import com.ninja_squad.console.*;
+import lombok.extern.slf4j.Slf4j;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
 
 import java.net.UnknownHostException;
 import java.util.Iterator;
 
+@Slf4j
 public class ConsoleRepositoryJongo implements ConsoleRepository {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ConsoleRepositoryJongo.class);
+    public static final String ROUTES = "routes";
+    public static final String APP_STATES = "app_states";
+    public static final String ROUTE_STATES = "route_states";
+    public static final String ROUTE_STATISTICS = "route_statistics";
+    public static final String EXCHANGE_STATISTICS = "exchange_statistics";
 
-    private MongoCollection messages;
+    private MongoCollection exchangeStatistics;
     private MongoCollection states;
     private MongoCollection routes;
     private MongoCollection routeStates;
-    private MongoCollection exchangeStats;
+    private MongoCollection routeStatistics;
 
     public ConsoleRepositoryJongo(String host, int port) {
         Mongo mongo = null;
@@ -30,16 +32,16 @@ public class ConsoleRepositoryJongo implements ConsoleRepository {
             log.error("No Mongo running");
         }
         Jongo jongo = new Jongo(mongo.getDB("console"));
-        messages = jongo.getCollection("notifications");
-        states = jongo.getCollection("states");
-        routeStates = jongo.getCollection("routestates");
-        routes = jongo.getCollection("routes");
-        exchangeStats = jongo.getCollection("exchanges");
+        routes = jongo.getCollection(ROUTES);
+        states = jongo.getCollection(APP_STATES);
+        routeStates = jongo.getCollection(ROUTE_STATES);
+        routeStatistics = jongo.getCollection(ROUTE_STATISTICS);
+        exchangeStatistics = jongo.getCollection(EXCHANGE_STATISTICS);
     }
 
     @Override
-    public void save(Message message) {
-        messages.save(message);
+    public void save(ExchangeStatistic exchangeStatistic) {
+        exchangeStatistics.save(exchangeStatistic);
     }
 
     @Override
@@ -73,8 +75,8 @@ public class ConsoleRepositoryJongo implements ConsoleRepository {
     }
 
     @Override
-    public void save(ExchangeStatistic exchangeStatistic) {
-        exchangeStats.save(exchangeStatistic);
+    public void save(RouteStatistic routeStatistic) {
+        routeStatistics.save(routeStatistic);
     }
 
 }

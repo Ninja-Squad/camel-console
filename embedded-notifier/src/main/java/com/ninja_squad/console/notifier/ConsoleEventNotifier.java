@@ -2,8 +2,8 @@ package com.ninja_squad.console.notifier;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.ninja_squad.console.Message;
-import com.ninja_squad.console.Notification;
+import com.ninja_squad.console.ExchangeStatistic;
+import com.ninja_squad.console.StepStatistic;
 import lombok.Setter;
 import org.apache.camel.management.event.ExchangeCompletedEvent;
 import org.apache.camel.management.event.ExchangeFailedEvent;
@@ -19,7 +19,7 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
     @Setter
     private ConsoleRepository repository;
 
-    private Multimap<String, Notification> exchanges = HashMultimap.create();
+    private Multimap<String, StepStatistic> stepStatisticsPerExchangeId = HashMultimap.create();
 
     public ConsoleEventNotifier() {
         String property = null;
@@ -49,59 +49,57 @@ public class ConsoleEventNotifier extends EventNotifierSupport {
     }
 
     protected void notifyExchangeCompletedEvent(ExchangeCompletedEvent event) {
-        log.debug(event.getExchange().getFromRouteId() + " : " + event.getExchange().getExchangeId()
-                + " completed.");
+        log.debug(event.getExchange().getFromRouteId() + " : " + event.getExchange().getExchangeId() + " completed.");
         //get notifications related
         final String id = event.getExchange().getExchangeId();
-        Message message = buildMessage(id);
-        message.setFailed(false);
-        persistMessage(message);
+        ExchangeStatistic exchangeStatistic = buildExchangeStatistic(id);
+        exchangeStatistic.setFailed(false);
+        persistExchangeStatistic(exchangeStatistic);
     }
 
     protected void notifyExchangeFailedEvent(ExchangeFailedEvent event) {
-        log.debug(event.getExchange().getFromRouteId() + " : " + event.getExchange().getExchangeId()
-                + " failed.");
+        log.debug(event.getExchange().getFromRouteId() + " : " + event.getExchange().getExchangeId() + " failed.");
         //get notifications related
         final String id = event.getExchange().getExchangeId();
-        Message message = buildMessage(id);
-        message.setFailed(true);
+        ExchangeStatistic exchangeStatistic = buildExchangeStatistic(id);
+        exchangeStatistic.setFailed(true);
         if (event.getExchange().getException() != null) {
-            message.setException(event.getExchange().getException().getClass().getSimpleName());
-            message.setExceptionMessage(event.getExchange().getException().getMessage());
+            exchangeStatistic.setException(event.getExchange().getException().getClass().getSimpleName());
+            exchangeStatistic.setExceptionMessage(event.getExchange().getException().getMessage());
         }
-        persistMessage(message);
+        persistExchangeStatistic(exchangeStatistic);
     }
 
-    protected synchronized void addNotification(String exchangeId, Notification notification) {
+    protected synchronized void addStepStatistic(String exchangeId, StepStatistic stepStatistic) {
         //setting step number
-        Collection<Notification> notifications = exchanges.get(exchangeId);
-        notification.setStep(notifications.size());
+        Collection<StepStatistic> steps = stepStatisticsPerExchangeId.get(exchangeId);
+        stepStatistic.setStep(steps.size());
         //saving
-        exchanges.put(exchangeId, notification);
+        stepStatisticsPerExchangeId.put(exchangeId, stepStatistic);
     }
 
-    protected synchronized Collection<Notification> getNotifications(String id) {
-        return exchanges.get(id);
+    protected synchronized Collection<StepStatistic> getStepStatistics(String id) {
+        return stepStatisticsPerExchangeId.get(id);
     }
 
-    protected synchronized void removeNotifications(String id) {
-        exchanges.removeAll(id);
+    protected synchronized void removeStepStatistics(String id) {
+        stepStatisticsPerExchangeId.removeAll(id);
     }
 
-    private void persistMessage(Message message) {
-        repository.save(message);
-        removeNotifications(message.getExchangeId());
+    private void persistExchangeStatistic(ExchangeStatistic exchangeStatistic) {
+        repository.save(exchangeStatistic);
+        removeStepStatistics(exchangeStatistic.getExchangeId());
     }
 
-    private Message buildMessage(String id) {
-        Collection<Notification> notifications = getNotifications(id);
-        log.debug("notifications for event " + id + " : " + notifications);
+    private ExchangeStatistic buildExchangeStatistic(String id) {
+        Collection<StepStatistic> steps = getStepStatistics(id);
+        log.debug("StepStatistics for event " + id + " : " + steps);
         //persist them
-        Message message = new Message();
-        message.setExchangeId(id);
-        message.setNotifications(notifications);
-        message.setTimestamp(DateTime.now().getMillis());
-        return message;
+        ExchangeStatistic exchangeStatistic = new ExchangeStatistic();
+        exchangeStatistic.setExchangeId(id);
+        exchangeStatistic.setSteps(steps);
+        exchangeStatistic.setTimestamp(DateTime.now().getMillis());
+        return exchangeStatistic;
     }
 
     @Override

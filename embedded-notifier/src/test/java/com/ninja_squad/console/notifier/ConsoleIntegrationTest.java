@@ -32,11 +32,11 @@ public class ConsoleIntegrationTest {
 
     private CamelContext context;
     private MongodProcess mongod;
-    private DBCollection notifications;
+    private DBCollection exchangeStatistics;
     private DBCollection routes;
     private DBCollection routeStates;
     private DBCollection states;
-    private DBCollection exchangeStats;
+    private DBCollection routeStatistics;
     private ConsoleEventNotifier notifier;
     private ConsoleLifecycleStrategy consoleLifecycleStrategy;
 
@@ -55,11 +55,11 @@ public class ConsoleIntegrationTest {
         mongod = mongodExecutable.start();
         Mongo mongo = new Mongo(host, port);
         DB db = mongo.getDB("console");
-        notifications = db.getCollection("notifications");
-        routes = db.getCollection("routes");
-        routeStates = db.getCollection("routestates");
-        states = db.getCollection("states");
-        exchangeStats = db.getCollection("exchanges");
+        exchangeStatistics = db.getCollection(ConsoleRepositoryJongo.EXCHANGE_STATISTICS);
+        routes = db.getCollection(ConsoleRepositoryJongo.ROUTES);
+        routeStates = db.getCollection(ConsoleRepositoryJongo.ROUTE_STATES);
+        states = db.getCollection(ConsoleRepositoryJongo.APP_STATES);
+        routeStatistics = db.getCollection(ConsoleRepositoryJongo.ROUTE_STATISTICS);
 
         // setting up notifiers and tracers
         notifier = spy(new ConsoleEventNotifier());
@@ -151,19 +151,19 @@ public class ConsoleIntegrationTest {
         stopCamelApp();
 
         // should be 1 message in database
-        DBCursor dbObjects = notifications.find();
+        DBCursor dbObjects = exchangeStatistics.find();
         assertThat(dbObjects.count()).isEqualTo(1);
         DBObject message = dbObjects.next();
 
         // with 3 steps
-        List<DBObject> notifications = (List<DBObject>) message.get("notifications");
-        for (DBObject notification : notifications) {
-            log.debug(notification.toString());
-            assertThat(notification.get("step")).isIn(0, 1, 2);
+        List<DBObject> steps = (List<DBObject>) message.get("steps");
+        for (DBObject stepStat : steps) {
+            log.debug(stepStat.toString());
+            assertThat(stepStat.get("step")).isIn(0, 1, 2);
         }
 
         // and 2 exchangeStatistic (1 for route2 and 1 for route1)
-        dbObjects = exchangeStats.find();
+        dbObjects = routeStatistics.find();
         assertThat(dbObjects.count()).isEqualTo(2);
 
         for (DBObject stat : dbObjects) {
@@ -171,6 +171,7 @@ public class ConsoleIntegrationTest {
             assertThat(stat.get("routeId")).isIn("route1", "route2");
             assertThat((Boolean) stat.get("failed")).isFalse();
             assertThat((Integer) stat.get("duration")).isGreaterThan(0);
+            assertThat((Long) stat.get("timestamp")).isGreaterThan(0);
         }
     }
 
@@ -195,18 +196,18 @@ public class ConsoleIntegrationTest {
         stopCamelApp();
 
         // should be 1 message in database
-        DBCursor dbObjects = notifications.find();
+        DBCursor dbObjects = exchangeStatistics.find();
         assertThat(dbObjects.count()).isEqualTo(1);
         DBObject message = dbObjects.next();
 
-        List<DBObject> notifications = (List<DBObject>) message.get("notifications");
-        for (DBObject notification : notifications) {
-            log.debug(notification.toString());
-            assertThat(notification.get("step")).isIn(0, 1, 2, 3, 4);
+        List<DBObject> steps = (List<DBObject>) message.get("steps");
+        for (DBObject stepStat : steps) {
+            log.debug(stepStat.toString());
+            assertThat(stepStat.get("step")).isIn(0, 1, 2, 3, 4);
         }
 
         // and 2 exchangeStatistic (1 for route3 and 1 for route1)
-        dbObjects = exchangeStats.find();
+        dbObjects = routeStatistics.find();
         assertThat(dbObjects.count()).isEqualTo(2);
 
         for (DBObject stat : dbObjects) {
@@ -219,6 +220,7 @@ public class ConsoleIntegrationTest {
                 assertThat((Boolean) stat.get("failed")).isFalse();
                 assertThat((Integer) stat.get("duration")).isGreaterThan(0);
             }
+            assertThat((Long) stat.get("timestamp")).isGreaterThan(0);
         }
     }
 

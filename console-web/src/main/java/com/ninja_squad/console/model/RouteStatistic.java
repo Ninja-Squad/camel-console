@@ -5,8 +5,8 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "notifications")
-public class Message extends com.ninja_squad.console.Message {
+@Document(collection = "routes_statistics")
+public class RouteStatistic extends com.ninja_squad.console.RouteStatistic {
 
     @Id
     @Getter
@@ -16,4 +16,5 @@ public class Message extends com.ninja_squad.console.Message {
     @Getter
     @Setter
     private Boolean handled;
+
 }
