@@ -88,6 +88,10 @@ require(['router', 'handlebars'], function (AppRouter, Handlebars) {
         return new Handlebars.SafeString(value * 100 / total);
     });
 
+    Handlebars.registerHelper('percentComplement', function(value, total) {
+        return new Handlebars.SafeString(total == 0 ? 0 : 100 - value);
+    });
+    
     new AppRouter();
 
 });

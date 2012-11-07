@@ -12,23 +12,32 @@ define(['backbone', 'views/GraphView', 'views/RouteTableView', 'models/Statistic
         },
 
         appRoutes: function () {
-            var successes = [[1, 67], [2, 54], [3, 57], [4, 61], [5, 70], [6, 67], [7, 54], [8, 57], [9, 61], [10, 70], [11, 67], [12, 54], [13, 57], [14, 61], [15, 70], [16, 67], [17, 54], [18, 57], [19, 61], [20, 70], [21, 67], [22, 54], [23, 57], [24, 61], [25, 70], [26, 67], [27, 54], [28, 57], [29, 61], [30, 70], [31, 67]];
-        
-            var failures = [[1, 5], [2, 2], [3, 7], [4, 6], [5, 0], [6, 5], [7, 2], [8, 7], [9, 6], [10, 0], [11, 5], [12, 2], [13, 7], [14, 6], [15, 0], [16, 5], [17, 2], [18, 7], [19, 6], [20, 0], [21, 5], [22, 2], [23, 7], [24, 6], [25, 0], [26, 5], [27, 2], [28, 7], [29, 6], [30, 0], [31, 5]];
-            
-            var averageTimes = [[1, 67], [2, 54], [3, 57], [4, 61], [5, 70], [6, 67], [7, 54], [8, 57], [9, 61], [10, 70], [11, 67], [12, 54], [13, 57], [14, 61], [15, 70], [16, 67], [17, 54], [18, 57], [19, 61], [20, 70], [21, 67], [22, 54], [23, 57], [24, 61], [25, 70], [26, 67], [27, 54], [28, 57], [29, 61], [30, 70], [31, 67]];
-            
-            var minimumTimes = [];
-            var maximumTimes = [];
-            $.each(averageTimes, function(index, point) {
-                minPoint = [point[0], point[1] - 10];
-                maxPoint = [point[0], point[1] + 100];
+            var generateTimestamps = function() {
+                var today = new Date();
+                today.setUTCHours(0);
+                today.setUTCMinutes(0);
+                today.setUTCSeconds(0);
+                today.setUTCMilliseconds(0);
                 
-                minimumTimes.push(minPoint);
-                maximumTimes.push(maxPoint);
-            });
+                var result = [];
+                for (var i = 0; i < 31; i++) {
+                    var date = new Date();
+                    date.setTime(today.getTime());
+                    var offset = i - 31;
+                    date.setUTCDate(date.getUTCDate() + offset);
+                    result.push(date.getTime());
+                }
+                return result;
+            };
         
-            var stats = new Statistics({successes: successes, failures: failures, averageTimes: averageTimes, minimumTimes: minimumTimes, maximumTimes: maximumTimes});
+            var timestamps = generateTimestamps();
+            var successes = [67, 54, 57, 61, 70, 67, 54, 57, 61, 70, 67, 54, 57, 61, 70, 67, 54, 57, 61, 70, 67, 54, 57, 61, 70, 67, 54, 57, 61, 70, 67];
+            var failures = [5, 2, 7, 6, 5, 0, 5, 2, 7, 6, 5, 0, 5, 2, 7, 6, 5, 0, 5, 2, 7, 6, 5, 0, 5, 2, 7, 6, 5, 0, 5, 2, 7, 6, 5, 0, 5];
+            var averageTimes = [67, 54, 57, 61, 70, 67, 54, 57, 61, 70, 67, 54, 57, 61, 70, 67, 54, 57, 61, 70, 67, 54, 57, 61, 70, 67, 54, 57, 61, 70, 67];
+            var minimumTimes = $.map(averageTimes, function(value) {return value - 10});
+            var maximumTimes = $.map(averageTimes, function(value) {return value + 100});
+            
+            var stats = new Statistics({successes: successes, failures: failures, averageTimes: averageTimes, minimumTimes: minimumTimes, maximumTimes: maximumTimes, timestamps: timestamps});
             var routeCollection = new RouteCollection();
             /*
             routeCollection.add(new Route({name: 'Long route name 3', messageCount: 234, successCount: 200, failureCount: 34, averageTime: 57, minimumTime: 12, maximumTime: 345}));

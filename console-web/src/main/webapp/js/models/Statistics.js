@@ -5,7 +5,16 @@ define(['backbone'], function(Backbone) {
             failures: [],
             averageTimes: [],
             minimumTimes: [],
-            maximumTimes: []
+            maximumTimes: [],
+            timestamps: [],
+        },
+        getTimeSerie: function(attribute) {
+            var data = this.get(attribute);
+            var result= [];
+            $.each(this.get('timestamps'), function(index, value) {
+                result.push([value, data[index]]);
+            });
+            return result;
         }
     });
     
