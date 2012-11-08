@@ -1,18 +1,18 @@
 define(['underscore', 
         'backbone', 
         'hbs!templates/graph',
-        'flot', 
+        'jquery',
+        'flot',
         'flot-stack',
         'flot-resize',
-        'bootstrap',
-        'models/Statistics'], function (_, Backbone, graphTemplate) {
+        'bootstrap'], function (_, Backbone, graphTemplate) {
     var GraphView = Backbone.View.extend({
         initialize: function() {
             this.template = graphTemplate;
             this.mode = 'messages';
             this.messagesMode = 'both';
             this.timesMode = 'all';
-            this.model.on('reset', this.reset, this);
+            this.collection.on('reset', this.reset, this);
             this.timeFormat = '%y-%m-%0d';
         },
         events: {
@@ -41,10 +41,10 @@ define(['underscore',
             this.$('[data-id=times-' + this.timesMode + ']').button('toggle');
             
             var successSerie = {
-                data: this.model.getTimeSerie('successes'),
+                data: this.collection.getTimeSerie('completed'),
                 color: '#57A957',
                 label: 'Successes',
-                bars: {
+                lines: {
                     show: true,
                     fill: true,
                     fillColor: 'rgba(98,196,98,0.5)',
@@ -53,10 +53,10 @@ define(['underscore',
                 stack: true
             };
             var failureSerie = {
-                data: this.model.getTimeSerie('failures'),
+                data: this.collection.getTimeSerie('failed'),
                 color: '#C43C35',
                 label: 'Failures',
-                bars: {
+                lines: {
                     show: true,
                     fill: true,
                     fillColor: 'rgba(238,95,91,0.5)',
@@ -65,7 +65,7 @@ define(['underscore',
                 stack: true
             };
             var averageSerie = {
-                data: this.model.getTimeSerie('averageTimes'),
+                data: this.collection.getTimeSerie('average'),
                 color: '#AEAEAE',
                 label: 'Average time',
                 lines: {
@@ -75,7 +75,7 @@ define(['underscore',
                 }
             };
             var minimumSerie = {
-                data: this.model.getTimeSerie('minimumTimes'),
+                data: this.collection.getTimeSerie('min'),
                 color: '#D4B989',
                 label: 'Minimum time',
                 lines: {
@@ -85,7 +85,7 @@ define(['underscore',
                 }
             };
             var maximumSerie = {
-                data: this.model.getTimeSerie('maximumTimes'),
+                data: this.collection.getTimeSerie('max'),
                 color: '#8F6E34',
                 label: 'Maximum time',
                 lines: {
@@ -96,8 +96,8 @@ define(['underscore',
             };
             var options = {
                 xaxis: {
-                    mode: 'time',
-                    timeformat: this.timeFormat
+                    mode: 'time'
+                    //timeformat: this.timeFormat
                 },
                 yaxis: {
                     min: 0
@@ -111,11 +111,11 @@ define(['underscore',
                 },
                 series: {
                     lines: {
-                        lineWidth: 1,
+                        lineWidth: 1
                     },
                     bars: {
-                        lineWidth: 1,
-                        barWidth: 0.8 * 24 * 60 * 60 * 1000,
+                        lineWidth: 1
+                        //barWidth: 0.8 * 24 * 60 * 60 * 1000
                     },
                     shadowSize: 0
                 }
