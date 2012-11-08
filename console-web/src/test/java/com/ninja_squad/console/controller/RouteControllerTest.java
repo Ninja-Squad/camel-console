@@ -15,6 +15,8 @@ public class RouteControllerTest extends AbstractWebTest {
 
     public RouteControllerTest() {
         this.activeProfiles = "resthub-mongodb, resthub-web-server";
+        this.annotationbasedConfig = true;
+        this.contextLocations = "com.ninja_squad.console";
     }
 
     protected String rootUrl() {
@@ -23,7 +25,6 @@ public class RouteControllerTest extends AbstractWebTest {
 
     @Test
     public void shouldFindRouteByRouteId() throws Exception {
-        // TODO unit test does not work
         Client httpClient = new Client();
         Route route = new Route("quoteWS");
         route = httpClient.url(rootUrl()).jsonPost(route).resource(route.getClass());

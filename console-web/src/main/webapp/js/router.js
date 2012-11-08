@@ -1,9 +1,12 @@
-define(['backbone', 'views/GraphView', 'views/RouteTableView',
+define(['backbone',
+    'views/GraphView', 'views/RouteTableView', 'views/StepView',
     'models/Statistic', 'collections/StatisticCollection',
     'models/Route', 'collections/RouteCollection',
     'utils/Server',
     'backbone-queryparams'
-], function (Backbone, GraphView, RouteTableView, Statistic, StatisticCollection, Route, RouteCollection, Server) {
+], function (Backbone, GraphView, RouteTableView, StepView,
+             Statistic, StatisticCollection,
+             Route, RouteCollection, Server) {
     var AppRouter = Backbone.Router.extend({
 
         initialize:function () {
@@ -52,6 +55,7 @@ define(['backbone', 'views/GraphView', 'views/RouteTableView',
                 that.routeCollection.add(new Route({routeId:step, uri:route.get('steps')[step]}));
             });
             new RouteTableView({collection:this.routeCollection, el:'#routes'}).render();
+            new StepView({model:route, el:'#steps'}).render();
         }
 
     });

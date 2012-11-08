@@ -78,7 +78,8 @@ require.config({
         flot:'libs/jquery.flot',
         'flot-selection':'libs/jquery.flot.selection',
         'flot-stack':'libs/jquery.flot.stack',
-        'flot-resize':'libs/jquery.flot.resize'
+        'flot-resize':'libs/jquery.flot.resize',
+        d3:'libs/d3.v2.min'
     }
 });
 
