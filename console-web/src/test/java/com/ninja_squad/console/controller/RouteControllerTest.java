@@ -23,6 +23,7 @@ public class RouteControllerTest extends AbstractWebTest {
 
     @Test
     public void shouldFindRouteByRouteId() throws Exception {
+        // TODO unit test does not work
         Client httpClient = new Client();
         Route route = new Route("quoteWS");
         route = httpClient.url(rootUrl()).jsonPost(route).resource(route.getClass());
