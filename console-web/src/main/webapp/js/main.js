@@ -78,7 +78,8 @@ require.config({
         flot:'libs/jquery.flot',
         'flot-selection':'libs/jquery.flot.selection',
         'flot-stack':'libs/jquery.flot.stack',
-        'flot-resize':'libs/jquery.flot.resize'
+        'flot-resize':'libs/jquery.flot.resize',
+        d3:'libs/d3.v2.min'
     }
 });
 
@@ -88,6 +89,10 @@ require(['router', 'handlebars'], function (AppRouter, Handlebars) {
         return new Handlebars.SafeString(value * 100 / total);
     });
 
+    Handlebars.registerHelper('percentComplement', function(value, total) {
+        return new Handlebars.SafeString(total == 0 ? 0 : 100 - value);
+    });
+    
     new AppRouter();
 
 });

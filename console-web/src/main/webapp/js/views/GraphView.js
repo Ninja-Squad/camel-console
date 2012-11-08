@@ -1,18 +1,19 @@
 define(['underscore', 
         'backbone', 
         'hbs!templates/graph',
-        'flot', 
+        'jquery',
+        'flot',
         'flot-stack',
         'flot-resize',
-        'bootstrap',
-        'models/Statistics'], function (_, Backbone, graphTemplate) {
+        'bootstrap'], function (_, Backbone, graphTemplate) {
     var GraphView = Backbone.View.extend({
         initialize: function() {
             this.template = graphTemplate;
             this.mode = 'messages';
             this.messagesMode = 'both';
             this.timesMode = 'all';
-            this.model.on('reset', this.reset, this);
+            this.collection.on('reset', this.reset, this);
+            this.timeFormat = '%y-%m-%0d';
         },
         events: {
             'click [data-id=messages]': function() {this.setMode('messages')},
@@ -24,7 +25,7 @@ define(['underscore',
             'click [data-id=times-minimum]': function() {this.setTimesMode('minimum')},
             'click [data-id=times-maximum]': function() {this.setTimesMode('maximum')},
             'click [data-id=times-all]': function() {this.setTimesMode('all')},
-            'plotclick [data-id=graph]': 'plotclick'
+            'plothover [data-id=graph]': 'plothover'
         },
         render: function(event) {
             this.$el.html(this.template());
@@ -40,10 +41,10 @@ define(['underscore',
             this.$('[data-id=times-' + this.timesMode + ']').button('toggle');
             
             var successSerie = {
-                data: this.model.get('successes'),
+                data: this.collection.getTimeSerie('completed'),
                 color: '#57A957',
                 label: 'Successes',
-                bars: {
+                lines: {
                     show: true,
                     fill: true,
                     fillColor: 'rgba(98,196,98,0.5)',
@@ -52,10 +53,10 @@ define(['underscore',
                 stack: true
             };
             var failureSerie = {
-                data: this.model.get('failures'),
+                data: this.collection.getTimeSerie('failed'),
                 color: '#C43C35',
                 label: 'Failures',
-                bars: {
+                lines: {
                     show: true,
                     fill: true,
                     fillColor: 'rgba(238,95,91,0.5)',
@@ -64,7 +65,7 @@ define(['underscore',
                 stack: true
             };
             var averageSerie = {
-                data: this.model.get('averageTimes'),
+                data: this.collection.getTimeSerie('average'),
                 color: '#AEAEAE',
                 label: 'Average time',
                 lines: {
@@ -74,7 +75,7 @@ define(['underscore',
                 }
             };
             var minimumSerie = {
-                data: this.model.get('minimumTimes'),
+                data: this.collection.getTimeSerie('min'),
                 color: '#D4B989',
                 label: 'Minimum time',
                 lines: {
@@ -84,7 +85,7 @@ define(['underscore',
                 }
             };
             var maximumSerie = {
-                data: this.model.get('maximumTimes'),
+                data: this.collection.getTimeSerie('max'),
                 color: '#8F6E34',
                 label: 'Maximum time',
                 lines: {
@@ -95,16 +96,28 @@ define(['underscore',
             };
             var options = {
                 xaxis: {
-                    tickSize: 1
+                    mode: 'time'
+                    //timeformat: this.timeFormat
                 },
                 yaxis: {
                     min: 0
                 },
                 grid: {
+                    hoverable: true,
                     clickable: true
                 },
                 legend: {
                     show: false
+                },
+                series: {
+                    lines: {
+                        lineWidth: 2
+                    },
+                    bars: {
+                        lineWidth: 1
+                        //barWidth: 0.8 * 24 * 60 * 60 * 1000
+                    },
+                    shadowSize: 0
                 }
             };
             
@@ -162,9 +175,10 @@ define(['underscore',
         removeTooltip: function() {
             $("#graphTooltip").remove();
         },
-        plotclick: function(event, pos, item) {
+        plothover: function(event, pos, item) {
             if (item) {
-                this.showTooltip(item.pageX, item.pageY - 18, item.datapoint[1] - item.datapoint[2]);
+                var label = $.plot.formatDate(new Date(item.datapoint[0]), this.timeFormat, null);
+                this.showTooltip(item.pageX, item.pageY - 18, label + ": " + (item.datapoint[1] - item.datapoint[2]));
             }
             else {
                 this.removeTooltip();

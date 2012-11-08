@@ -1,17 +1,24 @@
 package com.ninja_squad.console.notifier;
 
+import com.fasterxml.jackson.databind.AnnotationIntrospector;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.ninja_squad.console.InstanceState;
 import com.ninja_squad.console.RouteState;
 import com.ninja_squad.console.State;
 import org.apache.camel.*;
 import org.apache.camel.impl.EventDrivenConsumerRoute;
 import org.apache.camel.management.InstrumentationProcessor;
+import org.apache.camel.model.ProcessorDefinition;
+import org.apache.camel.model.RouteDefinition;
 import org.apache.camel.spi.LifecycleStrategy;
 import org.apache.camel.spi.RouteContext;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -125,6 +132,21 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
                 route = new com.ninja_squad.console.Route(routeCamel.getId())
                         .state(State.Started)
                         .uri(routeCamel.getEndpoint().getEndpointUri());
+                ObjectMapper mapper = new ObjectMapper();
+                AnnotationIntrospector introspector = new JaxbAnnotationIntrospector(TypeFactory.defaultInstance());
+                // make serializer use JAXB annotations (only)
+                mapper.setAnnotationIntrospector(introspector);
+                String definition = null;
+                RouteDefinition routeDefinition = routeCamel.getRouteContext().getRoute();
+                try {
+                    definition = mapper.writeValueAsString(routeDefinition);
+                } catch (IOException e) {
+                    log.error("Error while marshalling route definition", e);
+                }
+                route.setDefinition(definition);
+                for (ProcessorDefinition<?> stepDefinition : routeDefinition.getOutputs()) {
+                    route.getSteps().put(stepDefinition.getId(), stepDefinition.getLabel());
+                }
                 repository.save(route);
             }
 

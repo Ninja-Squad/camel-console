@@ -71,7 +71,7 @@ public class ConsoleTraceInterceptor extends DelegateAsyncProcessor {
         String exchangeId = exchange.getExchangeId();
         stepStatistic.setExchangeId(exchangeId);
         stepStatistic.setTimestamp(DateTime.now().getMillis());
-        stepStatistic.setDestination(node.getLabel());
+        stepStatistic.setDestination(node.getId());
         stepStatistic.setDuration(duration);
         return stepStatistic;
     }
