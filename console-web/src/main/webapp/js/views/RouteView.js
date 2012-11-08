@@ -1,35 +1,35 @@
-define(['underscore', 
-        'backbone', 
-        'hbs!templates/routeNumbers',
-        'hbs!templates/routeBlocks',
-        'models/Route'], function (_, Backbone, numbersTemplate, blocksTemplate) {
+define(['underscore',
+    'backbone',
+    'hbs!templates/routeNumbers',
+    'hbs!templates/routeBlocks',
+    'models/Route'], function (_, Backbone, numbersTemplate, blocksTemplate) {
     var RouteView = Backbone.View.extend({
-        tagName: 'tr',
-        initialize: function() {
+        tagName:'tr',
+        initialize:function () {
             this.numbersTemplate = numbersTemplate;
             this.blocksTemplate = blocksTemplate;
-            
             var view = this;
-            this.messagesTooltipTitle = function() {
-                return view.model.get('messageCount') + ' messages<br/>' + view.model.get('successCount') + ' successes<br/>'  + view.model.get('failureCount') + ' errors';
+            this.messagesTooltipTitle = function () {
+                return view.model.get('messageCount') + ' messages<br/>' + view.model.get('successCount') + ' successes<br/>' + view.model.get('failureCount') + ' errors';
             }
-            this.timesTooltipTitle = function() {
-                return 'Average time: ' + view.model.get('averageTime') + ' ms.<br/>Minimum time: ' + view.model.get('minimumTime') + ' ms.<br/>Maximum time: '  + view.model.get('maximumTime') + ' ms.';
+            this.timesTooltipTitle = function () {
+                return 'Average time: ' + view.model.get('averageTime') + ' ms.<br/>Minimum time: ' + view.model.get('minimumTime') + ' ms.<br/>Maximum time: ' + view.model.get('maximumTime') + ' ms.';
             }
         },
-        render: function(event) {
+        render:function (event) {
+            console.log('render', this.model);
             var html = (this.mode == 'numbers') ? this.numbersTemplate(this.model.toJSON()) : this.blocksTemplate(this.model.toJSON())
             this.$el.html(html);
-            this.$('.numblock-messages').tooltip({title: this.messagesTooltipTitle});
-            this.$('.numblock-times').tooltip({title: this.timesTooltipTitle});
+            this.$('.numblock-messages').tooltip({title:this.messagesTooltipTitle});
+            this.$('.numblock-times').tooltip({title:this.timesTooltipTitle});
             this.$('span').tooltip();
             return this;
         },
-        setMode: function(mode) {
+        setMode:function (mode) {
             this.mode = mode;
             this.render();
         }
     });
-    
+
     return RouteView;
 });

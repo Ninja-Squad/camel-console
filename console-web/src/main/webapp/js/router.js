@@ -24,7 +24,6 @@ define(['backbone', 'views/GraphView', 'views/RouteTableView',
                         'min':elem[3], 'max':elem[4], 'average':elem[5]});
                     stats.add(stat);
                 })
-                console.log(stats);
                 new GraphView({collection:stats, el:'#stats'}).render();
             });
             var routeCollection = new RouteCollection();

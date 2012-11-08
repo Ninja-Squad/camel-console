@@ -9,7 +9,6 @@ define(['backbone', 'models/Statistic'], function (Backbone, Statistic) {
             var result = this.map(function(model){
                 return [model.get('range'), model.get(attribute)]
             });
-            console.log("getTimeSerie", result);
             return result;
         }
     });

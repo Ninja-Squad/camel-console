@@ -2,6 +2,7 @@ package com.ninja_squad.console.notifier;
 
 import com.fasterxml.jackson.databind.AnnotationIntrospector;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.module.jaxb.JaxbAnnotationIntrospector;
 import com.ninja_squad.console.InstanceState;
 import com.ninja_squad.console.RouteState;
@@ -132,7 +133,7 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
                         .state(State.Started)
                         .uri(routeCamel.getEndpoint().getEndpointUri());
                 ObjectMapper mapper = new ObjectMapper();
-                AnnotationIntrospector introspector = new JaxbAnnotationIntrospector();
+                AnnotationIntrospector introspector = new JaxbAnnotationIntrospector(TypeFactory.defaultInstance());
                 // make serializer use JAXB annotations (only)
                 mapper.setAnnotationIntrospector(introspector);
                 String definition = null;

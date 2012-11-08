@@ -111,7 +111,7 @@ define(['underscore',
                 },
                 series: {
                     lines: {
-                        lineWidth: 1
+                        lineWidth: 2
                     },
                     bars: {
                         lineWidth: 1
