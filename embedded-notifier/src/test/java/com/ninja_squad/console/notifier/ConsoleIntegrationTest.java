@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Properties;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -31,33 +32,40 @@ public class ConsoleIntegrationTest {
 
     private CamelContext context;
     private MongodProcess mongod;
-    private DBCollection notifications;
+    private DBCollection exchangeStatistics;
     private DBCollection routes;
     private DBCollection routeStates;
     private DBCollection states;
+    private DBCollection routeStatistics;
     private ConsoleEventNotifier notifier;
     private ConsoleLifecycleStrategy consoleLifecycleStrategy;
 
-
     @Before
     public void setUp() throws Exception {
+        // getting properties
+        Properties properties = new Properties();
+        properties.load(getClass().getClassLoader().getResourceAsStream("database.properties"));
+        String host = properties.getProperty("mongodb.host");
+        int port = Integer.parseInt(properties.getProperty("mongodb.port"));
 
-        //setting up mongodb embedded
-        int port = 27017;
+        // setting up mongodb embedded
         MongodConfig mongodConfig = new MongodConfig(Version.Main.V2_0, port, Network.localhostIsIPv6());
         MongodStarter runtime = MongodStarter.getDefaultInstance();
         MongodExecutable mongodExecutable = runtime.prepare(mongodConfig);
         mongod = mongodExecutable.start();
-        Mongo mongo = new Mongo("localhost", port);
+        Mongo mongo = new Mongo(host, port);
         DB db = mongo.getDB("console");
-        notifications = db.getCollection("notifications");
-        routes = db.getCollection("routes");
-        routeStates = db.getCollection("routestates");
-        states = db.getCollection("states");
+        exchangeStatistics = db.getCollection(ConsoleRepositoryJongo.EXCHANGE_STATISTICS);
+        routes = db.getCollection(ConsoleRepositoryJongo.ROUTES);
+        routeStates = db.getCollection(ConsoleRepositoryJongo.ROUTE_STATES);
+        states = db.getCollection(ConsoleRepositoryJongo.APP_STATES);
+        routeStatistics = db.getCollection(ConsoleRepositoryJongo.ROUTE_STATISTICS);
 
-        //setting up notifiers and tracers
-        notifier = spy(new ConsoleEventNotifier(consoleLifecycleStrategy));
+        // setting up notifiers and tracers
+        notifier = spy(new ConsoleEventNotifier());
+        ConsoleRepositoryJongo repository = new ConsoleRepositoryJongo(host, port);
         consoleLifecycleStrategy = spy(new ConsoleLifecycleStrategy());
+        consoleLifecycleStrategy.setRepository(repository);
     }
 
     @After
@@ -68,7 +76,7 @@ public class ConsoleIntegrationTest {
     }
 
     private void startCamelApp() throws Exception {
-        //start Camel application with two routes
+        // start Camel application with two routes
         context = new DefaultCamelContext();
 
         context.addRoutes(new RouteBuilder() {
@@ -108,12 +116,11 @@ public class ConsoleIntegrationTest {
                 });
             }
         });
-        //add the lifecycle strategy
+        // add the lifecycle strategy
         context.addLifecycleStrategy(consoleLifecycleStrategy);
-        notifier = spy(new ConsoleEventNotifier(consoleLifecycleStrategy));
         // and the management strategy
         context.getManagementStrategy().addEventNotifier(notifier);
-        //add the intercept strategy
+        // add the intercept strategy
         context.addInterceptStrategy(new ConsoleTracer(notifier));
 
         context.start();
@@ -128,53 +135,53 @@ public class ConsoleIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldSeeNotificationsAndCompletedEvent() throws Exception {
+        // given a started app
         startCamelApp();
 
-        //send a message in route 2
+        // when sending a message in route 2
         ProducerTemplate template = new DefaultProducerTemplate(context);
         template.start();
         template.sendBody("direct:route2", "route2 - 1");
 
-        //and notifyExchangeCompletedEvent should have been called
+        // then notifyExchangeCompletedEvent should have been called
         verify(notifier, timeout(1000).times(1)).notifyExchangeCompletedEvent(any(ExchangeCompletedEvent.class));
 
-        Thread.sleep(3000);
+        stopCamelApp();
 
-        //should be 1 message in database
-        DBCursor dbObjects = notifications.find();
+        // should be 1 message in database
+        DBCursor dbObjects = exchangeStatistics.find();
         assertThat(dbObjects.count()).isEqualTo(1);
         DBObject message = dbObjects.next();
 
-        List<DBObject> notifs = (List<DBObject>) message.get("notifications");
-        for (DBObject notification : notifs) {
-            log.debug(notification.toString());
-            assertThat(notification.get("step")).isIn(0, 1, 2);
+        // with 3 steps
+        List<DBObject> steps = (List<DBObject>) message.get("steps");
+        for (DBObject stepStat : steps) {
+            log.debug(stepStat.toString());
+            assertThat(stepStat.get("step")).isIn(0, 1, 2);
         }
 
-        //should have updated the exchanges per route
-        dbObjects = routes.find();
-        for (DBObject route : dbObjects) {
-            log.debug(route.toString());
-            if (route.get("routeId").equals("route2")) {
-                assertThat(route.get("exchangesTotal")).isEqualTo(1);
-                assertThat(route.get("exchangesCompleted")).isEqualTo(1);
-                assertThat(route.get("exchangesFailed")).isEqualTo(0);
-            } else {
-                assertThat(route.get("exchangesTotal")).isEqualTo(0);
-                assertThat(route.get("exchangesCompleted")).isEqualTo(0);
-                assertThat(route.get("exchangesFailed")).isEqualTo(0);
-            }
-        }
+        // and 2 exchangeStatistic (1 for route2 and 1 for route1)
+        dbObjects = routeStatistics.find();
+        assertThat(dbObjects.count()).isEqualTo(2);
 
-        stopCamelApp();
+        for (DBObject stat : dbObjects) {
+            log.debug(stat.toString());
+            assertThat(stat.get("routeId")).isIn("route1", "route2");
+            assertThat((Boolean) stat.get("failed")).isFalse();
+            assertThat((Integer) stat.get("duration")).isGreaterThan(0);
+            assertThat((Long) stat.get("timestamp")).isGreaterThan(0);
+        }
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     public void shouldSeeNotificationsAndErrorEvent() throws Exception {
+        // given a started camel app
         startCamelApp();
 
-        //send a message in route 2
+        // when sending a message in route 3
         try {
             ProducerTemplate template = new DefaultProducerTemplate(context);
             template.start();
@@ -183,54 +190,54 @@ public class ConsoleIntegrationTest {
             //should receive a NPE but do nothing
         }
 
-        //and notifyExchangeFailedEvent should have been called
+        // then notifyExchangeFailedEvent should have been called
         verify(notifier, timeout(1000).times(1)).notifyExchangeFailedEvent(any(ExchangeFailedEvent.class));
 
-        Thread.sleep(2000);
+        stopCamelApp();
 
-        //should be 1 message in database
-        DBCursor dbObjects = notifications.find();
+        // should be 1 message in database
+        DBCursor dbObjects = exchangeStatistics.find();
         assertThat(dbObjects.count()).isEqualTo(1);
         DBObject message = dbObjects.next();
 
-        List<DBObject> notifs = (List<DBObject>) message.get("notifications");
-        for (DBObject notification : notifs) {
-            log.debug(notification.toString());
-            assertThat(notification.get("step")).isIn(0, 1, 2, 3, 4);
+        List<DBObject> steps = (List<DBObject>) message.get("steps");
+        for (DBObject stepStat : steps) {
+            log.debug(stepStat.toString());
+            assertThat(stepStat.get("step")).isIn(0, 1, 2, 3, 4);
         }
 
-        //should have updated the exchanges per route
-        dbObjects = routes.find();
-        for (DBObject route : dbObjects) {
-            log.debug(route.toString());
-            if (route.get("routeId").equals("route3")) {
-                assertThat(route.get("exchangesTotal")).isEqualTo(1);
-                assertThat(route.get("exchangesCompleted")).isEqualTo(0);
-                assertThat(route.get("exchangesFailed")).isEqualTo(1);
+        // and 2 exchangeStatistic (1 for route3 and 1 for route1)
+        dbObjects = routeStatistics.find();
+        assertThat(dbObjects.count()).isEqualTo(2);
+
+        for (DBObject stat : dbObjects) {
+            log.debug(stat.toString());
+            assertThat(stat.get("routeId")).isIn("route1", "route3");
+            if (stat.get("routeId").equals("route3")) {
+                assertThat((Boolean) stat.get("failed")).isTrue();
+                assertThat((Integer) stat.get("duration")).isEqualTo(0);
             } else {
-                assertThat(route.get("exchangesTotal")).isEqualTo(0);
-                assertThat(route.get("exchangesCompleted")).isEqualTo(0);
-                assertThat(route.get("exchangesFailed")).isEqualTo(0);
+                assertThat((Boolean) stat.get("failed")).isFalse();
+                assertThat((Integer) stat.get("duration")).isGreaterThan(0);
             }
+            assertThat((Long) stat.get("timestamp")).isGreaterThan(0);
         }
-
-        stopCamelApp();
     }
 
     @Test
     public void shouldSeeInstanceStateAndRouteState() throws Exception {
+        // given a started camel app
         startCamelApp();
 
-        //should see 3 routes
+        // when started
+        // then we should see 3 routes
         DBCursor dbObjects = routes.find();
         assertThat(dbObjects.count()).isEqualTo(3);
         for (DBObject route : dbObjects) {
             log.debug(route.toString());
             assertThat(route.get("routeId")).isIn("route1", "route2", "route3");
             assertThat(route.get("uri")).isIn("direct://route1", "direct://route2", "direct://route3");
-            assertThat(route.get("exchangesCompleted")).isEqualTo(0);
-            assertThat(route.get("exchangesFailed")).isEqualTo(0);
-            assertThat(route.get("exchangesTotal")).isEqualTo(0);
+            assertThat(route.get("definition")).isNotNull();
         }
 
         dbObjects = states.find();
@@ -249,8 +256,10 @@ public class ConsoleIntegrationTest {
             assertThat(state.get("state")).isEqualTo("Started");
         }
 
+        // when stopped
         stopCamelApp();
 
+        // then we should see state stopped
         dbObjects = states.find();
         assertThat(dbObjects.count()).isEqualTo(2);
         for (DBObject state : dbObjects) {

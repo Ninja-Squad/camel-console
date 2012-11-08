@@ -14,19 +14,19 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.entry;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 public class ConsoleLifecycleStrategyTest {
 
     private CamelContext context;
-    private ConsoleLifecycleStrategy lifecycleStrategy;
     private ConsoleRepository repository;
 
     @Before
     public void setUpContext() {
         context = new DefaultCamelContext();
-        lifecycleStrategy = new ConsoleLifecycleStrategy();
+        ConsoleLifecycleStrategy lifecycleStrategy = new ConsoleLifecycleStrategy();
         repository = mock(ConsoleRepositoryJongo.class);
         doNothing().when(repository).save(any(InstanceState.class));
         lifecycleStrategy.setRepository(repository);
@@ -59,7 +59,6 @@ public class ConsoleLifecycleStrategyTest {
     @Test
     public void shouldLogStopTime() throws Exception {
         //given a context with a consoleLifecycleStrategy
-        setUpContext();
         context.start();
 
         //when stopping context
@@ -80,7 +79,6 @@ public class ConsoleLifecycleStrategyTest {
     @Test
     public void shouldLogRouteAddedAndStopped() throws Exception {
         //given a context with a consoleLifecycleStrategy
-        setUpContext();
         context.start();
 
         //when adding a new route2
@@ -89,76 +87,65 @@ public class ConsoleLifecycleStrategyTest {
             @Override
             public void configure() throws Exception {
                 from("direct://route1").routeId("route1").to("mock:result");
-                from("direct://route2").routeId("route2").to("mock:result");
+                from("direct://route2").routeId("route2").to("mock:result2");
             }
         });
 
         //should have tried to find it
-        verify(repository, times(1)).findRoute("route1");
-        //then the startup should be stored
         doReturn(null).when(repository).findRoute("route1");
+        doReturn(null).when(repository).findRoute("route2");
+        verify(repository, times(1)).findRoute("route1");
+        verify(repository, times(1)).findRoute("route2");
+
+        //then the startup should be stored
         ArgumentCaptor<Route> routeArgumentCaptor = ArgumentCaptor.forClass(Route.class);
         verify(repository, times(2)).save(routeArgumentCaptor.capture());
+        // with route1
         Route route = routeArgumentCaptor.getAllValues().get(0);
         assertThat(route.getRouteId()).isEqualTo("route1");
         assertThat(route.getUri()).isEqualTo("direct://route1");
-        assertThat(route.getExchangesCompleted()).isEqualTo(0L);
-        assertThat(route.getExchangesFailed()).isEqualTo(0L);
-        assertThat(route.getExchangesTotal()).isEqualTo(0L);
+        assertThat(route.getDefinition()).isEqualTo("{\"id\":\"route1\"," +
+                "\"inputs\":[{\"id\":null,\"uri\":\"direct://route1\",\"ref\":null}]," +
+                "\"outputs\":[{\"id\":\"to1\",\"inheritErrorHandler\":null,\"blocks\":[],\"otherAttributes\":null," +
+                "\"uri\":\"mock:result\",\"ref\":null,\"pattern\":null}]," +
+                "\"inheritErrorHandler\":null,\"otherAttributes\":null," +
+                "\"group\":\"com.ninja_squad.console.notifier.ConsoleLifecycleStrategyTest$1\",\"streamCache\":null," +
+                "\"trace\":null,\"handleFault\":null,\"delayer\":null,\"autoStartup\":null," +
+                "\"startupOrder\":null,\"routePolicyRef\":null,\"shutdownRoute\":null,\"shutdownRunningTask\":null," +
+                "\"errorHandlerRef\":null,\"shortName\":\"route\",\"outputSupported\":true,\"abstract\":false," +
+                "\"label\":\"\",\"descriptionText\":null}");
+        assertThat(route.getSteps()).contains(entry("to1","mock:result"));
+        // then route2
         Route route2 = routeArgumentCaptor.getAllValues().get(1);
         assertThat(route2.getRouteId()).isEqualTo("route2");
         assertThat(route2.getUri()).isEqualTo("direct://route2");
-        assertThat(route2.getExchangesCompleted()).isEqualTo(0L);
-        assertThat(route2.getExchangesFailed()).isEqualTo(0L);
-        assertThat(route2.getExchangesTotal()).isEqualTo(0L);
+        assertThat(route2.getDefinition()).isEqualTo("{\"id\":\"route2\"," +
+                "\"inputs\":[{\"id\":null,\"uri\":\"direct://route2\",\"ref\":null}]," +
+                "\"outputs\":[{\"id\":\"to2\",\"inheritErrorHandler\":null,\"blocks\":[],\"otherAttributes\":null," +
+                "\"uri\":\"mock:result2\",\"ref\":null,\"pattern\":null}]," +
+                "\"inheritErrorHandler\":null,\"otherAttributes\":null," +
+                "\"group\":\"com.ninja_squad.console.notifier.ConsoleLifecycleStrategyTest$1\",\"streamCache\":null," +
+                "\"trace\":null,\"handleFault\":null,\"delayer\":null,\"autoStartup\":null," +
+                "\"startupOrder\":null,\"routePolicyRef\":null,\"shutdownRoute\":null,\"shutdownRunningTask\":null," +
+                "\"errorHandlerRef\":null,\"shortName\":\"route\"," +
+                "\"outputSupported\":true,\"abstract\":false,\"label\":\"\",\"descriptionText\":null}");
+        assertThat(route2.getSteps()).contains(entry("to2","mock:result2"));
         //and a log of the state and time
         ArgumentCaptor<RouteState> routeStateArgumentCaptor = ArgumentCaptor.forClass(RouteState.class);
         verify(repository, times(2)).save(routeStateArgumentCaptor.capture());
+        // for route1
         RouteState routeState = routeStateArgumentCaptor.getAllValues().get(0);
         assertThat(routeState.getRouteId()).isEqualTo("route1");
         assertThat(routeState.getState()).isEqualTo(State.Started);
         DateTime timestamp = new DateTime(routeState.getTimestamp());
         assertThat(timestamp.isBeforeNow()).isTrue();
         assertThat(timestamp.isAfter(startTime)).isTrue();
+        // and route2
         RouteState routeState2 = routeStateArgumentCaptor.getAllValues().get(0);
         assertThat(routeState2.getRouteId()).isEqualTo("route1");
         assertThat(routeState2.getState()).isEqualTo(State.Started);
         DateTime timestamp2 = new DateTime(routeState2.getTimestamp());
         assertThat(timestamp2.isBeforeNow()).isTrue();
         assertThat(timestamp2.isAfter(startTime)).isTrue();
-
-        //stop route1 and restart it
-        doReturn(routeState).when(repository).lastRouteState("route1");
-        startTime = DateTime.now();
-        context.stopRoute("route1");
-
-        //should have update its state
-        verify(repository, timeout(1000).times(1)).lastRouteState("route1");
-        routeStateArgumentCaptor = ArgumentCaptor.forClass(RouteState.class);
-        verify(repository, timeout(1000).times(3)).save(routeStateArgumentCaptor.capture());
-        routeState = routeStateArgumentCaptor.getAllValues().get(2);
-        assertThat(routeState.getRouteId()).isEqualTo("route1");
-        timestamp = new DateTime(routeState.getTimestamp());
-        assertThat(timestamp.isBeforeNow()).isTrue();
-        assertThat(timestamp.isAfter(startTime)).isTrue();
-        assertThat(routeState.getState()).isEqualTo(State.Stopped);
-
-        //restart the route1
-        startTime = DateTime.now();
-        context.startRoute("route1");
-
-        //should have tried to find it
-        doReturn(route).when(repository).findRoute("route1");
-        verify(repository, timeout(1000).times(1)).findRoute("route1");
-        //and not store it again, just update the state.
-        routeStateArgumentCaptor = ArgumentCaptor.forClass(RouteState.class);
-        verify(repository, times(1)).save(routeStateArgumentCaptor.capture());
-        routeState = routeStateArgumentCaptor.getValue();
-        assertThat(routeState.getRouteId()).isEqualTo("route1");
-        assertThat(routeState.getState()).isEqualTo(State.Started);
-        timestamp = new DateTime(routeState.getTimestamp());
-        assertThat(timestamp.isBeforeNow()).isTrue();
-        assertThat(timestamp.isAfter(startTime)).isTrue();
-
     }
 }

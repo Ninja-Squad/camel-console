@@ -24,6 +24,7 @@ public class WebAppInitializer implements WebApplicationInitializer {
         dispatcher.setLoadOnStartup(1);
         dispatcher.addMapping("/*");
 
-        servletContext.addListener(new ContextLoaderListener(appContext));
+        ContextLoaderListener contextLoaderListener = new ContextLoaderListener(appContext);
+        servletContext.addListener(contextLoaderListener);
     }
 }

@@ -1,6 +1,6 @@
 package com.ninja_squad.console.notifier;
 
-import com.ninja_squad.console.Notification;
+import com.ninja_squad.console.StepStatistic;
 import org.apache.camel.AsyncCallback;
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -17,15 +17,12 @@ public class ConsoleTraceInterceptor extends DelegateAsyncProcessor {
 
     private ConsoleEventNotifier eventNotifier;
 
-    private ConsolePerformanceCounter counter;
-
     private final ProcessorDefinition<?> node;
 
     public ConsoleTraceInterceptor(ConsoleEventNotifier eventNotifier, ProcessorDefinition<?> node, Processor target) {
         super(target);
         this.eventNotifier = eventNotifier;
         this.node = node;
-        counter = new ConsolePerformanceCounter(node.toString());
     }
 
     @Override
@@ -43,56 +40,62 @@ public class ConsoleTraceInterceptor extends DelegateAsyncProcessor {
         }
 
         // only record time if stats is enabled
-        final StopWatch watch = (counter != null) ? new StopWatch() : null;
+        final StopWatch watch = new StopWatch();
 
-        boolean sync = super.process(exchange, new AsyncCallback() {
+        return super.process(exchange, new AsyncCallback() {
             public void done(boolean doneSync) {
                 try {
-                    // record end time
-                    if (watch != null) {
-                        recordTime(exchange, watch.stop());
-                    }
+                    // record end time and store exchange
+                    recordTimeAndTrace(exchange, watch.stop());
                 } finally {
                     // and let the original callback know we are done as well
                     callback.done(doneSync);
                 }
             }
-
-            @Override
-            public String toString() {
-                return ConsoleTraceInterceptor.this.toString();
-            }
         });
-
-        try {
-            traceExchange(exchange, counter);
-        } catch (Exception e) {
-            log.info("Error while tracing exchange");
-        }
-
-        return sync;
     }
 
-    protected void recordTime(Exchange exchange, long duration) {
+    protected void recordTimeAndTrace(Exchange exchange, long duration) {
+        StepStatistic stepStatistic;
         if (!exchange.isFailed() && exchange.getException() == null) {
-            counter.completedExchange(exchange, duration);
+            stepStatistic = completedExchange(exchange, duration);
         } else {
-            counter.failedExchange(exchange);
+            stepStatistic = failedExchange(exchange, duration);
         }
+        storeStepStatistic(stepStatistic);
     }
 
-    protected void traceExchange(Exchange exchange, ConsolePerformanceCounter counter) throws Exception {
-        Notification notification = new Notification();
-        notification.setRouteId(exchange.getFromRouteId());
+    protected StepStatistic buildStepStatistic(Exchange exchange, long duration) {
+        StepStatistic stepStatistic = new StepStatistic();
+        stepStatistic.setRouteId(exchange.getFromRouteId());
         String exchangeId = exchange.getExchangeId();
-        notification.setExchangeId(exchangeId);
-        notification.setBody(exchange.getIn().getBody());
-        notification.setTimestamp(DateTime.now());
-        notification.setSource(exchange.getFromEndpoint() == null ? "" : exchange.getFromEndpoint().getEndpointUri());
-        notification.setDestination(node.getLabel());
-        notification.setDuration(counter.getLastProcessingTime());
-        eventNotifier.addNotification(exchangeId, notification);
-        log.debug(notification.toString());
+        stepStatistic.setExchangeId(exchangeId);
+        stepStatistic.setTimestamp(DateTime.now().getMillis());
+        stepStatistic.setDestination(node.getId());
+        stepStatistic.setDuration(duration);
+        return stepStatistic;
+    }
+
+    protected StepStatistic completedExchange(Exchange exchange, long duration) {
+        StepStatistic stepStatistic = buildStepStatistic(exchange, duration);
+        stepStatistic.setFailed(false);
+        return stepStatistic;
+    }
+
+    protected StepStatistic failedExchange(Exchange exchange, long duration) {
+        StepStatistic stepStatistic = buildStepStatistic(exchange, duration);
+        stepStatistic.setFailed(true);
+        stepStatistic.setErrorBody(exchange.getIn().getBody());
+        stepStatistic.setErrorHeaders(exchange.getIn().getHeaders());
+        stepStatistic.setException(exchange.getException().getClass().getSimpleName());
+        stepStatistic.setExceptionMessage(exchange.getException().getMessage());
+        storeStepStatistic(stepStatistic);
+        return stepStatistic;
+    }
+
+    protected void storeStepStatistic(StepStatistic stepStatistic) {
+        log.debug(stepStatistic.toString());
+        eventNotifier.addStepStatistic(stepStatistic.getExchangeId(), stepStatistic);
     }
 
 }

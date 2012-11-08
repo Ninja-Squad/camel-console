@@ -2,6 +2,9 @@ package com.ninja_squad.console;
 
 import lombok.*;
 
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 @ToString
 @EqualsAndHashCode
 @NoArgsConstructor
@@ -18,19 +21,11 @@ public class Route {
 
     @Getter
     @Setter
-    private String canonicalName;
+    private String definition;
 
     @Getter
     @Setter
-    private long exchangesCompleted;
-
-    @Getter
-    @Setter
-    private long exchangesFailed;
-
-    @Getter
-    @Setter
-    private long exchangesTotal;
+    private SortedMap<String, String> steps = new TreeMap<String, String>();
 
     //Builder
 

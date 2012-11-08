@@ -5,15 +5,15 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-@Document(collection = "routes")
-public class Route extends com.ninja_squad.console.Route {
+@Document(collection = "exchange_statistics")
+public class ExchangeStatistic extends com.ninja_squad.console.ExchangeStatistic {
 
     @Id
     @Getter
     @Setter
     private String id;
 
-    public Route(String routeId) {
-        super(routeId);
-    }
+    @Getter
+    @Setter
+    private Boolean handled;
 }
