@@ -1,4 +1,4 @@
-<td><span title="URI: {{ uri }}" rel="tooltip">{{ name }}</span></td>
+<td><span title="URI: {{ uri }}" rel="tooltip">{{ routeId }}</span></td>
 <td>
     <div class="numblock numblock-messages">
         <div class="top">{{ messageCount }}</div>
@@ -10,8 +10,8 @@
 </td>
 <td>
     <div class="progress progress-success-rate">
-        <div class="bar bar-success" style="width: {{{percent successCount messageCount }}}%"></div>
-        <div class="bar bar-danger" style="width: {{{ percent failureCount messageCount }}}%"></div>
+        <div class="bar bar-success" style="width: {{{successRate }}}%"></div>
+        <div class="bar bar-danger" style="width: {{{ percentComplement successRate messageCount}}}%"></div>
         <div class="progress-text">{{ successRate }} %</div>
     </div>
 </td>
