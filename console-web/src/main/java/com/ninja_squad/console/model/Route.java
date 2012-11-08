@@ -13,4 +13,7 @@ public class Route extends com.ninja_squad.console.Route {
     @Setter
     private String id;
 
+    public Route(String routeId) {
+        super(routeId);
+    }
 }

@@ -237,9 +237,7 @@ public class ConsoleIntegrationTest {
             log.debug(route.toString());
             assertThat(route.get("routeId")).isIn("route1", "route2", "route3");
             assertThat(route.get("uri")).isIn("direct://route1", "direct://route2", "direct://route3");
-            assertThat(route.get("exchangesCompleted")).isEqualTo(0);
-            assertThat(route.get("exchangesFailed")).isEqualTo(0);
-            assertThat(route.get("exchangesTotal")).isEqualTo(0);
+            assertThat(route.get("definition")).isNotNull();
         }
 
         dbObjects = states.find();
