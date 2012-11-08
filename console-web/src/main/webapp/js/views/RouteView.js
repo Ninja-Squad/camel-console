@@ -17,7 +17,6 @@ define(['underscore',
             }
         },
         render:function (event) {
-            console.log('render', this.model);
             var html = (this.mode == 'numbers') ? this.numbersTemplate(this.model.toJSON()) : this.blocksTemplate(this.model.toJSON())
             this.$el.html(html);
             this.$('.numblock-messages').tooltip({title:this.messagesTooltipTitle});
@@ -28,6 +27,12 @@ define(['underscore',
         setMode:function (mode) {
             this.mode = mode;
             this.render();
+        },
+        events:{
+            'click':'displayDetail'
+        },
+        displayDetail:function () {
+            Backbone.history.navigate(this.model.get('routeId'), true);
         }
     });
 

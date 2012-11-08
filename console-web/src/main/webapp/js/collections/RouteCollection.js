@@ -27,7 +27,7 @@ define(['backbone', 'models/Route'], function (Backbone, Route) {
         },
         parse:function (response) {
             return $.map(response.content, function (item) {
-                return {routeId:item.routeId, uri:item.uri};
+                return {routeId:item.routeId, uri:item.uri, steps:item.steps};
             });
         }
     });
