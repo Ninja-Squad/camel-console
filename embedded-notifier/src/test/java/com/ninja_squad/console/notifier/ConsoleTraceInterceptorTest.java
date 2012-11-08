@@ -85,7 +85,7 @@ public class ConsoleTraceInterceptorTest {
         CamelContext camelContext = new DefaultCamelContext();
         Exchange exchange = new DefaultExchange(camelContext);
         exchange.setFromRouteId("route1");
-        doReturn("destination").when(node).getLabel();
+        doReturn("destination").when(node).getId();
 
         // when the exchange is completed
         long start = DateTime.now().getMillis();

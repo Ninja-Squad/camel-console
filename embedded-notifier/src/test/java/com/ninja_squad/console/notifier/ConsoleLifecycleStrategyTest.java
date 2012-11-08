@@ -14,6 +14,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
 import static org.fest.assertions.api.Assertions.assertThat;
+import static org.fest.assertions.api.Assertions.entry;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -113,6 +114,7 @@ public class ConsoleLifecycleStrategyTest {
                 "\"startupOrder\":null,\"routePolicyRef\":null,\"shutdownRoute\":null,\"shutdownRunningTask\":null," +
                 "\"errorHandlerRef\":null,\"shortName\":\"route\",\"outputSupported\":true,\"abstract\":false," +
                 "\"label\":\"\",\"descriptionText\":null}");
+        assertThat(route.getSteps()).contains(entry("to1","mock:result"));
         // then route2
         Route route2 = routeArgumentCaptor.getAllValues().get(1);
         assertThat(route2.getRouteId()).isEqualTo("route2");
@@ -127,6 +129,7 @@ public class ConsoleLifecycleStrategyTest {
                 "\"startupOrder\":null,\"routePolicyRef\":null,\"shutdownRoute\":null,\"shutdownRunningTask\":null," +
                 "\"errorHandlerRef\":null,\"shortName\":\"route\"," +
                 "\"outputSupported\":true,\"abstract\":false,\"label\":\"\",\"descriptionText\":null}");
+        assertThat(route2.getSteps()).contains(entry("to2","mock:result2"));
         //and a log of the state and time
         ArgumentCaptor<RouteState> routeStateArgumentCaptor = ArgumentCaptor.forClass(RouteState.class);
         verify(repository, times(2)).save(routeStateArgumentCaptor.capture());
