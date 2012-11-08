@@ -113,3 +113,10 @@
 .btn-group {
     margin-bottom: 12px;
 }
+
+/* d3 */
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 4.5px;
+}
