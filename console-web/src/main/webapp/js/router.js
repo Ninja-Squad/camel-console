@@ -2,7 +2,7 @@ define(['backbone',
     'views/GraphView', 'views/RouteTableView', 'views/StepView',
     'models/Statistic', 'collections/StatisticCollection',
     'models/Route', 'collections/RouteCollection',
-    'utils/Server',
+    'utils/server',
     'backbone-queryparams'
 ], function (Backbone, GraphView, RouteTableView, StepView,
              Statistic, StatisticCollection,

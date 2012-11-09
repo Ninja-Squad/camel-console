@@ -1,4 +1,4 @@
-define(['backbone', 'utils/Server'], function (Backbone, Server) {
+define(['backbone', 'utils/server'], function (Backbone, Server) {
     var Route = Backbone.Model.extend({
         defaults:{
             uri:'',

@@ -7,16 +7,16 @@ define(['underscore',
             var res;
             var that = this;
             _.each(Object.keys(this.model.get('steps')), function (step) {
-                current = {routeId:step};//, uri:that.model.get('steps')[step]};
+                current = {routeId:step, uri:that.model.get('steps')[step]};
                 if (res === undefined) {
                     res = current;
                 } else {
                     if (res.children === undefined) {
                         res.children = [current];
                     } else {
-                        var last = res.children
+                        var last = res.children[0]
                         while (last.children != undefined) {
-                            last = last.children;
+                            last = last.children[0];
                         }
                         last.children = [current];
                     }
@@ -26,15 +26,16 @@ define(['underscore',
             console.log('dataset', this.dataset);
         },
         render:function (event) {
-            var vis = d3.select("#steps").append("svg:svg")
-                .attr("width", 400)
+            $("#steps").empty();
+            var vis = d3.select("#steps").append("svg")
+                .attr("width", '100%')
                 .attr("height", 300)
-                .append("svg:g")
-                .attr("transform", "translate(40, 0)"); // shift everything to the right
+                .append("g")
+                .attr("transform", "translate(200, 0)"); // shift everything to the right
 
             // Create a tree "canvas"
             var tree = d3.layout.tree()
-                .size([300, 150]);
+                .size([300, 500]);
 
             var diagonal = d3.svg.diagonal()
                 // change x and y (for the left to right tree)
@@ -50,25 +51,25 @@ define(['underscore',
             console.log(nodes)
             console.log(links)
 
-            var link = vis.selectAll("pathlink")
+            var link = vis.selectAll("path.link")
                 .data(links)
-                .enter().append("svg:path")
+                .enter().append("path")
                 .attr("class", "link")
                 .attr("d", diagonal)
 
-            var node = vis.selectAll("g.node")
+            var node = vis.selectAll(".node")
                 .data(nodes)
-                .enter().append("svg:g")
+                .enter().append("g")
                 .attr("transform", function (d) {
                     return "translate(" + d.y + "," + d.x + ")";
                 })
 
             // Add the dot at every node
-            node.append("svg:circle")
-                .attr("r", 3.5);
+            node.append("circle")
+                .attr("r", 5);
 
             // place the name atribute left or right depending if children
-            node.append("svg:text")
+            node.append("text")
                 .attr("dx", function (d) {
                     return d.children ? -8 : 8;
                 })
