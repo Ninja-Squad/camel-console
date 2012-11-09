@@ -145,6 +145,9 @@ public class ConsoleLifecycleStrategy implements LifecycleStrategy {
                 }
                 route.setDefinition(definition);
                 for (ProcessorDefinition<?> stepDefinition : routeDefinition.getOutputs()) {
+                    if (stepDefinition.getId() == null) {
+                        stepDefinition.setId(stepDefinition.getClass().getSimpleName());
+                    }
                     route.getSteps().put(stepDefinition.getId(), stepDefinition.getLabel());
                 }
                 repository.save(route);
