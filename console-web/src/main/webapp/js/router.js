@@ -1,9 +1,16 @@
 define(['backbone',
-    'views/GraphView', 'views/RouteTableView', 'views/StepView',
-    'models/Statistic', 'collections/StatisticCollection',
-    'models/Route', 'collections/RouteCollection',
-    'utils/server',
-    'backbone-queryparams'
+        'views/GraphView', 
+        'views/RouteTableView', 
+        'views/StepView',
+        'models/Statistic', 
+        'collections/StatisticCollection',
+        'models/Route', 
+        'collections/RouteCollection',
+        'utils/server',
+        'backbone-queryparams',
+        'flot',
+        'flot-stack',
+        'flot-resize'
 ], function (Backbone, GraphView, RouteTableView, StepView, Statistic, StatisticCollection, Route, RouteCollection, Server) {
     var AppRouter = Backbone.Router.extend({
 
