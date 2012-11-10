@@ -4,9 +4,7 @@ define(['backbone',
     'models/Route', 'collections/RouteCollection',
     'utils/server',
     'backbone-queryparams'
-], function (Backbone, GraphView, RouteTableView, StepView,
-             Statistic, StatisticCollection,
-             Route, RouteCollection, Server) {
+], function (Backbone, GraphView, RouteTableView, StepView, Statistic, StatisticCollection, Route, RouteCollection, Server) {
     var AppRouter = Backbone.Router.extend({
 
         initialize:function () {
@@ -16,7 +14,8 @@ define(['backbone',
 
         routes:{
             '':'appRoutes',
-            ':id':'appRoute'
+            'console':'appRoutes',
+            'console/:id':'appRoute'
         },
 
         appRoutes:function () {
@@ -46,16 +45,21 @@ define(['backbone',
                 })
                 new GraphView({collection:stats, el:'#stats'}).render();
             });
-            var route = this.routeCollection.find(function (model) {
-                return model.get('routeId') == id;
-            });
-            this.routeCollection = new RouteCollection();
             var that = this;
-            _.each(Object.keys(route.get('steps')), function (step) {
-                that.routeCollection.add(new Route({routeId:step, uri:route.get('steps')[step]}));
-            });
-            new RouteTableView({collection:this.routeCollection, el:'#routes'}).render();
-            new StepView({model:route, el:'#steps'}).render();
+            console.log("route detail", id);
+            this.routeCollection.fetch({success:function (collection) {
+                console.log("all routes", collection);
+                that.routeCollection = collection;
+                var route = that.routeCollection.find(function (model) {
+                    return model.get('routeId') == id;
+                });
+                that.routeCollection = new RouteCollection();
+                _.each(Object.keys(route.get('steps')), function (step) {
+                    that.routeCollection.add(new Route({routeId:step, uri:route.get('steps')[step]}));
+                });
+                new RouteTableView({collection:that.routeCollection, el:'#routes'}).render();
+                new StepView({model:route, el:'#steps'}).render();
+            }});
         }
 
     });

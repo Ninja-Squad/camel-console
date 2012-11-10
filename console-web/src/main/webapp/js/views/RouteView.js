@@ -32,7 +32,7 @@ define(['underscore',
             'click':'displayDetail'
         },
         displayDetail:function () {
-            Backbone.history.navigate(this.model.get('routeId'), true);
+            Backbone.history.navigate("console/" + this.model.get('routeId'), true);
         }
     });
 
