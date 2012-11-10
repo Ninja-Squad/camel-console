@@ -68,7 +68,7 @@
         <!-- Contains all RESThub artifacts and transitive dependencies -->
         <repository>
             <id>resthub</id>
-            <url>http://nexus.pullrequest.org/content/groups/resthub</url>
+            <url>http://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
     </repositories>
 

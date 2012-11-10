@@ -1,7 +1,7 @@
 define(['backbone', 'models/Route'], function (Backbone, Route) {
     var RouteCollection = Backbone.Collection.extend({
         model:Route,
-        url:'api/route',
+        url:'/api/route',
         initialize:function () {
             this.setSortAttribute('name');
             this.asc = true;

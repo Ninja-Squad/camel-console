@@ -1,5 +1,6 @@
 package com.ninja_squad.console;
 
+import com.ninja_squad.console.servlet.IndexServlet;
 import org.springframework.web.WebApplicationInitializer;
 import org.springframework.web.context.ContextLoaderListener;
 import org.springframework.web.context.support.AnnotationConfigWebApplicationContext;
@@ -22,7 +23,11 @@ public class WebAppInitializer implements WebApplicationInitializer {
 
         ServletRegistration.Dynamic dispatcher = servletContext.addServlet("dispatcher", new DispatcherServlet(appContext));
         dispatcher.setLoadOnStartup(1);
-        dispatcher.addMapping("/*");
+        dispatcher.addMapping("/api/*");
+
+        ServletRegistration.Dynamic index = servletContext.addServlet("index", new IndexServlet());
+        index.setLoadOnStartup(1);
+        index.addMapping("/console/*");
 
         ContextLoaderListener contextLoaderListener = new ContextLoaderListener(appContext);
         servletContext.addListener(contextLoaderListener);
