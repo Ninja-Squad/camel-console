@@ -59,7 +59,7 @@ public class RouteControllerTest extends AbstractWebTest {
     }
 
     protected String rootUrl() {
-        return "http://localhost:" + port + "/api/route";
+        return "http://localhost:" + port + "/route";
     }
 
     @Test

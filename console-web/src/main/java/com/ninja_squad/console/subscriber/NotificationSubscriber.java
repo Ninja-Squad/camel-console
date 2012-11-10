@@ -44,7 +44,7 @@ public class NotificationSubscriber {
                 pendingRouteStats();
                 pendingExchangeStats();
             }
-        }, 0, 1, java.util.concurrent.TimeUnit.SECONDS);
+        }, 0, 1, java.util.concurrent.TimeUnit.MINUTES);
     }
 
     protected void pendingRouteStats() {

@@ -12,7 +12,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 @Controller
-@RequestMapping(value = "/api/route")
+@RequestMapping(value = "/route")
 public class RouteController extends RepositoryBasedRestController<Route, String, RouteRepository> {
 
     @Inject
