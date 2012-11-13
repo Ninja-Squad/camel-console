@@ -3,11 +3,11 @@ define(['backbone', 'models/Statistic'], function (Backbone, Statistic) {
         model:Statistic,
         url:'api/statistic',
         initialize:function () {
-            timeUnit: 'hour'
+            timeUnit: 'hour';
         },
         getTimeSerie:function (attribute) {
             var result = this.map(function(model){
-                return [model.get('range'), model.get(attribute)]
+                return [model.get('range'), model.get(attribute)];
             });
             return result;
         }

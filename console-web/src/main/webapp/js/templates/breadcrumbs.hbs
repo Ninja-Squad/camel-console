@@ -1,0 +1,10 @@
+<ul class="breadcrumb">
+    {{#iter breadcrumbs}}
+        {{#unless this.iterStatus.last }}
+            <li><a href="#" data-path="{{ this.path }}">{{ this.text }}</a> <span class="divider">/</span></li>
+        {{/unless}}
+        {{#if this.iterStatus.last }}
+            <li class="active">{{ this.text }}</li>
+        {{/if}}
+    {{/iter}}
+</ul>
