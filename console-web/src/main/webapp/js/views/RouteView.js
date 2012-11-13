@@ -11,14 +11,14 @@ define(['underscore',
             var view = this;
             this.messagesTooltipTitle = function () {
                 return view.model.get('messageCount') + ' messages<br/>' + view.model.get('successCount') + ' successes<br/>' + view.model.get('failureCount') + ' errors';
-            }
+            };
             this.timesTooltipTitle = function () {
                 return 'Average time: ' + view.model.get('averageTime') + ' ms.<br/>Minimum time: ' + view.model.get('minimumTime') + ' ms.<br/>Maximum time: ' + view.model.get('maximumTime') + ' ms.';
-            }
+            };
             this.model.on('change', this.render, this);
         },
         render:function (event) {
-            var html = (this.mode == 'numbers') ? this.numbersTemplate(this.model.toJSON()) : this.blocksTemplate(this.model.toJSON())
+            var html = (this.mode == 'numbers') ? this.numbersTemplate(this.model.toJSON()) : this.blocksTemplate(this.model.toJSON());
             this.$el.html(html);
             this.$('.numblock-messages').tooltip({title:this.messagesTooltipTitle});
             this.$('.numblock-times').tooltip({title:this.timesTooltipTitle});

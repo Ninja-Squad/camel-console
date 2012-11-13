@@ -31,7 +31,7 @@ define(['backbone', 'utils/server'], function (Backbone, Server) {
                 });
                 var successRate = 0;
                 if (that.get('messageCount') != 0) {
-                    successRate = Math.floor(that.get('successCount') * 100 / that.get('messageCount'))
+                    successRate = Math.floor(that.get('successCount') * 100 / that.get('messageCount'));
                 }
                 that.set('successRate', successRate, options);
                 that.change();

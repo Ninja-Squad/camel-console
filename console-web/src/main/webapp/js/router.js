@@ -66,7 +66,7 @@ define(['backbone',
                     var stat = new Statistic({'range':elem[0], 'failed':elem[1], 'completed':elem[2],
                         'min':elem[3], 'max':elem[4], 'average':elem[5]});
                     stats.add(stat);
-                })
+                });
                 new GraphView({collection:stats, el:'#stats', timeUnit:TimeUnit.hour}).render();
             });
             var that = this;

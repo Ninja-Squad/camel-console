@@ -14,7 +14,7 @@ define(['underscore',
                     if (res.children === undefined) {
                         res.children = [current];
                     } else {
-                        var last = res.children[0]
+                        var last = res.children[0];
                         while (last.children != undefined) {
                             last = last.children[0];
                         }
@@ -48,21 +48,21 @@ define(['underscore',
             // Create an array with all the links
             var links = tree.links(nodes);
 
-            console.log(nodes)
-            console.log(links)
+            console.log(nodes);
+            console.log(links);
 
             var link = vis.selectAll("path.link")
                 .data(links)
                 .enter().append("path")
                 .attr("class", "link")
-                .attr("d", diagonal)
+                .attr("d", diagonal);
 
             var node = vis.selectAll(".node")
                 .data(nodes)
                 .enter().append("g")
                 .attr("transform", function (d) {
                     return "translate(" + d.y + "," + d.x + ")";
-                })
+                });
 
             // Add the dot at every node
             node.append("circle")
@@ -79,7 +79,7 @@ define(['underscore',
                 })
                 .text(function (d) {
                     return d.routeId;
-                })
+                });
         }
     });
     return StepView;

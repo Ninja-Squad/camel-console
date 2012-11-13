@@ -23,7 +23,7 @@ define(['backbone', 'models/Route'], function (Backbone, Route) {
                     result = 1;
                 }
                 return (this.asc ? result : -result);
-            }
+            };
         },
         parse:function (response) {
             return $.map(response.content, function (item) {

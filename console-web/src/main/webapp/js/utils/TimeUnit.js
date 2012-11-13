@@ -61,7 +61,7 @@ define([], function () {
             }
             return result;
         }
-    }
+    };
     
     return TimeUnit;
 });

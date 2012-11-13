@@ -7,6 +7,7 @@ define([
                 callback(data);
             });
         }
-    }
+    };
+    
     return Server;
 });
