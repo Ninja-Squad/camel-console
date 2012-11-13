@@ -20,24 +20,39 @@ define(['underscore',
             this.renderTable();
             return this;
         },
+        _accepted: function(route) {
+            if (!this.routeFilter || !this.routeFilter.trim()) {
+                return true;
+            }
+            var appliedFilter = this.routeFilter.trim().toLowerCase();
+            var checkedRouteId = route.get("routeId").toLowerCase();
+            return checkedRouteId.indexOf(appliedFilter) == 0;
+        },
         renderTable: function() {
             this.$("thead tr").html(this.mode == 'numbers' ? this.numbersHeaderTemplate() : this.blocksHeaderTemplate());
             this.$('tbody').html('');
             this.collection.each(function(route) {
-                var routeView = new RouteView({model: route});
-                routeView.setMode(this.mode);
-                this.$('tbody').append(routeView.render().$el);
+                if (this._accepted(route)) {
+                    var routeView = new RouteView({model: route});
+                    routeView.setMode(this.mode);
+                    this.$('tbody').append(routeView.render().$el);
+                }
             }, this);
             this.$("th[data-sort]").removeClass("sorted-asc").removeClass("sorted-desc");
             if (this.collection.sortAttribute) {
                 this.$("th[data-sort=" + this.collection.sortAttribute + "]").addClass("sorted-" + (this.collection.asc ? "asc" : "desc"));
             }
+            // hack to make tooltips disappear
+            $('body > .tooltip').remove(); 
             return this;
         },
         events: {
             'click [data-id=blocks]': 'setBlocksMode',
             'click [data-id=numbers]': 'setNumbersMode',
-            'click th' : 'sort'
+            'click th' : 'sort',
+            'change [data-id=filter]': 'filter',
+            'input [data-id=filter]': 'filter',
+            'click [data-id=clearFilter]': 'clearFilter'
         },
         setBlocksMode: function(event) {
             this.mode = 'blocks';
@@ -53,6 +68,15 @@ define(['underscore',
                 this.collection.setSortAttribute(sort);
                 this.collection.sort();
             }
+        },
+        filter: function(event) {
+            this.routeFilter = this.$("[data-id=filter]").val().trim();
+            this.$("[data-id=clearFilter]").attr("disabled", !(this.routeFilter && true));
+            this.renderTable();
+        },
+        clearFilter: function(event) {
+            this.$("[data-id=filter]").val("");
+            this.filter();
         }
     });
     
