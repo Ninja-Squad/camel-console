@@ -34,6 +34,7 @@ define(['underscore',
         },
         displayDetail:function () {
             Backbone.history.navigate("console/" + this.model.get('routeId'), true);
+            return false;
         }
     });
 
