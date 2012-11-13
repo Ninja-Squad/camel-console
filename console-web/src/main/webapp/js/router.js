@@ -41,6 +41,9 @@ define(['backbone',
             this.routeCollection.fetch();
             new RouteTableView({collection:this.routeCollection, el:'#routes'}).render();
             this.breadcrumbCollection.home();
+            
+            // hack to remove the step view. TODO find a better way to do that
+            $('#steps').empty();
         },
 
         appRoute:function (id) {
