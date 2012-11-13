@@ -11,7 +11,18 @@ define(['backbone',
         'collections/BreadcrumbCollection',
         'views/BreadcrumbsView',
         'backbone-queryparams'
-], function (Backbone, GraphView, RouteTableView, StepView, Statistic, StatisticCollection, Route, RouteCollection, Server) {
+], function (Backbone, 
+             GraphView, 
+             RouteTableView, 
+             StepView, 
+             Statistic, 
+             StatisticCollection, 
+             Route, 
+             RouteCollection, 
+             Server, 
+             TimeUnit, 
+             BreadcrumbCollection, 
+             BreadcrumbsView) {
     var AppRouter = Backbone.Router.extend({
 
         initialize:function () {
