@@ -7,13 +7,13 @@ define(['underscore',
         'flot-resize',
         'bootstrap'], function (_, Backbone, graphTemplate) {
     var GraphView = Backbone.View.extend({
-        initialize: function() {
+        initialize: function(options) {
             this.template = graphTemplate;
             this.mode = 'messages';
             this.messagesMode = 'both';
             this.timesMode = 'all';
             this.collection.on('reset', this.reset, this);
-            this.timeFormat = '%y-%m-%0d';
+            this.timeUnit = options.timeUnit;
         },
         events: {
             'click [data-id=messages]': function() {this.setMode('messages')},
@@ -44,7 +44,7 @@ define(['underscore',
                 data: this.collection.getTimeSerie('completed'),
                 color: '#57A957',
                 label: 'Successes',
-                lines: {
+                bars: {
                     show: true,
                     fill: true,
                     fillColor: 'rgba(98,196,98,0.5)',
@@ -56,7 +56,7 @@ define(['underscore',
                 data: this.collection.getTimeSerie('failed'),
                 color: '#C43C35',
                 label: 'Failures',
-                lines: {
+                bars: {
                     show: true,
                     fill: true,
                     fillColor: 'rgba(238,95,91,0.5)',
@@ -96,8 +96,8 @@ define(['underscore',
             };
             var options = {
                 xaxis: {
-                    mode: 'time'
-                    //timeformat: this.timeFormat
+                    mode: 'time',
+                    timeformat: this.timeUnit.timeFormat
                 },
                 yaxis: {
                     min: 0
@@ -114,8 +114,8 @@ define(['underscore',
                         lineWidth: 2
                     },
                     bars: {
-                        lineWidth: 1
-                        //barWidth: 0.8 * 24 * 60 * 60 * 1000
+                        lineWidth: 1,
+                        barWidth: 0.8 * this.timeUnit.millis
                     },
                     shadowSize: 0
                 }
@@ -177,7 +177,7 @@ define(['underscore',
         },
         plothover: function(event, pos, item) {
             if (item) {
-                var label = $.plot.formatDate(new Date(item.datapoint[0]), this.timeFormat, null);
+                var label = $.plot.formatDate(new Date(item.datapoint[0]), this.timeUnit.timeFormat, null);
                 this.showTooltip(item.pageX, item.pageY - 18, label + ": " + (item.datapoint[1] - item.datapoint[2]));
             }
             else {

@@ -32,6 +32,8 @@ define(['underscore',
             if (this.collection.sortAttribute) {
                 this.$("th[data-sort=" + this.collection.sortAttribute + "]").addClass("sorted-" + (this.collection.asc ? "asc" : "desc"));
             }
+            // hack to make tooltips disappear
+            $('body > .tooltip').remove(); 
             return this;
         },
         events: {

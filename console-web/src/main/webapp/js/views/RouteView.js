@@ -15,6 +15,7 @@ define(['underscore',
             this.timesTooltipTitle = function () {
                 return 'Average time: ' + view.model.get('averageTime') + ' ms.<br/>Minimum time: ' + view.model.get('minimumTime') + ' ms.<br/>Maximum time: ' + view.model.get('maximumTime') + ' ms.';
             }
+            this.model.on('change', this.render, this);
         },
         render:function (event) {
             var html = (this.mode == 'numbers') ? this.numbersTemplate(this.model.toJSON()) : this.blocksTemplate(this.model.toJSON())
@@ -29,7 +30,7 @@ define(['underscore',
             this.render();
         },
         events:{
-            'click':'displayDetail'
+            'click a': 'displayDetail'
         },
         displayDetail:function () {
             Backbone.history.navigate("console/" + this.model.get('routeId'), true);

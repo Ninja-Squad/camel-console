@@ -3,7 +3,7 @@ define(['backbone', 'models/Route'], function (Backbone, Route) {
         model:Route,
         url:'/api/route',
         initialize:function () {
-            this.setSortAttribute('name');
+            this.setSortAttribute('routeId');
             this.asc = true;
         },
         setSortAttribute:function (attribute) {
