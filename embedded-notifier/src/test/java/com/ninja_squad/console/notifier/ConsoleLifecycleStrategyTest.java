@@ -13,8 +13,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.SortedMap;
+
 import static org.fest.assertions.api.Assertions.assertThat;
-import static org.fest.assertions.api.Assertions.entry;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
@@ -106,14 +107,18 @@ public class ConsoleLifecycleStrategyTest {
         assertThat(route.getUri()).isEqualTo("direct://route1");
         assertThat(route.getDefinition()).isNotNull();
         assertThat(route.getDefinition()).isNotEmpty();
-        assertThat(route.getSteps()).contains(entry("to10","mock:result"));
+        SortedMap<String, String> steps = route.getSteps();
+        assertThat(steps).hasSize(1);
+        assertThat(steps.get(steps.keySet().iterator().next())).isEqualTo("mock:result");
         // then route2
         Route route2 = routeArgumentCaptor.getAllValues().get(1);
         assertThat(route2.getRouteId()).isEqualTo("route2");
         assertThat(route2.getUri()).isEqualTo("direct://route2");
         assertThat(route2.getDefinition()).isNotNull();
         assertThat(route2.getDefinition()).isNotEmpty();
-        assertThat(route2.getSteps()).contains(entry("to11","mock:result2"));
+        steps = route2.getSteps();
+        assertThat(steps).hasSize(1);
+        assertThat(steps.get(steps.keySet().iterator().next())).isEqualTo("mock:result2");
         //and a log of the state and time
         ArgumentCaptor<RouteState> routeStateArgumentCaptor = ArgumentCaptor.forClass(RouteState.class);
         verify(repository, times(2)).save(routeStateArgumentCaptor.capture());
