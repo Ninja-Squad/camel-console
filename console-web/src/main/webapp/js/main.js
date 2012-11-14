@@ -51,6 +51,12 @@ require.config({
                 'jquery',
                 'flot'
             ]
+        },
+        'flot-resize':{
+            deps:[
+                'jquery',
+                'flot'
+            ]
         }
     },
 
@@ -91,6 +97,20 @@ require(['router', 'handlebars'], function (AppRouter, Handlebars) {
 
     Handlebars.registerHelper('percentComplement', function(value, total) {
         return new Handlebars.SafeString(total == 0 ? 0 : 100 - value);
+    });
+    
+    Handlebars.registerHelper('iter', function(context, options) {
+        var fn = options.fn;
+        var ret = "";
+
+        if (context && context.length > 0) {
+            for (var i = 0; i < context.length; i++) {
+               ret = ret + fn(_.extend({}, 
+                                       context[i], 
+                                       {iterStatus: {index: i, first: (i == 0), last: (i == context.length - 1)}}));
+            }
+        }
+        return ret;
     });
     
     new AppRouter();
