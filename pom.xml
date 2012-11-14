@@ -25,8 +25,8 @@
     <modules>
         <module>console-common</module>
         <!--module>console-jmx</module-->
-        <module>console-web</module>
         <module>embedded-notifier</module>
+        <module>console-web</module>
     </modules>
 
     <dependencies>
@@ -89,8 +89,17 @@
                     <target>1.6</target>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.5.2</version>
+                <configuration>
+                    <check/>
+                    <formats>
+                        <format>xml</format>
+                    </formats>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-
-
 </project>
