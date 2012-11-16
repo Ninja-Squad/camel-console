@@ -1,7 +1,12 @@
-div[data-id=graph] {
+div[data-id=graph], div[data-id=overview] {
 	height: 300px;
 	margin-left: 40px;
 	margin-right: 50px;
+}
+
+div[data-id=overview] {
+	margin-top: 20px;
+    height: 100px;
 }
 
 .numblock {

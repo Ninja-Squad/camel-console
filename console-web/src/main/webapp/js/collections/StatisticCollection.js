@@ -14,6 +14,12 @@ define(['backbone', 'models/Statistic', 'utils/TimeUnit', 'utils/server'], funct
             });
             return result;
         },
+        getOverviewSerie: function() {
+            var result = this.map(function(model) {
+                return [model.get('range'), model.get('completed') + model.get('failed')];
+            });
+            return result;
+        },
         changeRange: function(from, to) {
         	var timeUnit = TimeUnit.forRange(from, to);
         	var that = this;
