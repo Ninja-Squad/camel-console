@@ -68,7 +68,8 @@
         <!-- Contains all RESThub artifacts and transitive dependencies -->
         <repository>
             <id>resthub</id>
-            <url>http://oss.sonatype.org/content/repositories/snapshots/</url>
+            <!--<url>http://oss.sonatype.org/content/repositories/snapshots/</url>-->
+            <url>http://nexus.pullrequest.org/content/repositories/snapshots</url>
         </repository>
     </repositories>
 
@@ -105,5 +106,23 @@
                 </configuration>
             </plugin>
         </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources/${env}</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
+
+    <profiles>
+        <profile>
+            <id>local</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <env>local</env>
+            </properties>
+        </profile>
+    </profiles>
 </project>
