@@ -32,9 +32,10 @@ define(['underscore',
         events:{
             'click a': 'displayDetail'
         },
-        displayDetail:function () {
-            Backbone.history.navigate("console/" + this.model.get('routeId'), true);
-            return false;
+        displayDetail: function(event) {
+            this.trigger("routeSelected", this.model.get('routeId'));
+            event.preventDefault();
+            event.stopPropagation();
         }
     });
 

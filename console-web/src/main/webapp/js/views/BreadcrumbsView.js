@@ -15,7 +15,9 @@ define(['underscore',
             'click a': 'navigate'
         },
         navigate: function(event) {
-            Backbone.history.navigate($(event.target).attr('data-path'), true);
+        	this.trigger("pathChanged", $(event.target).attr('data-path'));
+        	event.preventDefault();
+        	event.stopPropagation();
         }
     });
     

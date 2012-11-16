@@ -35,6 +35,9 @@ define(['underscore',
                 if (this._accepted(route)) {
                     var routeView = new RouteView({model: route});
                     routeView.setMode(this.mode);
+                    routeView.on("routeSelected", function(routeId) {
+                    	this.trigger("routeSelected", routeId);
+                    }, this);
                     this.$('tbody').append(routeView.render().$el);
                 }
             }, this);

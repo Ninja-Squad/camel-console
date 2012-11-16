@@ -1,19 +1,21 @@
 define(['underscore', 
         'backbone', 
         'hbs!templates/graph',
+        'utils/TimeUnit',
         'jquery',
         'flot',
         'flot-stack',
         'flot-resize',
-        'bootstrap'], function (_, Backbone, graphTemplate) {
+        'flot-selection',
+        'bootstrap'], function (_, Backbone, graphTemplate, TimeUnit) {
     var GraphView = Backbone.View.extend({
-        initialize: function(options) {
+        initialize: function() {
             this.template = graphTemplate;
             this.mode = 'messages';
             this.messagesMode = 'both';
             this.timesMode = 'all';
-            this.collection.on('reset', this.reset, this);
-            this.timeUnit = options.timeUnit;
+            this.model.get("statisticCollection").on('reset', this.renderGraph, this);
+            this.model.on('change:statisticCollection', this.renderGraph, this);
         },
         events: {
             'click [data-id=messages]': function() {this.setMode('messages');},
@@ -25,7 +27,9 @@ define(['underscore',
             'click [data-id=times-minimum]': function() {this.setTimesMode('minimum');},
             'click [data-id=times-maximum]': function() {this.setTimesMode('maximum');},
             'click [data-id=times-all]': function() {this.setTimesMode('all');},
-            'plothover [data-id=graph]': 'plothover'
+            'plothover [data-id=graph]': 'plothover',
+            'plotclick [data-id=graph]': 'plotclick',
+            'plotselected [data-id=graph]': 'plotselected'
         },
         render: function(event) {
             this.$el.html(this.template());
@@ -41,31 +45,29 @@ define(['underscore',
             this.$('[data-id=times-' + this.timesMode + ']').button('toggle');
             
             var successSerie = {
-                data: this.collection.getTimeSerie('completed'),
+                data: this.model.get("statisticCollection").getTimeSerie('completed'),
                 color: '#57A957',
                 label: 'Successes',
                 bars: {
                     show: true,
                     fill: true,
                     fillColor: 'rgba(98,196,98,0.5)',
-                    align: 'center'
                 },
                 stack: true
             };
             var failureSerie = {
-                data: this.collection.getTimeSerie('failed'),
+                data: this.model.get("statisticCollection").getTimeSerie('failed'),
                 color: '#C43C35',
                 label: 'Failures',
                 bars: {
                     show: true,
                     fill: true,
                     fillColor: 'rgba(238,95,91,0.5)',
-                    align: 'center'
                 },
                 stack: true
             };
             var averageSerie = {
-                data: this.collection.getTimeSerie('average'),
+                data: this.model.get("statisticCollection").getTimeSerie('average'),
                 color: '#AEAEAE',
                 label: 'Average time',
                 lines: {
@@ -75,7 +77,7 @@ define(['underscore',
                 }
             };
             var minimumSerie = {
-                data: this.collection.getTimeSerie('min'),
+                data: this.model.get("statisticCollection").getTimeSerie('min'),
                 color: '#D4B989',
                 label: 'Minimum time',
                 lines: {
@@ -85,7 +87,7 @@ define(['underscore',
                 }
             };
             var maximumSerie = {
-                data: this.collection.getTimeSerie('max'),
+                data: this.model.get("statisticCollection").getTimeSerie('max'),
                 color: '#8F6E34',
                 label: 'Maximum time',
                 lines: {
@@ -97,7 +99,7 @@ define(['underscore',
             var options = {
                 xaxis: {
                     mode: 'time',
-                    timeformat: this.timeUnit.timeFormat
+                    timeformat: this.model.get('timeUnit').timeFormat
                 },
                 yaxis: {
                     min: 0
@@ -115,9 +117,12 @@ define(['underscore',
                     },
                     bars: {
                         lineWidth: 1,
-                        barWidth: 0.8 * this.timeUnit.millis
+                        barWidth: this.model.get('timeUnit').millis
                     },
                     shadowSize: 0
+                },
+                selection: {
+                    mode: "x"
                 }
             };
             
@@ -177,12 +182,26 @@ define(['underscore',
         },
         plothover: function(event, pos, item) {
             if (item) {
-                var label = $.plot.formatDate(new Date(item.datapoint[0]), this.timeUnit.timeFormat, null);
+                var label = $.plot.formatDate(new Date(item.datapoint[0]), this.model.get('timeUnit').timeFormat, null);
                 this.showTooltip(item.pageX, item.pageY - 18, label + ": " + (item.datapoint[1] - item.datapoint[2]));
             }
             else {
                 this.removeTooltip();
             }
+        },
+        plotclick: function(event, pos, item) {
+            if (item && this.model.get('timeUnit') != TimeUnit.second) {
+                var from = item.datapoint[0];
+                var to = from + this.model.get('timeUnit').millis;
+            	this.trigger("rangeSelected", from, to);
+            }
+        },
+        plotselected: function(event, ranges) {
+        	if (this.model.get('timeUnit') != TimeUnit.second) {
+	        	var from = Math.round(ranges.xaxis.from);
+	        	var to = Math.round(ranges.xaxis.to);
+	        	this.trigger("rangeSelected", from, to);
+        	}
         }
     });
     

@@ -11,6 +11,7 @@ define(['backbone', 'collections/StatisticCollection'], function (Backbone, Stat
             minimumTime:0,
             maximumTime:0
         },
+        // TODO JB: j'avais carrément enlevé le corps de initialize et la fonction fetchStats
         initialize:function () {
             // fetch route stats
             this.fetchStats();
