@@ -2,7 +2,8 @@ define(['backbone', 'utils/TimeUnit', "collections/StatisticCollection"], functi
     var Statistics = Backbone.Model.extend({
         defaults: {
             timeUnit: TimeUnit.day,
-            statisticCollection: new StatisticCollection()
+            statisticCollection: new StatisticCollection(),
+            overviewCollection: new StatisticCollection()
         }
     });
     

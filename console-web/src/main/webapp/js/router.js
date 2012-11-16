@@ -36,9 +36,10 @@ define(['backbone',
         },
 
         state: {
-            routeId: null, // if null, we're showing all the routes. if not null, we're showing a specific route
+            routeId: null, // if empty or null, we're showing all the routes. Else, we're showing a specific route
             from: null,
             to: null,
+            updateOverview: false,
             createRoute: function() {
             	if (this.routeId) {
             		if (this.from && this.to) {
@@ -57,10 +58,11 @@ define(['backbone',
             		}
             	}
             },
-            setRouteId: function(routeId) {
+            changeRoute: function(routeId) {
             	this.routeId = routeId;
+            	this.updateOverview = true;
             },
-            setRange: function(from, to) {
+            changeRange: function(from, to) {
             	this.from = from;
             	this.to = to;
             },
@@ -86,23 +88,25 @@ define(['backbone',
         	this.breadcrumbCollection = new BreadcrumbCollection();
             this.breadcrumbsView = new BreadcrumbsView({collection: this.breadcrumbCollection, el: '#breadcrumbs'});
             this.breadcrumbsView.on("pathChanged", function(routeId) {
-            	this.state.setRouteId(routeId);
+            	this.state.changeRoute(routeId);
             	Backbone.history.navigate(this.state.createRoute(), true);
             }, this);
             this.breadcrumbsView.render();
             
             this.statistics = new Statistics();
+            
             this.graphView = new GraphView({model: this.statistics, el: '#stats'});
             this.graphView.on("rangeSelected", function(from, to) {
-            	this.state.setRange(from, to);
+            	this.state.changeRange(from, to);
             	Backbone.history.navigate(this.state.createRoute(), true);
             }, this);
             this.graphView.render();
+            this.updateOverview();
             
             this.routeCollection = new RouteCollection();
             this.routeTableView = new RouteTableView({collection: this.routeCollection, el: '#routes'});
             this.routeTableView.on("routeSelected", function(routeId) {
-            	this.state.setRouteId(routeId);
+            	this.state.changeRoute(routeId);
             	Backbone.history.navigate(this.state.createRoute(), true);
             }, this);
             this.routeTableView.render();
@@ -111,8 +115,12 @@ define(['backbone',
         },
 
         appRoutes: function(from, to) {
+        	var updateOverview = this.state.updateOverview;
         	this.updateState(null, from, to);
-            this.updateStatistics();
+        	if (updateOverview) {
+        		this.updateOverview();
+        	}
+        	this.updateStatistics();
             var that = this;
             this.routeCollection.fetch({success: function() {
             	that.updateRoutes();
@@ -123,7 +131,11 @@ define(['backbone',
         },
 
         appRoute: function(routeId, from, to) {
+        	var updateOverview = this.state.updateOverview;
         	this.updateState(routeId, from, to);
+        	if (updateOverview) {
+        		this.updateOverview();
+        	}
         	this.updateStatistics();
         	console.log("route detail", routeId);
         	// TODO: this is a hack to get the route with a given ID. It should be improved.
@@ -149,8 +161,9 @@ define(['backbone',
         	this.state.routeId = routeId;
         	this.state.from = from;
         	this.state.to = to;
+        	this.updateOverview = false;
         },
-        updateStatistics: function(to) {
+        updateStatistics: function() {
         	var that = this;
         	var options = {
         		from: that.state.from,
@@ -173,6 +186,26 @@ define(['backbone',
         	var timeUnit = this.state.toTimeUnit();
         	this.statistics.set("timeUnit", timeUnit);
         	Server.statsPerElementAndTimeUnit(this.state.toApiRoute(), timeUnit.name, options);
+        },
+        updateOverview: function() {
+        	var that = this;
+        	var options = {
+        		callback: function(data) {
+        			data = JSON.parse(data);
+                    var stats = [];
+                    data.forEach(function (elem) {
+                        var statistic = new Statistic({range: elem[0], 
+                        	                           failed: elem[1], 
+                        	                           completed: elem[2],
+                        	                           min: elem[3], 
+                        	                           max: elem[4], 
+                        	                           average: elem[5]});
+                        stats.push(statistic);
+                    });
+                    that.statistics.get("overviewCollection").reset(stats);
+        		}
+        	};
+        	Server.statsPerElementAndTimeUnit(this.state.toApiRoute(), TimeUnit.day.name, options);
         },
         updateRoutes: function() {
         	var that = this;

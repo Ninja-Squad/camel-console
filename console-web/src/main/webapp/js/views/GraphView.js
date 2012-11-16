@@ -16,6 +16,8 @@ define(['underscore',
             this.timesMode = 'all';
             this.model.get("statisticCollection").on('reset', this.renderGraph, this);
             this.model.on('change:statisticCollection', this.renderGraph, this);
+            this.model.get("overviewCollection").on('reset', this.renderOverview, this);
+            this.model.on('change:overviewCollection', this.renderOverview, this);
         },
         events: {
             'click [data-id=messages]': function() {this.setMode('messages');},
@@ -29,13 +31,17 @@ define(['underscore',
             'click [data-id=times-all]': function() {this.setTimesMode('all');},
             'plothover [data-id=graph]': 'plothover',
             'plotclick [data-id=graph]': 'plotclick',
-            'plotselected [data-id=graph]': 'plotselected'
+            'plotselected [data-id=graph]': 'plotselected',
+            'plotclick [data-id=overview]': 'overviewclick',
+            'plotselected [data-id=overview]': 'overviewselected',
+            
         },
         render: function(event) {
             this.$el.html(this.template());
             this.$('.btn-group').button();
             var view = this;
             this.renderGraph();
+            this.renderOverview();
         },
         renderGraph: function() {
             this.$('[data-id=messages-modes]').toggle(this.mode == 'messages');
@@ -156,6 +162,47 @@ define(['underscore',
             this.removeTooltip();
             return this;
         },
+        renderOverview: function() {
+            var overviewSerie = {
+                data: this.model.get("overviewCollection").getOverviewSerie(),
+                color: '#57A957',
+                label: 'Messages',
+                bars: {
+                    show: true,
+                    fill: true,
+                    fillColor: 'rgba(98,196,98,0.5)',
+                }
+            };
+            var options = {
+                xaxis: {
+                    mode: 'time',
+                    timeformat: TimeUnit.day.timeFormat
+                },
+                yaxis: {
+                    min: 0
+                },
+                grid: {
+                    clickable: true
+                },
+                legend: {
+                    show: false
+                },
+                series: {
+                    bars: {
+                        lineWidth: 1,
+                        barWidth: TimeUnit.day.millis
+                    },
+                    shadowSize: 0
+                },
+                selection: {
+                    mode: "x"
+                }
+            };
+            
+            var data = [overviewSerie];
+            this.overviewPlot = $.plot(this.$('[data-id=overview]'), data, options);
+            return this;
+        },
         setMode: function(mode) {
             this.mode = mode;
             this.renderGraph();
@@ -193,6 +240,7 @@ define(['underscore',
             if (item && this.model.get('timeUnit') != TimeUnit.second) {
                 var from = item.datapoint[0];
                 var to = from + this.model.get('timeUnit').millis;
+                this.overviewPlot.setSelection({xaxis: {from: from, to: to}}, true); // prevent event
             	this.trigger("rangeSelected", from, to);
             }
         },
@@ -200,8 +248,22 @@ define(['underscore',
         	if (this.model.get('timeUnit') != TimeUnit.second) {
 	        	var from = Math.round(ranges.xaxis.from);
 	        	var to = Math.round(ranges.xaxis.to);
-	        	this.trigger("rangeSelected", from, to);
+	        	this.overviewPlot.setSelection({xaxis: {from: from, to: to}}, true); // prevent event
+            	this.trigger("rangeSelected", from, to);
         	}
+        },
+        overviewclick: function(event, pos, item) {
+            if (item) {
+                var from = item.datapoint[0];
+                var to = from + TimeUnit.day.millis;
+                this.overviewPlot.setSelection({xaxis: {from: from, to: to}}, true); // prevent event
+            	this.trigger("rangeSelected", from, to);
+            }
+        },
+        overviewselected: function(event, ranges) {
+        	var from = Math.round(ranges.xaxis.from);
+	        var to = Math.round(ranges.xaxis.to);
+	        this.trigger("rangeSelected", from, to);
         }
     });
     
