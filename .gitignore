@@ -21,3 +21,6 @@ console-common/console-common.iml
 console-jmx/console-jmx.iml
 console-web/console-web.iml
 embedded-notifier/console-notifier.iml
+.project
+.classpath
+.settings
