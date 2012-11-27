@@ -1,10 +1,7 @@
 package com.ninja_squad.console.controller;
 
-import com.google.common.base.Function;
-import com.google.common.base.Predicate;
-import com.google.common.base.Predicates;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.ninja_squad.console.controller.converter.TimeUnitEnumConverter;
 import com.ninja_squad.console.model.Statistic;
 import com.ninja_squad.console.model.TimeUnit;
@@ -20,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping(value = "/statistic")
@@ -47,86 +45,55 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
 
     @RequestMapping(value = "{elementId}/per/{unit}", method = RequestMethod.GET)
     @ResponseBody
-    public String getStatisticsPerSecond(@PathVariable String elementId,
-                                         @PathVariable TimeUnit unit, @RequestParam(required = false) Long from,
-                                         @RequestParam(required = false) Long to) {
+    public List<Statistic> getStatisticsPerSecond(@PathVariable String elementId,
+                                                  @PathVariable TimeUnit unit, @RequestParam(required = false) Long from,
+                                                  @RequestParam(required = false) Long to) {
         log.debug("Stats for " + elementId + " by " + unit.toString() + (from != null ? " from " + from : "") + (to != null ? " to " + to : ""));
-        if (elementId == null || elementId.isEmpty() || unit == null) { return "[]"; }
+        if (elementId == null || elementId.isEmpty() || unit == null) { return Lists.newArrayList(); }
         List<Statistic> statsPerSecond = repository.findAllByElementIdAndTimeUnit(elementId, unit);
-        return toJson(statsPerSecond, unit, from, to, DateTime.now());
+        return fillMissingValues(statsPerSecond, unit, from, to, DateTime.now());
     }
 
-    protected String toJson(List<Statistic> stats, TimeUnit unit, Long from, Long to, DateTime now) {
-        if (stats.isEmpty()) { return "[]"; }
-        Statistic last = stats.get(0);
+    /**
+     * Adds missing values in stats for all time units between from (or first value if no from) and to (or now if no to)
+     * @param stats collection of stats with missing values
+     * @param unit the timeunit of the stats
+     * @param from timestamp in millis (lower bound). Can be null
+     * @param to timestamp in millis (higher bound). Can be null
+     * @param now datetime of current request (used if no upper bound is provided)
+     * @return a list of stats completed with 0 on missing timestamps
+     */
+    protected List<Statistic> fillMissingValues(List<Statistic> stats, TimeUnit unit, Long from, Long to, DateTime now) {
+        if (stats.isEmpty()) { return Lists.newArrayList(); }
+
+        // map with timestamp -> stat
+        Map<Long, Statistic> actuals = Maps.newHashMap();
+        for (Statistic stat : stats) {
+            actuals.put(stat.getRange(), stat);
+        }
+        // getting the elementId
+        String elementId = stats.get(0).getElementId();
         List<Statistic> counts = Lists.newArrayList();
-        for (Statistic statistic : stats) {
-            //first missing points to zero
-            long nextRangeAfterLast = TimeUtils.getNextRange(last.getRange(), unit);
-            if (statistic.getRange() > nextRangeAfterLast) {
-                Statistic zero = new Statistic(last.getElementId(), nextRangeAfterLast, unit, 0, 0, 0, 0, 0);
-                log.debug("add 0 on the first range after last " + zero);
-                counts.add(zero);
-                last = zero;
+
+        // building bounds : lower is from or first stat, upper is to or now
+        long timestamp = from != null ? from : stats.get(0).getRange();
+        if (to == null) {
+            to = TimeUtils.getNextRange(now.getMillis(), unit);
+        }
+
+        // building stats with zeros if not find
+        while (timestamp <= to) {
+            StatisticController.log.debug("timestamp " + timestamp);
+            Statistic statistic = actuals.get(timestamp);
+            if (statistic == null) {
+                statistic = new Statistic(elementId, timestamp, unit, 0, 0, 0, 0, 0);
             }
-            //last missing point to zero
-            long previousRangeFromCurrent = TimeUtils.getPreviousRange(statistic.getRange(), unit);
-            log.debug("previous from " + statistic.getRange() + " is " + previousRangeFromCurrent);
-            if (previousRangeFromCurrent > last.getRange()) {
-                Statistic zero = new Statistic(last.getElementId(), previousRangeFromCurrent, unit, 0, 0, 0, 0, 0);
-                log.debug("add 0 on the previous range from current " + zero);
-                counts.add(zero);
-            }
-            last = statistic;
             counts.add(statistic);
+            timestamp = TimeUtils.getNextRange(timestamp, unit);
         }
 
-        //last point to zero (only if the next range fits in the selection)
-        long afterLastTimestamp = TimeUtils.getNextRange(last.getRange(), unit);
-        long currentTimestampRounded = TimeUtils.getRoundedTimestamp(now.getMillis(), unit);
-        if (afterLastTimestamp < currentTimestampRounded) {
-            Statistic after = new Statistic(last.getElementId(), afterLastTimestamp, unit, 0, 0, 0, 0, 0);
-            log.debug("add 0 on the last point " + after);
-            last = after;
-            counts.add(after);
-        }
-
-        //current point to zero (only if current time is not yet in counts)
-        if (currentTimestampRounded > last.getRange()) {
-            Statistic current = new Statistic(last.getElementId(), currentTimestampRounded, unit, 0, 0, 0, 0, 0);
-            log.debug("add 0 on the current point " + current);
-            counts.add(current);
-        }
-
-        counts = filterRanges(counts, from, to);
-
-        List<String> json = Lists.transform(counts, new Function<Statistic, String>() {
-            @Override
-            public String apply(Statistic input) {
-                if (input == null) { return "null"; }
-                return input.toJson();
-            }
-        });
-        log.debug(json.toString());
-        return json.toString();
-    }
-
-    protected List<Statistic> filterRanges(List<Statistic> counts, final Long from, final Long to) {
-        Predicate<Statistic> isAfterFrom = (from == null) ? Predicates.<Statistic>alwaysTrue() :
-                new Predicate<Statistic>() {
-                    @Override
-                    public boolean apply(Statistic input) {
-                        return input.getRange() >= from;
-                    }
-                };
-        Predicate<Statistic> isBeforeTo = (to == null) ? Predicates.<Statistic>alwaysTrue() :
-                new Predicate<Statistic>() {
-                    @Override
-                    public boolean apply(Statistic input) {
-                        return input.getRange() <= to;
-                    }
-                };
-        return Lists.newArrayList(Iterables.filter(counts, Predicates.and(isAfterFrom, isBeforeTo)));
+        log.debug(counts.toString());
+        return counts;
     }
 
 }

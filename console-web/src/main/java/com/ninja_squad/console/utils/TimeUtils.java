@@ -21,7 +21,7 @@ public class TimeUtils {
         if (cached != null) { return cached; }
         // if not compute it
         DateTime time = new DateTime(timestamp, DateTimeZone.UTC);
-        log.debug("Rounding " + time + " in " + unit);
+        log.trace("Rounding " + time + " in " + unit);
         switch (unit) {
             case SECOND:
                 time = time.minusMillis(time.getMillisOfSecond());
@@ -51,7 +51,7 @@ public class TimeUtils {
                 time = new DateTime(roundedY, DateTimeZone.UTC).minusDays(time.getDayOfYear() - 1);
                 break;
         }
-        log.debug("Rounded " + time);
+        log.trace("Rounded " + time);
         // store in cache
         cache.put(timestamp + unit.toString(), time.getMillis());
         return time.getMillis();
@@ -68,7 +68,7 @@ public class TimeUtils {
     public static long getRange(long timestamp, TimeUnit unit, boolean next) {
         if (unit == null) { return timestamp; }
         DateTime time = new DateTime(timestamp, DateTimeZone.UTC);
-        log.debug((next ? "Next" : "Previous") + " timestamp for " + time + " in " + unit);
+        log.trace((next ? "Next" : "Previous") + " timestamp for " + time + " in " + unit);
         switch (unit) {
             case SECOND:
                 time = next ? time.plusSeconds(1) : time.minusSeconds(1);
@@ -92,7 +92,7 @@ public class TimeUtils {
                 time = next ? time.plusYears(1) : time.minusYears(1);
                 break;
         }
-        log.debug((next ? "Next " : "Previous ") + time);
+        log.trace((next ? "Next " : "Previous ") + time);
         return getRoundedTimestamp(time.getMillis(), unit);
     }
 }

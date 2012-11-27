@@ -17,15 +17,29 @@ public class Statistic {
 
     @Id
     private String id;
+
     @Getter
     private String elementId;
+
     @Getter
     private long range;
+
+    @Getter
     private TimeUnit timeUnit;
+
+    @Getter
     private int failed;
+
+    @Getter
     private int completed;
+
+    @Getter
     private int min;
+
+    @Getter
     private int max;
+
+    @Getter
     private int average;
 
     public Statistic(String elementId, long range, TimeUnit timeUnit, int failed, int completed, int min, int max, int average) {
