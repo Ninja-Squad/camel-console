@@ -89,7 +89,7 @@ Backbone.Paginator = (function ( Backbone, _, $ ) {
 				processData: false,
 				url: _.result(queryOptions, 'url')
 			}, options);
-			
+
 			return $.ajax( queryOptions );
 
 		},
@@ -741,7 +741,7 @@ Backbone.Paginator = (function ( Backbone, _, $ ) {
 				processData: false,
 				url: _.result(queryOptions, 'url')
 			}, options);
-			
+
 			return $.ajax( queryOptions );
 
 		},
