@@ -1,4 +1,4 @@
-define(['backbone', 'utils/server'], function (Backbone, Server) {
+define(['backbone', 'collections/StatisticCollection'], function (Backbone, StatisticCollection) {
     var Route = Backbone.Model.extend({
         defaults:{
             uri:'',
@@ -17,25 +17,24 @@ define(['backbone', 'utils/server'], function (Backbone, Server) {
         },
         fetchStats:function () {
             var that = this;
-            var options = {silent: true};
-            Server.statsPerElementAndTimeUnit(that.get('routeId'), 'year', function (data) {
-                data = JSON.parse(data);
-                // the result is an array containing a single array
-                data.forEach(function (elem) {
-                    that.set('failureCount', elem[1], options);
-                    that.set('successCount', elem[2], options);
-                    that.set('minimumTime', elem[3], options);
-                    that.set('maximumTime', elem[4], options);
-                    that.set('averageTime', elem[5], options);
-                    that.set('messageCount', elem[1] + elem[2], options);
-                });
+            var options = {silent:true};
+            var stats = new StatisticCollection({id:that.get('routeId'), timeUnit:'year'});
+            stats.fetch({success:function () {
+                var stat = stats.at(0);
+                console.log(stat.get('completed'));
+                that.set('failureCount', stat.get('failed'), options);
+                that.set('successCount', stat.get('completed'), options);
+                that.set('minimumTime', stat.get('min'), options);
+                that.set('maximumTime', stat.get('max'), options);
+                that.set('averageTime', stat.get('average'), options);
+                that.set('messageCount', stat.get('failed') + stat.get('completed'), options);
                 var successRate = 0;
                 if (that.get('messageCount') != 0) {
                     successRate = Math.floor(that.get('successCount') * 100 / that.get('messageCount'));
                 }
                 that.set('successRate', successRate, options);
                 that.change();
-            });
+            }})
         }
     });
     return Route;
