@@ -54,7 +54,7 @@ public class RouteControllerTest extends AbstractWebTest {
         MongodExecutable mongodExecutable = runtime.prepare(mongodConfig);
         mongod = mongodExecutable.start();
         this.activeProfiles = "mongodb-test, resthub-web-server";
-        this.annotationbasedConfig = true;
+        this.annotationBasedConfig = true;
         this.contextLocations = "com.ninja_squad.console";
     }
 
