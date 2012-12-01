@@ -1,9 +1,6 @@
 package com.ninja_squad.console.model;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -19,9 +16,11 @@ public class Statistic {
     private String id;
 
     @Getter
+    @Setter
     private String elementId;
 
     @Getter
+    @Setter
     private long range;
 
     @Getter
