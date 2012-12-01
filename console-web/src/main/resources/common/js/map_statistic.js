@@ -1,3 +1,4 @@
+// for each stat will emit an object containing each field interesting, with this elementId as a key
 function () {
     emit(this.elementId, {
         completed:this.completed,

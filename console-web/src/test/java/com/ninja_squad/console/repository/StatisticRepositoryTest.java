@@ -163,6 +163,9 @@ public class StatisticRepositoryTest {
         assertThat(stat.getAverage()).isEqualTo((200 * 1000 + 150 * 5000) / 6000);
     }
 
+    /**
+     * Builds and stores stats from january to october by month
+     */
     private void storeStats() {
         long january = new DateTime(2012, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         Statistic januaryStats = new Statistic(ROUTE_1, january, TimeUnit.MONTH, 10, 1000, 100, 450, 200);

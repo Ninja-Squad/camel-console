@@ -1,3 +1,4 @@
+// for the stats of an elementId (key), will compute every field to build an aggregated stat
 function (key, values) {
     var completed = 0;
     var failed = 0;
