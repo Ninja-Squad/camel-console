@@ -134,6 +134,35 @@ public class StatisticRepositoryTest {
         assertThat(stat.getAverage()).isEqualTo((200 * 1000 + 150 * 5000) / 6000);
     }
 
+    @Test
+    public void shouldAggregateStatsWithTheBestTimeUnit() throws Exception {
+        // given a stats from january to september
+        storeStats();
+        long dayInMarch = new DateTime(2012, 3, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        Statistic dayInMarchStats = new Statistic(ROUTE_1, dayInMarch, TimeUnit.DAY, 10, 10, 10, 10, 10);
+        long dayInApril = new DateTime(2012, 4, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        Statistic dayInAprilStats = new Statistic(ROUTE_1, dayInApril, TimeUnit.DAY, 10, 10, 10, 10, 10);
+        long minuteInJune = new DateTime(2012, 6, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        Statistic minuteInJuneStats = new Statistic(ROUTE_1, minuteInJune, TimeUnit.MINUTE, 10, 10, 10, 10, 10);
+        long secondInJuly = new DateTime(2012, 7, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        Statistic secondInJulyStats = new Statistic(ROUTE_1, secondInJuly, TimeUnit.SECOND, 10, 10, 10, 10, 10);
+        statisticRepository.save(Lists.newArrayList(dayInMarchStats, dayInAprilStats, minuteInJuneStats, secondInJulyStats));
+
+        // when aggregating stats
+        long february = new DateTime(2012, 2, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long september = new DateTime(2012, 9, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        Statistic stat = statisticRepository.aggregateStatistics(ROUTE_1, february, september);
+
+        // then should be aggregated
+        assertThat(stat.getRange()).isEqualTo(february);
+        assertThat(stat.getElementId()).isEqualTo(ROUTE_1);
+        assertThat(stat.getCompleted()).isEqualTo(6000);
+        assertThat(stat.getFailed()).isEqualTo(160);
+        assertThat(stat.getMin()).isEqualTo(30);
+        assertThat(stat.getMax()).isEqualTo(400);
+        assertThat(stat.getAverage()).isEqualTo((200 * 1000 + 150 * 5000) / 6000);
+    }
+
     private void storeStats() {
         long january = new DateTime(2012, 1, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         Statistic januaryStats = new Statistic(ROUTE_1, january, TimeUnit.MONTH, 10, 1000, 100, 450, 200);

@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.ninja_squad.console.model.MapReducedStatistic;
 import com.ninja_squad.console.model.Statistic;
 import com.ninja_squad.console.model.TimeUnit;
+import com.ninja_squad.console.utils.TimeUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -39,8 +40,11 @@ public class StatisticRepositoryCustomDefault implements StatisticRepositoryCust
 
     @Override
     public Statistic aggregateStatistics(String elementId, long from, long to) {
+        // find the best timeUnit
+        TimeUnit timeUnit = TimeUtils.getTimeUnit(from, to);
+
         // building query
-        Query query = buildQuery(elementId, from, to);
+        Query query = buildQuery(elementId, timeUnit, from, to);
 
         // map reducing
         MapReduceResults<MapReducedStatistic> aggregation =
@@ -69,10 +73,12 @@ public class StatisticRepositoryCustomDefault implements StatisticRepositoryCust
         return statistic;
     }
 
-    private Query buildQuery(String elementId, long from, long to) {
+    private Query buildQuery(String elementId, TimeUnit timeUnit, long from, long to) {
         Criteria criteria = new Criteria().andOperator(
                 // only for this element
                 Criteria.where("elementId").is(elementId),
+                // and this timeUnit
+                Criteria.where("timeUnit").is(timeUnit.toString()),
                 // with a range greater or equal than from
                 Criteria.where("range").gte(from),
                 // with a range lesser or equal than to
