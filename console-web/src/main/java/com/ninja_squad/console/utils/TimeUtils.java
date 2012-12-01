@@ -95,4 +95,33 @@ public class TimeUtils {
         log.trace((next ? "Next " : "Previous ") + time);
         return getRoundedTimestamp(time.getMillis(), unit);
     }
+
+    public static TimeUnit getTimeUnit(long from, long to) {
+        long gap = to - from;
+        // second if less than 60 seconds
+        if (gap < 60 * 1000L) {
+            return TimeUnit.SECOND;
+        }
+        // minute if less than 60 minutes
+        else if (gap < 60 * 60 * 1000L) {
+            return TimeUnit.MINUTE;
+        }
+        // hour if less than 24 hours
+        else if (gap < 24 * 60 * 60 * 1000L) {
+            return TimeUnit.HOUR;
+        }
+        // day if less 7 days
+        else if (gap < 7 * 24 * 60 * 60 * 1000L) {
+            return TimeUnit.DAY;
+        }
+        // week if less 4 weeks
+        else if (gap < 4 * 7 * 24 * 60 * 60 * 1000L) {
+            return TimeUnit.WEEK;
+        }
+        // month if less 12 weeks
+        else if (gap < 12 * 4 * 7 * 24 * 60 * 60 * 1000L) {
+            return TimeUnit.MONTH;
+        }
+        return TimeUnit.YEAR;
+    }
 }

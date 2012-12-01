@@ -56,11 +56,12 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
 
     /**
      * Adds missing values in stats for all time units between from (or first value if no from) and to (or now if no to)
+     *
      * @param stats collection of stats with missing values
-     * @param unit the timeunit of the stats
-     * @param from timestamp in millis (lower bound). Can be null
-     * @param to timestamp in millis (higher bound). Can be null
-     * @param now datetime of current request (used if no upper bound is provided)
+     * @param unit  the timeunit of the stats
+     * @param from  timestamp in millis (lower bound). Can be null
+     * @param to    timestamp in millis (higher bound). Can be null
+     * @param now   datetime of current request (used if no upper bound is provided)
      * @return a list of stats completed with 0 on missing timestamps
      */
     protected List<Statistic> fillMissingValues(List<Statistic> stats, TimeUnit unit, Long from, Long to, DateTime now) {
@@ -80,10 +81,12 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
         if (to == null) {
             to = TimeUtils.getNextRange(now.getMillis(), unit);
         }
+        log.debug("to " + to);
+        log.debug("timestamp " + timestamp);
 
         // building stats with zeros if not find
         while (timestamp <= to) {
-            StatisticController.log.debug("timestamp " + timestamp);
+            log.debug("timestamp " + timestamp);
             Statistic statistic = actuals.get(timestamp);
             if (statistic == null) {
                 statistic = new Statistic(elementId, timestamp, unit, 0, 0, 0, 0, 0);
@@ -94,6 +97,14 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
 
         log.debug(counts.toString());
         return counts;
+    }
+
+    @RequestMapping(value = "{elementId}/aggregated", method = RequestMethod.GET)
+    @ResponseBody
+    public Statistic aggregateStatistics(@PathVariable String elementId,
+                                         @RequestParam(required = true) Long from,
+                                         @RequestParam(required = true) Long to) {
+        return repository.aggregateStatistics(elementId, from, to);
     }
 
 }
