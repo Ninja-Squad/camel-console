@@ -119,4 +119,56 @@ public class TimeUtilsTest {
         long expected = new DateTime(2012, 10, 28, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
         assertThat(roundedDays).isEqualTo(expected);
     }
+
+    @Test
+    public void shouldFindTheTimeUnitMonthBetweenTwoTimestamps() throws Exception {
+        // given 2 timestamps
+        long february = new DateTime(2012, 2, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long september = new DateTime(2012, 9, 1, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+
+        // when finding the best timeUnit
+        TimeUnit unit = TimeUtils.getTimeUnit(february, september);
+
+        // then should be Month
+        assertThat(unit).isEqualTo(TimeUnit.MONTH);
+    }
+
+    @Test
+    public void shouldFindTheTimeUnitDayBetweenTwoTimestamps() throws Exception {
+        // given 2 timestamps
+        long thirdDay = new DateTime(2012, 11, 3, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long fifthDay = new DateTime(2012, 11, 5, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+
+        // when finding the best timeUnit
+        TimeUnit unit = TimeUtils.getTimeUnit(thirdDay, fifthDay);
+
+        // then should be Day
+        assertThat(unit).isEqualTo(TimeUnit.DAY);
+    }
+
+    @Test
+    public void shouldFindTheTimeUnitMinuteBetweenTwoTimestamps() throws Exception {
+        // given 2 timestamps
+        long minuteZero = new DateTime(2012, 11, 3, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long minuteFiftyNine = new DateTime(2012, 11, 3, 0, 59, 0, 0, DateTimeZone.UTC).getMillis();
+
+        // when finding the best timeUnit
+        TimeUnit unit = TimeUtils.getTimeUnit(minuteZero, minuteFiftyNine);
+
+        // then should be Minute
+        assertThat(unit).isEqualTo(TimeUnit.MINUTE);
+    }
+
+    @Test
+    public void shouldFindTheTimeUnitWeekBetweenTwoTimestamps() throws Exception {
+        // given 2 timestamps
+        long weekOne = new DateTime(2012, 11, 3, 0, 0, 0, 0, DateTimeZone.UTC).getMillis();
+        long weekThree = new DateTime(2012, 11, 22, 0, 59, 0, 0, DateTimeZone.UTC).getMillis();
+
+        // when finding the best timeUnit
+        TimeUnit unit = TimeUtils.getTimeUnit(weekOne, weekThree);
+
+        // then should be Minute
+        assertThat(unit).isEqualTo(TimeUnit.WEEK);
+    }
 }
