@@ -11,9 +11,19 @@ import org.joda.time.DateTimeZone;
 public class TimeUtils {
 
     private static Cache<String, Long> cache = CacheBuilder.newBuilder()
-            .maximumSize(1000)
+            .maximumSize(10000)
             .build();
 
+    /**
+     * Rounds a timestamp to the timeUnit asked.
+     * Ex : rounds 12:01:45:000 to 12:00:00:000 if timeUnit is HOUR
+     * <p/>
+     * This implementation uses recursive calls with a cache.
+     *
+     * @param timestamp the current timestamp (in millis)
+     * @param unit      the timeUnit needed
+     * @return a rounded timestamp in millis
+     */
     public static long getRoundedTimestamp(long timestamp, TimeUnit unit) {
         if (unit == null) { return timestamp; }
         // check if in cache
@@ -57,15 +67,37 @@ public class TimeUtils {
         return time.getMillis();
     }
 
+    /**
+     * Returns the next for a timestamp and a timeUnit.
+     *
+     * @param timestamp the current timestamp (in millis)
+     * @param unit      the timeUnit
+     * @return the next range (in millis)
+     */
     public static long getNextRange(long timestamp, TimeUnit unit) {
         return getRange(timestamp, unit, true);
     }
 
+    /**
+     * Returns previous range for a timestamp and a timeUnit.
+     *
+     * @param timestamp the current timestamp (in millis)
+     * @param unit      the timeUnit
+     * @return the previous range (in millis)
+     */
     public static long getPreviousRange(long timestamp, TimeUnit unit) {
         return getRange(timestamp, unit, false);
     }
 
-    public static long getRange(long timestamp, TimeUnit unit, boolean next) {
+    /**
+     * Returns the next or previous range for a timestamp and a timeUnit, depending on next value.
+     *
+     * @param timestamp the current timestamp (in millis)
+     * @param unit      the timeUnit
+     * @param next      if true returns next range, if false returns previous
+     * @return the next or previous range (in millis)
+     */
+    private static long getRange(long timestamp, TimeUnit unit, boolean next) {
         if (unit == null) { return timestamp; }
         DateTime time = new DateTime(timestamp, DateTimeZone.UTC);
         log.trace((next ? "Next" : "Previous") + " timestamp for " + time + " in " + unit);
@@ -94,5 +126,41 @@ public class TimeUtils {
         }
         log.trace((next ? "Next " : "Previous ") + time);
         return getRoundedTimestamp(time.getMillis(), unit);
+    }
+
+    /**
+     * Finds the highest possible granularity between two timestamps.
+     *
+     * @param from the lower timestamp (in millis)
+     * @param to   the highest timestamp (in millis)
+     * @return the highest possible granularity as timeUnit
+     */
+    public static TimeUnit getTimeUnit(long from, long to) {
+        long gap = to - from;
+        // second if less than 60 seconds
+        if (gap < 60 * 1000L) {
+            return TimeUnit.SECOND;
+        }
+        // minute if less than 60 minutes
+        else if (gap < 60 * 60 * 1000L) {
+            return TimeUnit.MINUTE;
+        }
+        // hour if less than 24 hours
+        else if (gap < 24 * 60 * 60 * 1000L) {
+            return TimeUnit.HOUR;
+        }
+        // day if less 7 days
+        else if (gap < 7 * 24 * 60 * 60 * 1000L) {
+            return TimeUnit.DAY;
+        }
+        // week if less 4 weeks
+        else if (gap < 4 * 7 * 24 * 60 * 60 * 1000L) {
+            return TimeUnit.WEEK;
+        }
+        // month if less 12 weeks
+        else if (gap < 12 * 4 * 7 * 24 * 60 * 60 * 1000L) {
+            return TimeUnit.MONTH;
+        }
+        return TimeUnit.YEAR;
     }
 }

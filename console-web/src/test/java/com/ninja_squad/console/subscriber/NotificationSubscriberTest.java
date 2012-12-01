@@ -120,7 +120,7 @@ public class NotificationSubscriberTest {
     }
 
     @Test
-    public void getPendingstepStatisticsShouldReturnThePendingExchangeStats() throws Exception {
+    public void getPendingStepStatisticsShouldReturnThePendingExchangeStats() throws Exception {
         // given 2 stepStatistics handled among 5
         createExchangeStatistic("1", DateTime.now(), true);
         createExchangeStatistic("2", DateTime.now(), false);
