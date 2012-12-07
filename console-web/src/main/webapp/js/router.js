@@ -213,16 +213,13 @@ define(['backbone',
     	    		to: that.state.to,
     	    		callback: function(data) {
     	    			var silent = {silent: true};
-    	    			// TODO this is a hack, and I wouldn't be surprised if it returned incorrect results: we should 
-    	    			// have an API for getting the aggregated stats for a range directly
-    		            data.forEach(function (elem) {
-    		                route.set('failureCount', elem.failed, silent);
-    		                route.set('successCount', elem.completed, silent);
-    		                route.set('minimumTime', elem.min, silent);
-    		                route.set('maximumTime', elem.max, silent);
-    		                route.set('averageTime', elem.average, silent);
-    		                route.set('messageCount', elem.failed + elem.completed, silent);
-    		            });
+    	    			route.set('failureCount', data.failed, silent);
+    		            route.set('successCount', data.completed, silent);
+    		            route.set('minimumTime', data.min, silent);
+    		            route.set('maximumTime', data.max, silent);
+    		            route.set('averageTime', data.average, silent);
+    		            route.set('messageCount', data.failed + data.completed, silent);
+    		            
     		            var successRate = 0;
     		            if (route.get('messageCount') != 0) {
     		                successRate = Math.floor(route.get('successCount') * 100 / route.get('messageCount'));
@@ -231,7 +228,7 @@ define(['backbone',
     		            route.change();
     	    		}
             	};
-        		Server.statsPerElementAndTimeUnit(route.get("routeId"), 'year', options);
+        		Server.aggregatedStatsPerElement(route.get("routeId"), options);
         	});
         }
     });

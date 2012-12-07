@@ -11,6 +11,18 @@ define([
             });
         },
         
+        aggregatedStatsPerElement: function(elementId, options) {
+            var params = {};
+            if (options.from && options.to) {
+            	params = {from: options.from, to: options.to};
+            }
+            else {
+            	params = {from: 0, to: (new Date()).getTime() + 1000000};
+            }
+        	$.getJSON('/api/statistic/' + elementId + '/aggregated', params, function(data) {
+                options.callback(data);
+            });
+        },
     };
     
     return Server;
