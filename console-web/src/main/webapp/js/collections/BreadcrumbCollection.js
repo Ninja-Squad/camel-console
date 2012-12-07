@@ -7,7 +7,7 @@ define(['backbone', 'models/Breadcrumb'], function (Backbone, Breadcrumb) {
             this.reset([HOME]);
         },
         route: function(routeId) {
-            this.reset([HOME, {path: 'routeId', text: 'Route ' + routeId}]);
+            this.reset([HOME, {path: routeId, text: 'Route ' + routeId}]);
         }
     });
 

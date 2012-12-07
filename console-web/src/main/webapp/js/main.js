@@ -114,5 +114,4 @@ require(['router', 'handlebars'], function (AppRouter, Handlebars) {
     });
     
     new AppRouter();
-
 });

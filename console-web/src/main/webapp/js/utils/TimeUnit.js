@@ -9,7 +9,7 @@ define([], function () {
     var TimeUnit = {
         month: {
             timeFormat: '%b %y',
-            millis: 28 * 24 * 60 * 60 * 1000,
+            millis: 31 * 24 * 60 * 60 * 1000,
             minRange: 104 * 7 * 24 * 60 * 60 * 1000,
             name: 'month'
         },
@@ -49,8 +49,8 @@ define([], function () {
          */
         forRange: function(fromMillis, toMillis) {
             var range = toMillis - fromMillis;
-            var units = [minute, hour, day, week, month];
-            var result;
+            var units = [this.minute, this.hour, this.day, this.week, this.month];
+            var result = this.second;
             for (var i = 0; i < units.length; i++) {
                 if (range >= units[i].minRange) {
                     result = units[i];
