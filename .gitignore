@@ -22,3 +22,6 @@ console-jmx/console-jmx.iml
 console-web/console-web.iml
 embedded-notifier/console-notifier.iml
 target
+.project
+.classpath
+.settings
