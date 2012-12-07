@@ -39,7 +39,7 @@ define(['backbone',
             routeId: null, // if empty or null, we're showing all the routes. Else, we're showing a specific route
             from: null,
             to: null,
-            updateOverview: false,
+            overviewMustBeUpdated: false,
             createRoute: function() {
             	if (this.routeId) {
             		if (this.from && this.to) {
@@ -60,7 +60,7 @@ define(['backbone',
             },
             changeRoute: function(routeId) {
             	this.routeId = routeId;
-            	this.updateOverview = true;
+            	this.overviewMustBeUpdated = true;
             },
             changeRange: function(from, to) {
             	this.from = from;
@@ -115,9 +115,9 @@ define(['backbone',
         },
 
         appRoutes: function(from, to) {
-        	var updateOverview = this.state.updateOverview;
+        	var overviewMustBeUpdated = this.state.overviewMustBeUpdated;
         	this.updateState(null, from, to);
-        	if (updateOverview) {
+        	if (overviewMustBeUpdated) {
         		this.updateOverview();
         	}
         	this.updateStatistics();
@@ -131,9 +131,9 @@ define(['backbone',
         },
 
         appRoute: function(routeId, from, to) {
-        	var updateOverview = this.state.updateOverview;
+        	var overviewMustBeUpdated = this.state.overviewMustBeUpdated;
         	this.updateState(routeId, from, to);
-        	if (updateOverview) {
+        	if (overviewMustBeUpdated) {
         		this.updateOverview();
         	}
         	this.updateStatistics();
@@ -161,7 +161,7 @@ define(['backbone',
         	this.state.routeId = routeId;
         	this.state.from = from;
         	this.state.to = to;
-        	this.updateOverview = false;
+        	this.state.overviewMustBeUpdated = false;
         },
         updateStatistics: function() {
         	var that = this;
