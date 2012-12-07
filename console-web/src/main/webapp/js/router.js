@@ -169,15 +169,14 @@ define(['backbone',
         		from: that.state.from,
         		to: that.state.to,
         		callback: function(data) {
-        			data = JSON.parse(data);
-                    var stats = [];
+        			var stats = [];
                     data.forEach(function (elem) {
-                        var statistic = new Statistic({range: elem[0], 
-                        	                           failed: elem[1], 
-                        	                           completed: elem[2],
-                        	                           min: elem[3], 
-                        	                           max: elem[4], 
-                        	                           average: elem[5]});
+                        var statistic = new Statistic({range: elem.range, 
+                        	                           failed: elem.failed, 
+                        	                           completed: elem.completed,
+                        	                           min: elem.min, 
+                        	                           max: elem.max, 
+                        	                           average: elem.average});
                         stats.push(statistic);
                     });
                     that.statistics.get("statisticCollection").reset(stats);
@@ -191,15 +190,14 @@ define(['backbone',
         	var that = this;
         	var options = {
         		callback: function(data) {
-        			data = JSON.parse(data);
-                    var stats = [];
+        			var stats = [];
                     data.forEach(function (elem) {
-                        var statistic = new Statistic({range: elem[0], 
-                        	                           failed: elem[1], 
-                        	                           completed: elem[2],
-                        	                           min: elem[3], 
-                        	                           max: elem[4], 
-                        	                           average: elem[5]});
+                        var statistic = new Statistic({range: elem.range, 
+							                           failed: elem.failed, 
+							                           completed: elem.completed,
+							                           min: elem.min, 
+							                           max: elem.max, 
+							                           average: elem.average});
                         stats.push(statistic);
                     });
                     that.statistics.get("overviewCollection").reset(stats);
@@ -215,16 +213,15 @@ define(['backbone',
     	    		to: that.state.to,
     	    		callback: function(data) {
     	    			var silent = {silent: true};
-    	    			data = JSON.parse(data);
-    		            // TODO this is a hack, and I wouldn't be surprised if it returned incorrect results: we should 
+    	    			// TODO this is a hack, and I wouldn't be surprised if it returned incorrect results: we should 
     	    			// have an API for getting the aggregated stats for a range directly
     		            data.forEach(function (elem) {
-    		                route.set('failureCount', elem[1], silent);
-    		                route.set('successCount', elem[2], silent);
-    		                route.set('minimumTime', elem[3], silent);
-    		                route.set('maximumTime', elem[4], silent);
-    		                route.set('averageTime', elem[5], silent);
-    		                route.set('messageCount', elem[1] + elem[2], silent);
+    		                route.set('failureCount', elem.failed, silent);
+    		                route.set('successCount', elem.completed, silent);
+    		                route.set('minimumTime', elem.min, silent);
+    		                route.set('maximumTime', elem.max, silent);
+    		                route.set('averageTime', elem.average, silent);
+    		                route.set('messageCount', elem.failed + elem.completed, silent);
     		            });
     		            var successRate = 0;
     		            if (route.get('messageCount') != 0) {

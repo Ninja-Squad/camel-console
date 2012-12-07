@@ -11,12 +11,12 @@ define(['backbone', 'collections/StatisticCollection'], function (Backbone, Stat
             minimumTime:0,
             maximumTime:0
         },
-        // TODO JB: j'avais carrément enlevé le corps de initialize et la fonction fetchStats
-        initialize:function () {
+        // TODO JB: j'avais carrÃ©ment enlevÃ© le corps de initialize et la fonction fetchStats
+        initialize: function() {
             // fetch route stats
-            this.fetchStats();
+            // this.fetchStats();
         },
-        fetchStats:function () {
+        fetchStats: function() {
             var that = this;
             var options = {silent:true};
             var stats = new StatisticCollection({id:that.get('routeId'), timeUnit:'year'});

@@ -1,14 +1,14 @@
 define(['backbone', 'models/Statistic', 'utils/TimeUnit', 'utils/server'], function (Backbone, Statistic, TimeUnit, Server) {
     var StatisticCollection = Backbone.Collection.extend({
-        model:Statistic,
-        url:function () {
+        model: Statistic,
+        url: function() {
             return '/api/statistic/' + this.id + '/per/' + this.timeUnit;
         },
-        initialize:function (options) {
-            this.id = options.id;
-            this.timeUnit = options.timeUnit;
+        initialize: function(options) {
+            // this.id = options.id;
+            // this.timeUnit = options.timeUnit;
         },
-        getTimeSerie:function (attribute) {
+        getTimeSerie: function(attribute) {
             var result = this.map(function (model) {
                 return [model.get('range'), model.get(attribute)];
             });
