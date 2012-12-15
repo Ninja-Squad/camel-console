@@ -2,6 +2,7 @@
 function (key, values) {
     var completed = 0;
     var failed = 0;
+
     var min = values[0].min;
     var max = 0;
     var avg = 0;

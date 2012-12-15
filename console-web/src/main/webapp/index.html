@@ -2,21 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
     <title>Camel Console</title>
+    <link type="text/css" rel="stylesheet" href="//fonts.googleapis.com/css?family=Rokkitt:400,700|Source+Code+Pro">
     <link href="/css/bootstrap.css" rel="stylesheet"/>
     <link href="/css/console.css" rel="stylesheet"/>
     <script data-main="/js/main" src="/js/libs/require.js"></script>
-
+    <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
 </head>
 <body>
+<div class="bcrumb" id="breadcrumbs"></div>
 <div class="container-fluid">
-    <div id="breadcrumbs"></div>
-    <h1 class="page-header">Routes</h1>
-    <div id="stats"></div>
-    <hr/>
-    <div id="routes"></div>
-    <hr/>
-    <div id="steps"></div>
+    <div class="section">
+        <h2 class="page-header">Routes</h2>
+        <div class="content">
+            <div id="summary"></div>
+            <div id="stats"></div>
+            <div id="routes" style="display:none"></div>
+            <div id="steps"></div>
+        </div>
+    </div>
 </div>
 </body>
 </html>

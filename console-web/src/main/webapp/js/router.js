@@ -1,30 +1,32 @@
 define(['backbone',
-        'views/GraphView', 
-        'views/RouteTableView', 
+        'views/GraphView',
+        'views/RouteTableView',
         'views/StepView',
-        'models/Statistic', 
+        'models/Statistic',
         'collections/StatisticCollection',
-        'models/Statistics', 
-        'models/Route', 
+        'models/Statistics',
+        'models/Route',
         'collections/RouteCollection',
         'utils/server',
         'utils/TimeUnit',
         'collections/BreadcrumbCollection',
         'views/BreadcrumbsView',
+        'views/SummaryView',
         'backbone-queryparams'
-], function (Backbone, 
-		     GraphView, 
-             RouteTableView, 
-             StepView, 
-             Statistic, 
-             StatisticCollection, 
+], function (Backbone,
+		     GraphView,
+             RouteTableView,
+             StepView,
+             Statistic,
+             StatisticCollection,
              Statistics,
-             Route, 
-             RouteCollection, 
-             Server, 
-             TimeUnit, 
-             BreadcrumbCollection, 
-             BreadcrumbsView) {
+             Route,
+             RouteCollection,
+             Server,
+             TimeUnit,
+             BreadcrumbCollection,
+             BreadcrumbsView,
+             SummaryView) {
 	var AppRouter = Backbone.Router.extend({
 
     	routes: {
@@ -83,8 +85,9 @@ define(['backbone',
             	}
             }
     	},
-        
+
         initialize: function () {
+            // breadcrumb
         	this.breadcrumbCollection = new BreadcrumbCollection();
             this.breadcrumbsView = new BreadcrumbsView({collection: this.breadcrumbCollection, el: '#breadcrumbs'});
             this.breadcrumbsView.on("pathChanged", function(routeId) {
@@ -92,9 +95,15 @@ define(['backbone',
             	Backbone.history.navigate(this.state.createRoute(), true);
             }, this);
             this.breadcrumbsView.render();
-            
+
+            // summary
+            this.summaryView = new SummaryView({el: '#summary'});
+            this.summaryView.render();
+
+
+            // graph
             this.statistics = new Statistics();
-            
+
             this.graphView = new GraphView({model: this.statistics, el: '#stats'});
             this.graphView.on("rangeSelected", function(from, to) {
             	this.state.changeRange(from, to);
@@ -102,7 +111,7 @@ define(['backbone',
             }, this);
             this.graphView.render();
             this.updateOverview();
-            
+
             this.routeCollection = new RouteCollection();
             this.routeTableView = new RouteTableView({collection: this.routeCollection, el: '#routes'});
             this.routeTableView.on("routeSelected", function(routeId) {
@@ -110,7 +119,7 @@ define(['backbone',
             	Backbone.history.navigate(this.state.createRoute(), true);
             }, this);
             this.routeTableView.render();
-            
+
             Backbone.history.start({pushState: true});
         },
 
@@ -154,7 +163,7 @@ define(['backbone',
                 that.updateRoutes();
                 new StepView({model:route, el:'#steps'}).render();
             }});
-        	
+
             this.breadcrumbCollection.route(routeId);
         },
         updateState: function(routeId, from, to) {
@@ -171,11 +180,11 @@ define(['backbone',
         		callback: function(data) {
         			var stats = [];
                     data.forEach(function (elem) {
-                        var statistic = new Statistic({range: elem.range, 
-                        	                           failed: elem.failed, 
+                        var statistic = new Statistic({range: elem.range,
+                        	                           failed: elem.failed,
                         	                           completed: elem.completed,
-                        	                           min: elem.min, 
-                        	                           max: elem.max, 
+                        	                           min: elem.min,
+                        	                           max: elem.max,
                         	                           average: elem.average});
                         stats.push(statistic);
                     });
@@ -192,11 +201,11 @@ define(['backbone',
         		callback: function(data) {
         			var stats = [];
                     data.forEach(function (elem) {
-                        var statistic = new Statistic({range: elem.range, 
-							                           failed: elem.failed, 
+                        var statistic = new Statistic({range: elem.range,
+							                           failed: elem.failed,
 							                           completed: elem.completed,
-							                           min: elem.min, 
-							                           max: elem.max, 
+							                           min: elem.min,
+							                           max: elem.max,
 							                           average: elem.average});
                         stats.push(statistic);
                     });
@@ -219,7 +228,7 @@ define(['backbone',
     		            route.set('maximumTime', data.max, silent);
     		            route.set('averageTime', data.average, silent);
     		            route.set('messageCount', data.failed + data.completed, silent);
-    		            
+
     		            var successRate = 0;
     		            if (route.get('messageCount') != 0) {
     		                successRate = Math.floor(route.get('successCount') * 100 / route.get('messageCount'));
