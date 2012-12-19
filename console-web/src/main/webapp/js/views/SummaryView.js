@@ -3,13 +3,14 @@ define(['underscore',
     'hbs!templates/summary'
 ], function (_, Backbone, summaryTemplate) {
     var SummaryView = Backbone.View.extend({
-        initialize:function () {
+        initialize: function () {
             this.template = summaryTemplate;
         },
-        events:{
+        events: {
         },
-        render:function () {
-            this.$el.html(this.template());
+        render: function () {
+            this.model.set("total", this.model.get("completed") + this.model.get("failed"));
+            this.$el.html(this.template(this.model.toJSON()));
         }
     });
 

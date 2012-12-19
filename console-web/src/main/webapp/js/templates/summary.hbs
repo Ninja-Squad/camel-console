@@ -1,17 +1,17 @@
 <div class="row-fluid summary">
-<span class="span3">
-        <span class="summary-range">27 Nov 2012 18:52-18:56</span>
+<span class="span4">
+    <span class="summary-range">{{ prettyRange from to }}</span>
 </span>
 <span class="span2">
-        <span class="summary-number">42</span> <span class="summary-label">messages</span>
+    <span class="summary-number">{{ total }}</span> <span class="summary-label">messages</span>
 </span>
 <span class="span2">
-    <span class="summary-number">42</span> <span class="summary-label">completed</span>
+    <span class="summary-number">{{ completed }}</span> <span class="summary-label">completed</span>
 </span>
 <span class="span2">
-    <span class="summary-number">0</span> <span class="summary-label">failed</span>
+    <span class="summary-number">{{ failed }}</span> <span class="summary-label">failed</span>
 </span>
 <span class="span2">
-    <span class="summary-number">156</span> <span class="summary-label">ms average</span>
+    <span class="summary-number">{{ average }}</span> <span class="summary-label">ms average</span>
 </span>
 </div>

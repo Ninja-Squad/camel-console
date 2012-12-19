@@ -63,7 +63,7 @@ define(['underscore',
                 color:'#A0ED62',
                 label:'Successes',
                 shadowSize:1,
-                lines:{
+                bars:{
                     show:true,
                     fill:true,
                     fillColor:'rgba(160,237,98,0.5)'
@@ -76,7 +76,7 @@ define(['underscore',
                 data:this.model.get("statisticCollection").getTimeSerie('failed'),
                 color:'#ED8662',
                 label:'Failures',
-                lines:{
+                bars:{
                     show:true,
                     fill:true,
                     fillColor:'rgba(238,95,91,0.5)'
