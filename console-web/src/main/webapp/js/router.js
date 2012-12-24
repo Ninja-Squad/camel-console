@@ -113,7 +113,6 @@ define(['backbone',
 
             // graph
             this.statistics = new Statistics();
-
             this.graphView = new GraphView({model: this.statistics, el: '#stats'});
             this.graphView.on("rangeSelected", function (from, to) {
                 this.state.changeRange(from, to);
