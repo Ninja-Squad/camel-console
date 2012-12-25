@@ -8,7 +8,7 @@
     </appender>
 
     <logger name="com.ninja_squad.console">
-        <level value="debug"/>
+        <level value="info"/>
     </logger>
 
     <root level="info">

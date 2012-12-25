@@ -62,6 +62,12 @@
             <version>${resthub.spring.stack.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.carrotsearch</groupId>
+            <artifactId>junit-benchmarks</artifactId>
+            <version>0.4.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <repositories>

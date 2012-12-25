@@ -49,7 +49,7 @@ public class NotificationSubscriber {
 
     protected void pendingRouteStats() {
         List<RouteStatistic> routeStatistics = getExchangeStatistics();
-        NotificationSubscriber.log.debug(routeStatistics.size() + " pending stats");
+        NotificationSubscriber.log.info(routeStatistics.size() + " pending stats");
         for (RouteStatistic routeStatistic : routeStatistics) {
             // add exchangeStatistic to each range
             long timestamp = routeStatistic.getTimestamp();
@@ -66,7 +66,7 @@ public class NotificationSubscriber {
 
     protected void pendingExchangeStats() {
         List<ExchangeStatistic> pendingExchangeStats = getPendingExchangeStats();
-        NotificationSubscriber.log.debug(pendingExchangeStats.size() + " pending notifications");
+        NotificationSubscriber.log.info(pendingExchangeStats.size() + " pending notifications");
         for (ExchangeStatistic exchangeStat : pendingExchangeStats) {
             // compute duration
             int duration = computeDuration(exchangeStat);
