@@ -345,7 +345,7 @@ public class NotificationSubscriberTest {
         // then we should have a new Statistic for each time unit and 2 for SECOND
         Sort sort = new Sort(Sort.Direction.DESC, "timestamp");
         List<Statistic> all = statisticRepository.findAll(sort);
-        //assertThat(all).hasSize(TimeUnit.values().length + 1);
+        assertThat(all).hasSize(TimeUnit.values().length + 1);
         Statistic statistic = all.get(0);
         long millis = new DateTime(2012, 10, 31, 16, 0, 0, 0, DateTimeZone.UTC).getMillis();
         assertThat(statistic).isEqualTo(new Statistic("route1", millis, TimeUnit.SECOND, 0, 2, 100, 200, 150));

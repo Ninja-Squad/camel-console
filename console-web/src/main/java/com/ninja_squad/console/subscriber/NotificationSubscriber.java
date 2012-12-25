@@ -1,6 +1,5 @@
 package com.ninja_squad.console.subscriber;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import com.ninja_squad.console.StepStatistic;
@@ -19,7 +18,6 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.Executors;
 
 @Slf4j
@@ -37,7 +35,7 @@ public class NotificationSubscriber {
     @Setter
     private RouteStatisticRepository routeStatisticRepository;
 
-    //@PostConstruct
+    @PostConstruct
     public void subscribe() {
         log.debug("Start subscribing");
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
@@ -52,7 +50,6 @@ public class NotificationSubscriber {
     protected void pendingRouteStats() {
         List<RouteStatistic> routeStatistics = getPendingRouteStatistics();
         NotificationSubscriber.log.info(routeStatistics.size() + " pending stats");
-        List<Statistic> statistics = Lists.newArrayList();
         for (RouteStatistic routeStatistic : routeStatistics) {
             // add exchangeStatistic to each range
             long timestamp = routeStatistic.getTimestamp();
@@ -60,19 +57,16 @@ public class NotificationSubscriber {
             for (TimeUnit unit : TimeUnit.values()) {
                 String routeId = routeStatistic.getRouteId();
                 int duration = routeStatistic.getDuration();
-                Statistic statistic = updateStatisticForElement(routeId, unit, timestamp, duration, isFailed);
-                statistics.add(statistic);
+                updateStatisticForElement(routeId, unit, timestamp, duration, isFailed);
             }
             routeStatistic.setHandled(true);
         }
         routeStatisticRepository.save(routeStatistics);
-        statisticRepository.save(statistics);
     }
 
     protected void pendingExchangeStats() {
         List<ExchangeStatistic> pendingExchangeStats = getPendingExchangeStats();
         NotificationSubscriber.log.info(pendingExchangeStats.size() + " pending notifications");
-        List<Statistic> statistics = Lists.newArrayList();
         for (ExchangeStatistic exchangeStat : pendingExchangeStats) {
             // compute duration
             int duration = computeDuration(exchangeStat);
@@ -82,8 +76,7 @@ public class NotificationSubscriber {
             long timestamp = exchangeStat.getTimestamp();
             boolean isFailed = exchangeStat.isFailed();
             for (TimeUnit unit : TimeUnit.values()) {
-                Statistic statistic = updateStatisticForElement(Statistic.ALL, unit, timestamp, duration, isFailed);
-                statistics.add(statistic);
+                updateStatisticForElement(Statistic.ALL, unit, timestamp, duration, isFailed);
             }
 
             Collection<StepStatistic> steps = exchangeStat.getSteps();
@@ -93,16 +86,14 @@ public class NotificationSubscriber {
                     timestamp = stepStatistic.getTimestamp();
                     duration = (int) stepStatistic.getDuration();
                     isFailed = stepStatistic.isFailed();
-                    Statistic statistic = updateStatisticForElement(elementId, unit, timestamp, duration, isFailed);
-                    statistics.add(statistic);
+                    updateStatisticForElement(elementId, unit, timestamp, duration, isFailed);
                 }
             }
 
             // notification is not pending anymore
             exchangeStat.setHandled(true);
+            exchangeStatRepository.save(exchangeStat);
         }
-        exchangeStatRepository.save(pendingExchangeStats);
-        statisticRepository.save(statistics);
     }
 
     protected Statistic updateStatisticForElement(String elementId, TimeUnit unit, long timestamp, int duration, boolean isFailed) {
@@ -116,7 +107,8 @@ public class NotificationSubscriber {
             // update existing one
             statistic = updateStatistic(statistic, duration, isFailed);
         }
-        return statistic;
+        // saving it
+        return statisticRepository.save(statistic);
     }
 
     protected Statistic updateStatistic(Statistic statistic, int duration, boolean failed) {
