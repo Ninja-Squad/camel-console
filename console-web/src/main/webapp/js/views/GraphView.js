@@ -181,7 +181,7 @@ define(['underscore',
                 data:this.model.get("overviewCollection").getOverviewSerie(),
                 color:'#A0ED62',
                 label:'Messages',
-                lines:{
+                bars:{
                     show:true,
                     fill:true,
                     fillColor:'rgba(160,237,98,0.5)'
