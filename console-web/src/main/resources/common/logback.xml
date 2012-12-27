@@ -7,18 +7,6 @@
         </layout>
     </appender>
 
-    <logger name="org.resthub">
-        <level value="warn" />
-    </logger>
-
-    <logger name="org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver">
-        <level value="debug" />
-    </logger>
-
-    <logger name="org.springframework">
-        <level value="warn" />
-    </logger>
-
     <logger name="org.springframework.data">
         <level value="info" />
     </logger>

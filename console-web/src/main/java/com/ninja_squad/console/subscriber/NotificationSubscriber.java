@@ -13,6 +13,8 @@ import com.ninja_squad.console.repository.StatisticRepository;
 import com.ninja_squad.console.utils.TimeUtils;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -37,7 +39,7 @@ public class NotificationSubscriber {
 
     @PostConstruct
     public void subscribe() {
-        log.debug("Start subscribing");
+        log.info("Start subscribing");
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
             @Override
             public void run() {
@@ -49,7 +51,7 @@ public class NotificationSubscriber {
 
     protected void pendingRouteStats() {
         List<RouteStatistic> routeStatistics = getExchangeStatistics();
-        NotificationSubscriber.log.debug(routeStatistics.size() + " pending stats");
+        log.info(routeStatistics.size() + " pending stats");
         for (RouteStatistic routeStatistic : routeStatistics) {
             // add exchangeStatistic to each range
             long timestamp = routeStatistic.getTimestamp();
@@ -66,7 +68,7 @@ public class NotificationSubscriber {
 
     protected void pendingExchangeStats() {
         List<ExchangeStatistic> pendingExchangeStats = getPendingExchangeStats();
-        NotificationSubscriber.log.debug(pendingExchangeStats.size() + " pending notifications");
+        log.info(pendingExchangeStats.size() + " pending notifications");
         for (ExchangeStatistic exchangeStat : pendingExchangeStats) {
             // compute duration
             int duration = computeDuration(exchangeStat);
@@ -137,6 +139,7 @@ public class NotificationSubscriber {
     }
 
     private List<RouteStatistic> getExchangeStatistics() {
-        return routeStatisticRepository.findByHandledExistsOrderByTimestampAsc(false);
+        Pageable request = new PageRequest(1, 500);
+        return routeStatisticRepository.findByHandledExistsOrderByTimestampAsc(false, request);
     }
 }
