@@ -53,6 +53,7 @@ public class NotificationSubscriber {
         List<RouteStatistic> routeStatistics = getExchangeStatistics();
         log.info(routeStatistics.size() + " pending stats");
         for (RouteStatistic routeStatistic : routeStatistics) {
+            log.info(routeStatistic + " to do");
             // add exchangeStatistic to each range
             long timestamp = routeStatistic.getTimestamp();
             boolean isFailed = routeStatistic.isFailed();
@@ -62,8 +63,10 @@ public class NotificationSubscriber {
                 updateStatisticForElement(routeId, unit, timestamp, duration, isFailed);
             }
             routeStatistic.setHandled(true);
+            log.info(routeStatistic + " done");
             routeStatisticRepository.save(routeStatistic);
         }
+        log.info(routeStatistics.size() + " stats done");
     }
 
     protected void pendingExchangeStats() {
@@ -96,6 +99,7 @@ public class NotificationSubscriber {
             exchangeStat.setHandled(true);
             exchangeStatRepository.save(exchangeStat);
         }
+        log.info(pendingExchangeStats.size() + " notifs done");
     }
 
     protected Statistic updateStatisticForElement(String elementId, TimeUnit unit, long timestamp, int duration, boolean isFailed) {
@@ -135,7 +139,8 @@ public class NotificationSubscriber {
     }
 
     protected List<ExchangeStatistic> getPendingExchangeStats() {
-        return exchangeStatRepository.findByHandledExistsOrderByTimestampAsc(false);
+        Pageable request = new PageRequest(1, 500);
+        return exchangeStatRepository.findByHandledExistsOrderByTimestampAsc(false, request);
     }
 
     private List<RouteStatistic> getExchangeStatistics() {
