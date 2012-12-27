@@ -116,7 +116,7 @@ define(['underscore',
                 xaxis:{
                     mode:'time',
                     ticks: 3,
-                    timeformat:this.model.get('timeUnit').timeFormat,
+                    timeformat:this.model.get('timeUnit').timeFormat
                 },
                 yaxis:{
                     ticks: 3,
