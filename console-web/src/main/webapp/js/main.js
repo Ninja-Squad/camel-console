@@ -113,17 +113,23 @@ require(['router', 'handlebars'], function (AppRouter, Handlebars) {
         return ret;
     });
 
-    Handlebars.registerHelper('prettyRange', function (from, to) {
+    function padWithZero(number) {
+        if ((number + '').length === 1) {
+            return '0' + number;
+        }
+        return number;
+    }
+
+    Handlebars.registerHelper('prettyDate', function (date) {
         var months = ["Jan", "Feb", "Mar", "Apr", "May"
             , "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        console.log(from, to);
-        var dateFrom = new Date(parseInt(from));
-        var dateTo = new Date(parseInt(to));
-        console.log(dateFrom, dateTo);
-        return dateFrom.getUTCDate() + ' ' + months[dateFrom.getUTCMonth()] + ' '
-            + dateFrom.getUTCHours() + ':' + dateFrom.getUTCMinutes() + ':' + dateFrom.getUTCSeconds()
-            + ' - ' + dateTo.getUTCDate() + ' ' + months[dateTo.getUTCMonth()] + ' '
-            + dateTo.getUTCHours() + ':' + dateTo.getUTCMinutes() + ':' + dateTo.getUTCSeconds();
+        var dateJs = new Date(parseInt(date));
+        return dateJs.getUTCDate()
+            + ' ' + months[dateJs.getUTCMonth()]
+            + ' ' + dateJs.getUTCFullYear()
+            + ' ' + padWithZero(dateJs.getUTCHours())
+            + ':' + padWithZero(dateJs.getUTCMinutes())
+            + ':' + padWithZero(dateJs.getUTCSeconds())
     });
 
     new AppRouter();

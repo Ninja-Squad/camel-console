@@ -24,6 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
@@ -37,6 +38,7 @@ import java.util.List;
 
 import static org.fest.assertions.api.Assertions.assertThat;
 import static org.fest.assertions.api.Assertions.extractProperty;
+import static org.mockito.Matchers.any;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
@@ -324,7 +326,7 @@ public class NotificationSubscriberTest {
         assertThat(statistic).isEqualTo(new Statistic("mock:step0", millis, TimeUnit.SECOND, 0, 1, 300, 300, 300));
 
         // no more pending stepStatistics
-        assertThat(exchangeStatRepository.findByHandledExistsOrderByTimestampAsc(false)).hasSize(0);
+        assertThat(exchangeStatRepository.findByHandledExistsOrderByTimestampAsc(false, any(Pageable.class))).hasSize(0);
     }
 
     @Test
@@ -369,6 +371,6 @@ public class NotificationSubscriberTest {
         millis = new DateTime(2012, 10, 31, 16, 0, 30, 0, DateTimeZone.UTC).getMillis();
         assertThat(statistic).isEqualTo(new Statistic("route1", millis, TimeUnit.SECOND, 0, 1, 300, 300, 300));
         // no more pending stepStatistics
-        assertThat(exchangeStatRepository.findByHandledExistsOrderByTimestampAsc(false)).hasSize(0);
+        assertThat(exchangeStatRepository.findByHandledExistsOrderByTimestampAsc(false, any(Pageable.class))).hasSize(0);
     }
 }
