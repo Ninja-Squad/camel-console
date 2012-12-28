@@ -1,5 +1,6 @@
 package com.ninja_squad.console.subscriber;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Ordering;
 import com.google.common.primitives.Ints;
 import com.ninja_squad.console.StepStatistic;
@@ -51,19 +52,22 @@ public class NotificationSubscriber {
 
     protected void pendingRouteStats() {
         List<RouteStatistic> routeStatistics = getExchangeStatistics();
+        Stopwatch stopwatch = new Stopwatch();
         log.info(routeStatistics.size() + " pending stats");
         for (RouteStatistic routeStatistic : routeStatistics) {
-            log.info(routeStatistic + " to do");
-            // add exchangeStatistic to each range
+            stopwatch.reset();
+            stopwatch.start();
+            // add stat to each time unit
             long timestamp = routeStatistic.getTimestamp();
             boolean isFailed = routeStatistic.isFailed();
             for (TimeUnit unit : TimeUnit.values()) {
                 String routeId = routeStatistic.getRouteId();
                 int duration = routeStatistic.getDuration();
                 updateStatisticForElement(routeId, unit, timestamp, duration, isFailed);
+                log.info("update in " + stopwatch.elapsedMillis() + " ms");
             }
             routeStatistic.setHandled(true);
-            log.info(routeStatistic + " done");
+            log.info("stat " + routeStatistic.getTimestamp() + " done in " + stopwatch.elapsedMillis() + " ms");
             routeStatisticRepository.save(routeStatistic);
         }
         log.info(routeStatistics.size() + " stats done");
@@ -71,8 +75,11 @@ public class NotificationSubscriber {
 
     protected void pendingExchangeStats() {
         List<ExchangeStatistic> pendingExchangeStats = getPendingExchangeStats();
+        Stopwatch stopwatch = new Stopwatch();
         log.info(pendingExchangeStats.size() + " pending notifications");
         for (ExchangeStatistic exchangeStat : pendingExchangeStats) {
+            stopwatch.reset();
+            stopwatch.start();
             // compute duration
             int duration = computeDuration(exchangeStat);
             exchangeStat.setDuration(duration);
@@ -98,6 +105,7 @@ public class NotificationSubscriber {
             // notification is not pending anymore
             exchangeStat.setHandled(true);
             exchangeStatRepository.save(exchangeStat);
+            log.info("notif " + exchangeStat.getTimestamp() + " done in " + stopwatch.elapsedMillis() + " ms");
         }
         log.info(pendingExchangeStats.size() + " notifs done");
     }
