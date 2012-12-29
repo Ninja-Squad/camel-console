@@ -1,6 +1,6 @@
 define(['backbone', 'models/Breadcrumb'], function (Backbone, Breadcrumb) {
-    var HOME = {path: '', text: 'Home'};
-    
+    var HOME = {path: '', text: 'Camelkeeper'};
+
     var BreadcrumbCollection = Backbone.Collection.extend({
         model: Breadcrumb,
         home: function() {

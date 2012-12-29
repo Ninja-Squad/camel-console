@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <camel.version>2.10.1</camel.version>
         <mongo.version>2.9.1</mongo.version>
-        <jongo.version>0.2</jongo.version>
+        <jongo.version>0.3</jongo.version>
         <embed-mongo.version>1.26</embed-mongo.version>
         <jackson.version>2.1.0</jackson.version>
     </properties>

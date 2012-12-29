@@ -73,6 +73,30 @@ public class StatisticRepositoryCustomDefault implements StatisticRepositoryCust
         return statistic;
     }
 
+    @Override
+    public void saveAll(List<Statistic> statistics) {
+        // split already saved and new ones
+        List<Statistic> inserts = Lists.newArrayList();
+        List<Statistic> saves = Lists.newArrayList();
+        for (Statistic statistic : statistics) {
+            if (statistic.getId() == null) {
+                inserts.add(statistic);
+            } else {
+                saves.add(statistic);
+            }
+        }
+        // insert new ones in bulk
+        if (!inserts.isEmpty()) {
+            mongoTemplate.insert(inserts, Statistic.class);
+        }
+        // update each old ones
+        if (!saves.isEmpty()) {
+            for (Statistic save : saves) {
+                mongoTemplate.save(save);
+            }
+        }
+    }
+
     private Query buildQuery(String elementId, TimeUnit timeUnit, long from, long to) {
         Criteria criteria = new Criteria().andOperator(
                 // only for this element

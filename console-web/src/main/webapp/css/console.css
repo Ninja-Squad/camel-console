@@ -1,30 +1,153 @@
+/* overriding bootstrap font */
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Rokkitt", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: #d3d3d3;
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAPwAAADmBAMAAAADyPWpAAAAHlBMVEUAAAAAAAAAAAAAAAD///8AAAAAAAAAAAAAAAAAAAAzn7ZSAAAACnRSTlMEAgEFAAMGBwgJHK6+iAAAAjVJREFUeF7t3TFvEzEYh3EnUQJjoaRzCGS/ChW6UsF+pc0eCSkwVqrUwhcAPjZT38fDKzmKuBvQ858qy/bP9mT57LTcvIu8iHxZP2VVIl8Prrmj0TpyHW1OIf9zXl5eXl5eXl5+uX1Kv41gzuC7rHASnS4bzdOBlk+Rj/AMr2tMFP4lPb2OwhOg24CuWJIheXl5eXl5eXl5ef5cpbtKxoR0ktUs1JyzfYV/xTwLSUdaSfDMfsOSoC9YsgsaMbu3wX8eh5eXl5eXl5eXl+9pn/IU7pD2kfswP1B4l/U5ZfRAR53pXj5GKgl+ly3JOcevLMmQvLy8vLy8vLy8fN/YQNL+d5g/4X+F+Q3+Lv/+HmGe1Ub7LO0U/gEpW5L31JykEx2bl5eXl5eXl5eXr25w7iPsKn/AVxL8njQ+oJNZIdPspBYTqVXzonF9AGg1Di8vLy8vLy8vL89h43wdKUd8VS/byDV8Bj17jBQyZ/gMZNO4KpoUNtfpchxeXl5eXl5eXl5+S7K94pL2VLjJvsqfUpjuP9lqPv8TKckF0vSpU3v7nPGz7KLrm31kQF5eXl5eXl5eXj5/rdMdcVa5OHiruaj4/AIpVQc4/a1qDsnLy8vLy8vLy8t3UNkBZj/Ap/ZFSQPP7vuKwn92+rsEGoOXl5eXl5eXl5fPfywp/133CXzVP3z6fr5rvEo6qx/AR7JO1/D9EYtX6GhIXl5eXl5eXl5eHvM7fPUAvvEviOBn1Jwz5orPav4FxfqDRAI+1ZEAAAAASUVORK5CYII=)
+}
+
+/* breadcrumb */
+.bcrumb {
+    font-size: 18px;
+    line-height: 45px;
+    background-image: linear-gradient(top, rgb(255, 255, 255) 3%, rgb(242, 242, 242) 76%);
+    background-image: -o-linear-gradient(top, rgb(255, 255, 255) 3%, rgb(242, 242, 242) 76%);
+    background-image: -moz-linear-gradient(top, rgb(255, 255, 255) 3%, rgb(242, 242, 242) 76%);
+    background-image: -webkit-linear-gradient(top, rgb(255, 255, 255) 3%, rgb(242, 242, 242) 76%);
+    background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0.03, rgb(255, 255, 255)), color-stop(0.76, rgb(242, 242, 242)));
+    box-shadow: 0px 1px 10px 0px #555;
+    height: 61px;
+    border-bottom: #D4D4D4 1px solid;
+}
+
+.bcrumb #name {
+    font-family: "Rokkitt", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #DDD;
+    text-shadow: rgba(0, 0, 0, 0.247059) 0px -1px 0px, white 0px 1px 0px, rgba(0, 0, 0, 0.121569) 0px 0px 30px;
+    padding-right: 30px;
+    padding-top: 15px;
+}
+
+.bcrumb #name:hover {
+    text-decoration: none;
+    color: #1D8835;
+    -webkit-transition: color .25s linear;
+    transition: color .25s linear;
+}
+
+.breadcrumb {
+    background-image: inherit;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+/* summary */
+.summary {
+    margin-top: 40px;
+    margin-bottom: 30px;
+}
+
+.summary-range {
+    margin-left: 10px;
+    font-size: 25px;
+    font-weight: bold;
+    font-family: "Rokkitt", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.summary-label {
+    color: #c5c5c5;
+    font-size: 20px;
+    font-family: "Rokkitt", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.summary-number {
+    font-size: 48px;
+    font-weight: bold;
+    font-family: "Rokkitt", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+/* sections */
+.section {
+    background-color: white;
+    border-radius: 4px;
+}
+
+.section .page-header {
+    padding-left: 20px;
+    padding-top: 5px;
+    padding-bottom: 0px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    background-color: #f5f5f5;
+}
+
+.section .content {
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+/* left menu */
+.left-menu {
+    padding-top: 20px;
+    padding-bottom: 20px;
+    /*background-color: #f5f5f5;*/
+    /*border-radius: 4px;*/
+    /*box-shadow: 0 2px 4px 0 rgba(155, 155, 155, 0.5);*/
+}
+
+.left-menu .nav-header {
+    font-size: 13px;
+}
+
+.left-menu .nav-list > li > a,
+.left-menu .nav-list > li > a:hover {
+    font-family: "Rokkitt", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 18px;
+    color: #c5c5c5;
+    background-color: transparent; /*#eeeeee;*/
+    text-shadow: none;
+}
+
+.left-menu .nav-list > .active > a,
+.left-menu .nav-list > .active > a:hover {
+    color: #0088cc;
+    text-shadow: none;
+    background-color: transparent; /*#eeeeee;*/
+}
+
+/* graphs */
+
 div[data-id=graph], div[data-id=overview] {
-	height: 300px;
-	margin-left: 40px;
-	margin-right: 50px;
+    height: 300px;
+    margin-left: 40px;
+    margin-right: 50px;
 }
 
 div[data-id=overview] {
-	margin-top: 20px;
+    margin-top: 20px;
     height: 100px;
 }
 
 .numblock {
-    width: 200px; 
-    border: 1px solid #DDDDDD; 
-    border-radius: 3px; 
-    text-align: center; 
+    width: 200px;
+    border: 1px solid #DDDDDD;
+    border-radius: 3px;
+    text-align: center;
     font-weight: bold;
     background-color: #EEEEEE;
-    background-image: -moz-linear-gradient(center top , #FFFFFF, #E6E6E6);
+    background-image: -moz-linear-gradient(center top, #FFFFFF, #E6E6E6);
     background-repeat: repeat-x;
     margin: auto;
 }
 
 .numblock .top {
-    width: 200px; 
-    border-bottom: 1px solid #DDDDDD; 
-    font-size: xx-large; 
+    width: 200px;
+    border-bottom: 1px solid #DDDDDD;
+    font-size: xx-large;
     line-height: normal;
 }
 
@@ -33,18 +156,18 @@ div[data-id=overview] {
 }
 
 .numblock .bottom .left {
-    width: 100px; 
-    display: table-cell; 
+    width: 100px;
+    display: table-cell;
     border-right: 1px solid #DDDDDD;
 }
 
 .numblock .bottom .right {
-    width: 100px; 
+    width: 100px;
     display: table-cell;
 }
 
 .numblock-messages .top {
-    color: #339BB9; 
+    color: #339BB9;
 }
 
 .numblock-messages .bottom .left {
@@ -74,37 +197,45 @@ div[data-id=overview] {
 }
 
 .progress-text {
-    position: absolute; 
-    text-align: center; 
-    width: inherit; 
+    position: absolute;
+    text-align: center;
+    width: inherit;
     color: white;
 }
 
 .table th.block {
     text-align: center;
 }
+
 .table th.num, .table td.num {
     text-align: right;
     font-weight: bold;
 }
+
 .table td.messageCount {
-    color: #339BB9; 
+    color: #339BB9;
 }
+
 .table td.successCount {
-    color: #5EB95E; 
+    color: #5EB95E;
 }
+
 .table td.failureCount {
-    color: #DD514C; 
+    color: #DD514C;
 }
+
 .table td.averageTime {
-    color: #AEAEAE; 
+    color: #AEAEAE;
 }
+
 .table td.minimumTime {
-    color: #D4B989; 
+    color: #D4B989;
 }
+
 .table td.maximumTime {
-    color: #8F6E34; 
+    color: #8F6E34;
 }
+
 .table th[data-sort] {
     cursor: pointer;
     background-position: right;
@@ -121,9 +252,9 @@ div[data-id=overview] {
     background-image: url(../img/arrow_up.png);
 }
 
-/* d3 */
+/* d3
 .link {
-  fill: none;
-  stroke: #ccc;
-  stroke-width: 4.5px;
+    fill: none;
+    stroke: #ccc;
+    stroke-width: 4.5px;
 }

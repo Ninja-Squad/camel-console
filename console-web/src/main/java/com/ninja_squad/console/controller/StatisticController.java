@@ -48,7 +48,7 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
     public List<Statistic> getStatisticsPerSecond(@PathVariable String elementId,
                                                   @PathVariable TimeUnit unit, @RequestParam(required = false) Long from,
                                                   @RequestParam(required = false) Long to) {
-        log.debug("Stats for " + elementId + " by " + unit.toString() + (from != null ? " from " + from : "") + (to != null ? " to " + to : ""));
+        log.info("Stats for " + elementId + " by " + unit.toString() + (from != null ? " from " + from : "") + (to != null ? " to " + to : ""));
         if (elementId == null || elementId.isEmpty() || unit == null) { return Lists.newArrayList(); }
         List<Statistic> statsPerSecond = repository.findAllByElementIdAndTimeUnit(elementId, unit);
         return fillMissingValues(statsPerSecond, unit, from, to, DateTime.now());
