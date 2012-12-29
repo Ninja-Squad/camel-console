@@ -27,12 +27,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -55,6 +57,9 @@ public class NotificationSubscriberTest {
 
     @Inject
     private RouteStatisticRepository routeStatisticRepository;
+
+    @Inject
+    private MongoTemplate mongoTemplate;
 
     private NotificationSubscriber subscriber;
 
@@ -95,6 +100,7 @@ public class NotificationSubscriberTest {
         subscriber.setExchangeStatRepository(exchangeStatRepository);
         subscriber.setStatisticRepository(statisticRepository);
         subscriber.setRouteStatisticRepository(routeStatisticRepository);
+        subscriber.setMongoTemplate(mongoTemplate);
     }
 
     private ExchangeStatistic createExchangeStatistic(String id, DateTime time, boolean handled) {
@@ -185,7 +191,7 @@ public class NotificationSubscriberTest {
         long now = 1351523921246L;
 
         // when updateMessagesPerSecond
-        Statistic statistic = subscriber.updateStatisticForElement("route1", TimeUnit.SECOND, now, 200, false);
+        Statistic statistic = subscriber.updateStatisticForElement("route1", TimeUnit.SECOND, now, 200, false, Lists.<Statistic>newArrayList());
 
         // then should be 1 message in range with 200 everywhere
         assertThat(statistic).isEqualTo(new Statistic("route1", 1351523921000L, TimeUnit.SECOND, 0, 1, 200, 200, 200));
@@ -195,10 +201,10 @@ public class NotificationSubscriberTest {
     public void updateMessagesPerSecondShouldUpdateStats() throws Exception {
         // given a message completed in 200ms in the same range than a previous one
         long now = 1351523921246L;
-        statisticRepository.save(new Statistic("route1", 1351523921000L, TimeUnit.SECOND, 0, 1, 100, 100, 100));
+        Statistic route1 = statisticRepository.save(new Statistic("route1", 1351523921000L, TimeUnit.SECOND, 0, 1, 100, 100, 100));
 
         // when updateMessagesPerSecond
-        Statistic statistic = subscriber.updateStatisticForElement("route1", TimeUnit.SECOND, now, 200, false);
+        Statistic statistic = subscriber.updateStatisticForElement("route1", TimeUnit.SECOND, now, 200, false, Lists.<Statistic>newArrayList(route1));
 
         // then should be 2 messages in the range with update min and average
         assertThat(statistic).isEqualTo(new Statistic("route1", 1351523921000L, TimeUnit.SECOND, 0, 2, 100, 200, 150));
@@ -208,10 +214,10 @@ public class NotificationSubscriberTest {
     public void updateMessagesPerSecondShouldUpdateStatsIfFailed() throws Exception {
         // given a message completed in 200ms in the same range than a previous one
         long now = 1351523921246L;
-        statisticRepository.save(new Statistic("route1", 1351523921000L, TimeUnit.SECOND, 0, 1, 100, 100, 100));
+        Statistic route1 = statisticRepository.save(new Statistic("route1", 1351523921000L, TimeUnit.SECOND, 0, 1, 100, 100, 100));
 
         // when updateMessagesPerSecond
-        Statistic statistic = subscriber.updateStatisticForElement("route1", TimeUnit.SECOND, now, 200, true);
+        Statistic statistic = subscriber.updateStatisticForElement("route1", TimeUnit.SECOND, now, 200, true, Lists.<Statistic>newArrayList(route1));
 
         // then should be 2 messages in the range with update min and average
         assertThat(statistic).isEqualTo(new Statistic("route1", 1351523921000L, TimeUnit.SECOND, 1, 1, 100, 100, 100));
@@ -372,5 +378,30 @@ public class NotificationSubscriberTest {
         assertThat(statistic).isEqualTo(new Statistic("route1", millis, TimeUnit.SECOND, 0, 1, 300, 300, 300));
         // no more pending stepStatistics
         assertThat(exchangeStatRepository.findByHandledExistsOrderByTimestampAsc(false, any(Pageable.class))).hasSize(0);
+    }
+
+    @Test
+    public void shouldGetConcernedStats() throws Exception {
+        // given stats in db
+        long timestampJanuary = new DateTime(2013, 1, 31, 16, 0, 30, 0, DateTimeZone.UTC).getMillis();
+        Statistic statJanuary = new Statistic("route1", timestampJanuary, TimeUnit.SECOND, 0, 1, 10, 10, 10);
+        long timestampFebruary = new DateTime(2013, 2, 12, 16, 0, 30, 0, DateTimeZone.UTC).getMillis();
+        Statistic statFebruary = new Statistic("route1", timestampFebruary, TimeUnit.SECOND, 0, 1, 10, 10, 10);
+        long timestampMarch = new DateTime(2013, 3, 12, 16, 0, 30, 0, DateTimeZone.UTC).getMillis();
+        Statistic statMarch = new Statistic("route1", timestampMarch, TimeUnit.SECOND, 0, 1, 10, 10, 10);
+        List<Statistic> statistics = Lists.newArrayList(statJanuary, statFebruary, statMarch);
+        statisticRepository.save(statistics);
+
+        // and new messages
+        RouteStatistic routeStatisticFebruary = createRouteStatistic("exchange1", "route1", new DateTime(2013, 2, 11, 16, 0, 30, 0, DateTimeZone.UTC), 20, false);
+        RouteStatistic routeStatisticMarch = createRouteStatistic("exchange2", "route1", new DateTime(2013, 3, 13, 16, 0, 30, 0, DateTimeZone.UTC), 20, false);
+
+        // when getting concerned stats
+        ArrayList<RouteStatistic> routeStatistics = Lists.newArrayList(routeStatisticFebruary, routeStatisticMarch);
+        Iterable<Long> timestampsRoute = subscriber.getTimestampsRoute(routeStatistics);
+        List<Statistic> concernedStats = subscriber.getConcernedStats(timestampsRoute);
+
+        // then should be 2 stats
+       assertThat(concernedStats).isNotNull().hasSize(2).containsExactly(statFebruary, statMarch);
     }
 }

@@ -2,6 +2,8 @@ package com.ninja_squad.console.repository;
 
 import com.ninja_squad.console.model.Statistic;
 
+import java.util.List;
+
 public interface StatisticRepositoryCustom {
 
     /**
@@ -13,4 +15,10 @@ public interface StatisticRepositoryCustom {
      * @return only one statistic with all fields aggregated
      */
     Statistic aggregateStatistics(String elementId, long from, long to);
+
+    /**
+     * Splits objects with the ones that can be bulk inserted (new ones) and the ones that need a save (old ones).
+     * @param statistics
+     */
+    void saveAll(List<Statistic> statistics);
 }

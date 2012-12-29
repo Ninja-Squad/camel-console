@@ -102,10 +102,10 @@ define(['backbone',
                 from: that.state.from,
                 to: that.state.to,
                 callback: function (data) {
-                    var statistic = new Statistic(data);
-                    statistic.set("from", that.state.from);
-                    statistic.set("to", that.state.to);
-                    that.summaryView = new SummaryView({model: statistic, el: '#summary'});
+                    that.summaryStats = new Statistic(data);
+                    that.summaryStats.set("from", that.state.from);
+                    that.summaryStats.set("to", that.state.to);
+                    that.summaryView = new SummaryView({model: that.summaryStats, el: '#summary'});
                     that.summaryView.render();
                 }
             };
@@ -138,6 +138,7 @@ define(['backbone',
             if (overviewMustBeUpdated) {
                 this.updateOverview();
             }
+            this.updateSummary();
             this.updateStatistics();
             var that = this;
             this.routeCollection.fetch({success: function () {
@@ -154,6 +155,7 @@ define(['backbone',
             if (overviewMustBeUpdated) {
                 this.updateOverview();
             }
+            this.updateSummary();
             this.updateStatistics();
             console.log("route detail", routeId);
             // TODO: this is a hack to get the route with a given ID. It should be improved.
@@ -180,6 +182,25 @@ define(['backbone',
             this.state.from = from;
             this.state.to = to;
             this.state.overviewMustBeUpdated = false;
+        },
+        updateSummary: function () {
+            var that = this;
+            var options = {
+                from: that.state.from,
+                to: that.state.to,
+                callback: function (data) {
+                    that.summaryStats.set("range", data.range, {silent: true});
+                    that.summaryStats.set("failed", data.failed, {silent: true});
+                    that.summaryStats.set("completed", data.completed, {silent: true});
+                    that.summaryStats.set("min", data.min, {silent: true});
+                    that.summaryStats.set("max", data.max, {silent: true});
+                    that.summaryStats.set("average", data.average, {silent: true});
+                    that.summaryStats.set("from", that.state.from, {silent: true});
+                    that.summaryStats.set("to", that.state.to, {silent: true});
+                    that.summaryStats.change();
+                }
+            };
+            Server.aggregatedStatsPerElement("overall", options);
         },
         updateStatistics: function () {
             var that = this;

@@ -5,6 +5,7 @@ define(['underscore',
     var SummaryView = Backbone.View.extend({
         initialize: function () {
             this.template = summaryTemplate;
+            this.model.on("change", this.render, this);
         },
         events: {
         },

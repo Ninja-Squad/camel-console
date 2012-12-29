@@ -18,6 +18,7 @@ import org.junit.runner.RunWith;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.mongodb.config.AbstractMongoConfiguration;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.WriteResultChecking;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
@@ -54,6 +55,7 @@ public class NotificationSubscriberPerfTest {
     private NotificationSubscriber subscriber;
 
     @Inject
+    @Setter
     private MongoTemplate mongoTemplate;
 
     @Configuration
@@ -73,12 +75,13 @@ public class NotificationSubscriberPerfTest {
 
     @Before
     public void setUp() throws Exception {
+        mongoTemplate.setWriteResultChecking(WriteResultChecking.EXCEPTION);
         // reset handled
         WriteResult result = mongoTemplate.updateMulti(new Query(where("handled").exists(true)),
                 new Update().unset("handled"),
                 RouteStatistic.class);
 
-        log.info(result.getN() + " stats");
+        log.info(result.getN() + " waiting");
 
         exchangeStatRepository.deleteAll();
         statisticRepository.deleteAll();
@@ -86,10 +89,12 @@ public class NotificationSubscriberPerfTest {
         subscriber.setExchangeStatRepository(exchangeStatRepository);
         subscriber.setStatisticRepository(statisticRepository);
         subscriber.setRouteStatisticRepository(routeStatisticRepository);
+        subscriber.setMongoTemplate(mongoTemplate);
     }
 
     @Test
     public void shouldHandlePendingStats() throws Exception {
         subscriber.pendingRouteStats();
+        log.info(statisticRepository.count() + " stats created");
     }
 }
