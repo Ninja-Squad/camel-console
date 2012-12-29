@@ -13,6 +13,7 @@ public class Statistic {
     public static final String ALL = "overall";
 
     @Id
+    @Getter
     private String id;
 
     @Getter
