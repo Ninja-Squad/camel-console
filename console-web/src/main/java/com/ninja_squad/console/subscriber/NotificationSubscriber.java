@@ -9,7 +9,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
 import com.mongodb.WriteResult;
-import com.ninja_squad.console.StepStatistic;
+import com.ninja_squad.console.model.StepStatistic;
 import com.ninja_squad.console.model.ExchangeStatistic;
 import com.ninja_squad.console.model.RouteStatistic;
 import com.ninja_squad.console.model.Statistic;
