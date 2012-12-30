@@ -4,9 +4,11 @@ import com.google.common.base.Function;
 import com.google.common.base.Predicate;
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.primitives.Ints;
+import com.mongodb.WriteResult;
 import com.ninja_squad.console.StepStatistic;
 import com.ninja_squad.console.model.ExchangeStatistic;
 import com.ninja_squad.console.model.RouteStatistic;
@@ -21,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.WriteResultChecking;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -35,6 +36,9 @@ import java.util.concurrent.Executors;
 
 @Slf4j
 public class NotificationSubscriber {
+
+    public static final int ROUTE_SIZE = 8000;
+    public static final int EXCHANGE_SIZE = 10000;
 
     @Inject
     @Setter
@@ -54,7 +58,6 @@ public class NotificationSubscriber {
 
     @PostConstruct
     public void subscribe() {
-        //mongoTemplate.setWriteResultChecking(WriteResultChecking.LOG);
         log.info("Start subscribing");
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
             @Override
@@ -68,12 +71,17 @@ public class NotificationSubscriber {
     protected void pendingRouteStats() {
         // pending messages
         List<RouteStatistic> routeStatistics = getPendingRouteStatistics();
+        log.info(routeStatistics.size() + " pending stats");
+
+        if (Iterables.isEmpty(routeStatistics)) {
+            return;
+        }
+
         // concerned stats
         Iterable<Long> timestamps = getTimestampsRoute(routeStatistics);
         List<Statistic> concernedStats = getConcernedStats(timestamps);
 
         Stopwatch stopwatch = new Stopwatch();
-        log.info(routeStatistics.size() + " pending stats");
         stopwatch.start();
         for (final RouteStatistic routeStatistic : routeStatistics) {
             // add stat to each time unit
@@ -85,18 +93,25 @@ public class NotificationSubscriber {
                 updateStatisticForElement(routeId, unit, timestamp, duration, isFailed, concernedStats);
             }
         }
+        long computeTime = stopwatch.elapsedMillis();
         Set<String> ids = Sets.newHashSet(Iterables.transform(routeStatistics, new Function<RouteStatistic, String>() {
             @Override
             public String apply(RouteStatistic input) {
                 return input.getId();
             }
         }));
-        mongoTemplate.updateMulti(
+        WriteResult writeResult = mongoTemplate.updateMulti(
                 new Query(Criteria.where("_id").in(ids)),
                 new Update().set("handled", true),
                 RouteStatistic.class);
+        if (writeResult.getError() != null) {
+            log.error(writeResult.getError());
+        }
         statisticRepository.saveAll(concernedStats);
-        log.info(routeStatistics.size() + " stats done in " + stopwatch.elapsedMillis() + " ms -> " + concernedStats.size());
+        log.info(writeResult.getN() + " stats done in "
+                + stopwatch.elapsedMillis() + " ms ("
+                + computeTime + "/" + (stopwatch.elapsedMillis()-computeTime)
+                + ")-> " + concernedStats.size());
     }
 
     protected Iterable<Long> getTimestampsRoute(List<RouteStatistic> routeStatistics) {
@@ -118,22 +133,35 @@ public class NotificationSubscriber {
     }
 
     protected List<Statistic> getConcernedStats(Iterable<Long> timestamps) {
-        // min and max
+        // min and max (with an offset of 1 to include bounds)
         Long min = Ordering.natural().min(timestamps);
         Long max = Ordering.natural().max(timestamps);
         // find stats between
-        return statisticRepository.findAllByRangeBetween(min, max);
+        List<Statistic> statsForEveryTimeUnit = Lists.newArrayList();
+        for (TimeUnit unit : TimeUnit.values()) {
+            List<Statistic> stats = statisticRepository.findAllByRangeBetweenAndTimeUnit(
+                    TimeUtils.getPreviousRange(min, unit),
+                    TimeUtils.getNextRange(max, unit),
+                    unit);
+            statsForEveryTimeUnit.addAll(stats);
+        }
+        return statsForEveryTimeUnit;
     }
 
     protected void pendingExchangeStats() {
         // pending messages
         List<ExchangeStatistic> pendingExchangeStats = getPendingExchangeStats();
+        log.info(pendingExchangeStats.size() + " pending notifications");
+
+        if (Iterables.isEmpty(pendingExchangeStats)) {
+            return;
+        }
+
         // get concerned stats
         Iterable<Long> timestamps = getTimestampsExchange(pendingExchangeStats);
         List<Statistic> concernedStats = getConcernedStats(timestamps);
 
         Stopwatch stopwatch = new Stopwatch();
-        log.info(pendingExchangeStats.size() + " pending notifications");
         stopwatch.start();
         for (ExchangeStatistic exchangeStat : pendingExchangeStats) {
             // compute duration
@@ -167,10 +195,13 @@ public class NotificationSubscriber {
                 return input.getId();
             }
         }));
-        mongoTemplate.updateMulti(
+        WriteResult writeResult = mongoTemplate.updateMulti(
                 new Query(Criteria.where("_id").in(ids)),
                 new Update().set("handled", true),
                 ExchangeStatistic.class);
+        if (writeResult.getError() != null) {
+            log.error(writeResult.getError());
+        }
         statisticRepository.saveAll(concernedStats);
         log.info(pendingExchangeStats.size() + " notifs done in " + stopwatch.elapsedMillis() + " ms -> " + concernedStats.size());
     }
@@ -202,13 +233,19 @@ public class NotificationSubscriber {
     }
 
     protected Statistic updateStatistic(Statistic statistic, int duration, boolean failed) {
-        if (failed) { statistic.addFailed(); } else { statistic.addCompleted(duration); }
+        if (failed) {
+            statistic.addFailed();
+        } else {
+            statistic.addCompleted(duration);
+        }
         return statistic;
     }
 
     protected int computeDuration(ExchangeStatistic exchangeStatistic) {
         List<StepStatistic> stepStatistics = getOrderedSteps(exchangeStatistic);
-        if (stepStatistics.isEmpty()) { return 0; }
+        if (stepStatistics.isEmpty()) {
+            return 0;
+        }
         return (int) (exchangeStatistic.getTimestamp() - stepStatistics.get(0).getTimestamp());
     }
 
@@ -223,12 +260,12 @@ public class NotificationSubscriber {
     }
 
     protected List<ExchangeStatistic> getPendingExchangeStats() {
-        Pageable request = new PageRequest(0, 10000);
+        Pageable request = new PageRequest(0, EXCHANGE_SIZE);
         return exchangeStatRepository.findByHandledExistsOrderByTimestampAsc(false, request);
     }
 
     private List<RouteStatistic> getPendingRouteStatistics() {
-        Pageable request = new PageRequest(0, 10000);
+        Pageable request = new PageRequest(0, ROUTE_SIZE);
         return routeStatisticRepository.findByHandledExistsOrderByTimestampAsc(false, request);
     }
 }
