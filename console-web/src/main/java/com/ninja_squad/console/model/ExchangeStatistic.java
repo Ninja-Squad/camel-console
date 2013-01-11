@@ -1,19 +1,42 @@
 package com.ninja_squad.console.model;
 
-import lombok.Getter;
-import lombok.Setter;
+import com.google.common.collect.Sets;
+import lombok.Data;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.Collection;
+
+@Data
 @Document(collection = "exchange_statistics")
-public class ExchangeStatistic extends com.ninja_squad.console.ExchangeStatistic {
+public class ExchangeStatistic {
 
     @Id
-    @Getter
-    @Setter
     private String id;
 
-    @Getter
-    @Setter
+    @Indexed
     private Boolean handled;
+
+    @Field("i")
+    private String exchangeId;
+
+    @Field("t")
+    private long timestamp;
+
+    @Field("d")
+    private long duration;
+
+    @Field("f")
+    private boolean failed;
+
+    @Field("e")
+    private String exception;
+
+    @Field("em")
+    private String exceptionMessage;
+
+    @Field("s")
+    private Collection<StepStatistic> steps = Sets.newHashSet();
 }

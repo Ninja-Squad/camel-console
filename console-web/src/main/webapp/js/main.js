@@ -124,7 +124,7 @@ require(['router', 'handlebars'], function (AppRouter, Handlebars) {
         var months = ["Jan", "Feb", "Mar", "Apr", "May"
             , "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         var dateJs = new Date(parseInt(date));
-        return dateJs.getUTCDate()
+        return padWithZero(dateJs.getUTCDate())
             + ' ' + months[dateJs.getUTCMonth()]
             + ' ' + dateJs.getUTCFullYear()
             + ' ' + padWithZero(dateJs.getUTCHours())

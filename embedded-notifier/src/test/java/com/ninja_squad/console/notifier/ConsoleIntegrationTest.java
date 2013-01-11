@@ -156,10 +156,10 @@ public class ConsoleIntegrationTest {
         DBObject message = dbObjects.next();
 
         // with 3 steps
-        List<DBObject> steps = (List<DBObject>) message.get("steps");
+        List<DBObject> steps = (List<DBObject>) message.get("s");
         for (DBObject stepStat : steps) {
             log.debug(stepStat.toString());
-            assertThat(stepStat.get("step")).isIn(0, 1, 2);
+            assertThat(stepStat.get("s")).isIn(0, 1, 2);
         }
 
         // and 2 exchangeStatistic (1 for route2 and 1 for route1)
@@ -200,10 +200,10 @@ public class ConsoleIntegrationTest {
         assertThat(dbObjects.count()).isEqualTo(1);
         DBObject message = dbObjects.next();
 
-        List<DBObject> steps = (List<DBObject>) message.get("steps");
+        List<DBObject> steps = (List<DBObject>) message.get("s");
         for (DBObject stepStat : steps) {
             log.debug(stepStat.toString());
-            assertThat(stepStat.get("step")).isIn(0, 1, 2, 3, 4);
+            assertThat(stepStat.get("s")).isIn(0, 1, 2, 3, 4);
         }
 
         // and 2 exchangeStatistic (1 for route3 and 1 for route1)

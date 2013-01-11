@@ -20,9 +20,10 @@ public interface StatisticRepository extends MongoRepository<Statistic, String>,
     /**
      * Finds all statistics for all element and time unit between min and max timestamp.
      *
-     * @param min the lower bound timestamp.
-     * @param max the higher bound timestamp.
+     * @param min      the lower bound timestamp.
+     * @param timeUnit the time unit {@link TimeUnit}.
+     * @param max      the higher bound timestamp.
      * @return all the statistics between the bounds.
      */
-    List<Statistic> findAllByRangeBetween(Long min, Long max);
+    List<Statistic> findAllByRangeBetweenAndTimeUnit(Long min, Long max, TimeUnit timeUnit);
 }

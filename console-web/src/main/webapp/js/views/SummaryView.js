@@ -12,7 +12,7 @@ define(['underscore',
         render: function () {
             // default from to 01/01/2012
             if (this.model.get("from") === undefined) {
-                this.model.set("from", new Date(2012, 1, 1).getTime())
+                this.model.set("from", Date.UTC(2012, 0, 1))
             }
             // default to to now
             if (this.model.get("to") === undefined) {
