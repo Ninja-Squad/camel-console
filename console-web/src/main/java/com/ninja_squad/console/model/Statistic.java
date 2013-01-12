@@ -2,12 +2,17 @@ package com.ninja_squad.console.model;
 
 import lombok.*;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @NoArgsConstructor
 @ToString
 @EqualsAndHashCode(exclude = "id")
 @Document(collection = "statistics")
+@CompoundIndexes({
+    @CompoundIndex(name = "agg_stats", def = "{'elementId': 1, 'timeUnit': 1, 'range': 1}")
+})
 public class Statistic {
 
     public static final String ALL = "overall";
@@ -62,9 +67,5 @@ public class Statistic {
         min = duration < min ? duration : min;
         max = duration > max ? duration : max;
         completed++;
-    }
-
-    public String toJson() {
-        return "[" + range + "," + failed + "," + completed + "," + min + "," + max + "," + average + "]";
     }
 }
