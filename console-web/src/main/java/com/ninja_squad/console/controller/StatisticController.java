@@ -1,5 +1,6 @@
 package com.ninja_squad.console.controller;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.ninja_squad.console.controller.converter.TimeUnitEnumConverter;
@@ -48,24 +49,33 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
     public List<Statistic> getStatisticsPerSecond(@PathVariable String elementId,
                                                   @PathVariable TimeUnit unit, @RequestParam(required = false) Long from,
                                                   @RequestParam(required = false) Long to) {
+        Stopwatch stopWatch = new Stopwatch();
+        stopWatch.start();
         log.info("Stats for " + elementId + " by " + unit.toString() + (from != null ? " from " + from : "") + (to != null ? " to " + to : ""));
-        if (elementId == null || elementId.isEmpty() || unit == null) { return Lists.newArrayList(); }
+        if (elementId == null || elementId.isEmpty()) {
+            return Lists.newArrayList();
+        }
         List<Statistic> statsPerSecond = repository.findAllByElementIdAndTimeUnit(elementId, unit);
-        return fillMissingValues(statsPerSecond, unit, from, to, DateTime.now());
+        log.info("find in " + stopWatch.elapsedMillis());
+        List<Statistic> statistics = fillMissingValues(statsPerSecond, unit, from, to, DateTime.now());
+        log.info("fill in " + stopWatch.elapsedMillis());
+        return statistics;
     }
 
     /**
      * Adds missing values in stats for all time units between from (or first value if no from) and to (or now if no to)
      *
      * @param stats collection of stats with missing values
-     * @param unit  the timeunit of the stats
+     * @param unit  the time unit of the stats
      * @param from  timestamp in millis (lower bound). Can be null
      * @param to    timestamp in millis (higher bound). Can be null
      * @param now   datetime of current request (used if no upper bound is provided)
      * @return a list of stats completed with 0 on missing timestamps
      */
     protected List<Statistic> fillMissingValues(List<Statistic> stats, TimeUnit unit, Long from, Long to, DateTime now) {
-        if (stats.isEmpty()) { return Lists.newArrayList(); }
+        if (stats.isEmpty()) {
+            return Lists.newArrayList();
+        }
 
         // map with timestamp -> stat
         Map<Long, Statistic> actuals = Maps.newHashMap();
@@ -104,7 +114,11 @@ public class StatisticController extends RepositoryBasedRestController<Statistic
     public Statistic aggregateStatistics(@PathVariable String elementId,
                                          @RequestParam(required = true) Long from,
                                          @RequestParam(required = true) Long to) {
-        return repository.aggregateStatistics(elementId, from, to);
+        Stopwatch stopWatch = new Stopwatch();
+        stopWatch.start();
+        Statistic statistic = repository.aggregateStatistics(elementId, from, to);
+        log.info("aggregated in " + stopWatch.elapsedMillis());
+        return statistic;
     }
 
 }

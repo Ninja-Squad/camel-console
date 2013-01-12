@@ -137,30 +137,38 @@ public class TimeUtils {
      */
     public static TimeUnit getTimeUnit(long from, long to) {
         long gap = to - from;
+        log.info("gap is " + gap);
         // second if less than 60 seconds
         if (gap < 60 * 1000L) {
+            log.info("-> seconds");
             return TimeUnit.SECOND;
         }
         // minute if less than 60 minutes
         else if (gap < 60 * 60 * 1000L) {
+            log.info("-> minute");
             return TimeUnit.MINUTE;
         }
         // hour if less than 24 hours
         else if (gap < 24 * 60 * 60 * 1000L) {
+            log.info("-> hour");
             return TimeUnit.HOUR;
         }
         // day if less 7 days
         else if (gap < 7 * 24 * 60 * 60 * 1000L) {
+            log.info("-> day");
             return TimeUnit.DAY;
         }
         // week if less 4 weeks
         else if (gap < 4 * 7 * 24 * 60 * 60 * 1000L) {
+            log.info("-> week");
             return TimeUnit.WEEK;
         }
         // month if less 12 weeks
         else if (gap < 12 * 4 * 7 * 24 * 60 * 60 * 1000L) {
+            log.info("-> month");
             return TimeUnit.MONTH;
         }
+        log.info("-> year");
         return TimeUnit.YEAR;
     }
 }
