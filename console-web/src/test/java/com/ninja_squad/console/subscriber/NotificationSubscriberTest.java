@@ -2,7 +2,7 @@ package com.ninja_squad.console.subscriber;
 
 import com.google.common.collect.Lists;
 import com.mongodb.Mongo;
-import com.ninja_squad.console.StepStatistic;
+import com.ninja_squad.console.model.StepStatistic;
 import com.ninja_squad.console.model.ExchangeStatistic;
 import com.ninja_squad.console.model.RouteStatistic;
 import com.ninja_squad.console.model.Statistic;

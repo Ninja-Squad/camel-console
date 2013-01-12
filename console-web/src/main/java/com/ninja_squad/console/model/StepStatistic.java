@@ -1,42 +1,44 @@
-package com.ninja_squad.console;
+package com.ninja_squad.console.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
 @Data
+@Document
 public class StepStatistic {
 
-    @JsonProperty("r")
+    @Field("r")
     private String routeId;
 
-    @JsonProperty("d")
+    @Field("d")
     private String destination;
 
-    @JsonProperty("i")
+    @Field("i")
     private String exchangeId;
 
-    @JsonProperty("t")
+    @Field("t")
     private long timestamp;
 
-    @JsonProperty("s")
+    @Field("s")
     private int step;
 
-    @JsonProperty("c")
+    @Field("c")
     private long duration;
 
-    @JsonProperty("f")
+    @Field("f")
     private boolean failed;
 
-    @JsonProperty("eb")
+    @Field("eb")
     private Object errorBody;
 
-    @JsonProperty("eh")
+    @Field("eh")
     private Object errorHeaders;
 
-    @JsonProperty("e")
+    @Field("e")
     private String exception;
 
-    @JsonProperty("m")
+    @Field("m")
     private String exceptionMessage;
 
 }

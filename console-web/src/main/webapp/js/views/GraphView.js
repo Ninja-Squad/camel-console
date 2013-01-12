@@ -60,13 +60,13 @@ define(['underscore',
 
             var successSerie = {
                 data:this.model.get("statisticCollection").getTimeSerie('completed'),
-                color:'#A0ED62',
+                color:'rgba(42,143,189,0.5)',
                 label:'Successes',
                 shadowSize:1,
                 bars:{
                     show:true,
                     fill:true,
-                    fillColor:'rgba(160,237,98,0.5)'
+                    fillColor:'rgba(42,143,189,0.2)'
                 },
                 points:{
                     show:false
@@ -179,12 +179,12 @@ define(['underscore',
         renderOverview:function () {
             var overviewSerie = {
                 data:this.model.get("overviewCollection").getOverviewSerie(),
-                color:'#A0ED62',
+                color:'rgba(42,143,189,0.5)',
                 label:'Messages',
                 bars:{
                     show:true,
                     fill:true,
-                    fillColor:'rgba(160,237,98,0.5)'
+                    fillColor:'rgba(42,143,189,0.2)'
                 }
             };
             var options = {
